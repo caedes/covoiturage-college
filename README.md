@@ -17,6 +17,25 @@ et harnais de test. Aucune fonctionnalité métier n'est implémentée.
 | `npm run lint` | Formatage et qualité (Biome) |
 | `npm run format` | Applique le formatage |
 
+## Déploiement
+
+L'hébergement est sur Netlify. Tout merge sur `main` déclenche le job `deploy` du
+workflow CI : il publie en production le `dist/` produit par le job `verify`, donc
+celui qui a passé lint, build et tests. Une PR ne déploie rien.
+
+Deux entrées sont requises dans `Settings → Secrets and variables → Actions` :
+
+| Nom | Onglet | Valeur |
+| --- | --- | --- |
+| `NETLIFY_AUTH_TOKEN` | Secrets | Personal access token Netlify (`User settings → Applications`) |
+| `NETLIFY_SITE_ID` | Variables | Identifiant du site, donné par `netlify status` |
+
+L'identifiant du site n'est pas un secret — il apparaît dans l'URL admin Netlify —
+d'où la variable plutôt que le secret.
+
+Le fichier `public/_redirects` renvoie toutes les URL vers `index.html` : sans lui,
+un accès direct à une route côté client retournerait un 404 Netlify.
+
 ## Règle de contribution
 
 **Toute nouvelle vue doit être couverte par un test de structure accessible.**
