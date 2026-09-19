@@ -27,3 +27,35 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm run test:coverage
+      # Ce qui part en prod est ce bundle, pas un rebuild : le job deploy le
+      # recupere tel quel.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  deploy:
+    name: deploy
+    needs: verify
+    # Jamais sur une pull request : la garde est fausse, le job apparait skipped
+    # et ne bloque rien.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      # En premier : checkout nettoie le workspace. Place apres le telechargement
+      # de l'artefact, il effacerait le dist/ qu'on vient de recuperer. Il n'est
+      # la que pour donner acces au .nvmrc.
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # --no-build : Netlify ne construit rien ici, il recoit un dist/ deja bati.
+      - run: npx --yes netlify-cli@27 deploy --prod --dir=dist --no-build
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
