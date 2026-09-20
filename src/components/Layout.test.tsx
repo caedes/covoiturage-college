@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { member } from '../test/fakeAuth'
 import { renderRoute } from '../test/renderRoute'
 
 describe('Layout', () => {
@@ -47,6 +48,24 @@ describe('Layout', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: /covoiturage collège/i }),
     ).toBeInTheDocument()
+  })
+
+  it('affiche le prénom du membre connecté', async () => {
+    await renderRoute('/', { auth: member({ firstName: 'Karim' }) })
+    expect(screen.getByText(/connecté en tant que karim/i)).toBeInTheDocument()
+  })
+
+  it('propose un bouton de déconnexion', async () => {
+    await renderRoute('/')
+    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument()
+  })
+
+  it('déconnecte le membre au clic', async () => {
+    const user = userEvent.setup()
+    const scenario = member()
+    await renderRoute('/', { auth: scenario })
+    await user.click(screen.getByRole('button', { name: /se déconnecter/i }))
+    expect(scenario.signOutCalls()).toBe(1)
   })
 })
 
