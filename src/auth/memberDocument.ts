@@ -14,7 +14,7 @@ const memberDocumentSchema = z.object({
 export function toMember(email: string, data: unknown): Member {
   const result = memberDocumentSchema.safeParse(data)
   const parsed = result.success ? result.data : {}
-  const localPart = email.split('@')[0] ?? email
+  const localPart = email.split('@')[0]
 
   return {
     email,
