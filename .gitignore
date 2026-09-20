@@ -6,3 +6,8 @@ coverage
 
 # Local Netlify folder
 .netlify
+
+# Journaux des émulateurs Firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
