@@ -16,6 +16,8 @@ et harnais de test. Aucune fonctionnalité métier n'est implémentée.
 | `npm run test:coverage` | Tests avec rapport et seuil de couverture |
 | `npm run lint` | Formatage et qualité (Biome) |
 | `npm run format` | Applique le formatage |
+| `npm run test:rules` | Tests des règles Firestore contre l'émulateur (Java requis) |
+| `npm run rules:deploy` | Déploie `firestore.rules` sur le projet Firebase |
 
 ## Déploiement
 
@@ -35,6 +37,65 @@ d'où la variable plutôt que le secret.
 
 Le fichier `public/_redirects` renvoie toutes les URL vers `index.html` : sans lui,
 un accès direct à une route côté client retournerait un 404 Netlify.
+
+## Authentification
+
+Toutes les pages sont derrière une authentification Google : il n'existe aucune
+page publique. L'accès est restreint à une liste blanche nominative stockée dans
+Firestore.
+
+### Ajouter ou retirer une personne
+
+Dans la console Firebase, collection `members` :
+
+| Élément | Valeur |
+| --- | --- |
+| Identifiant du document | l'adresse Google, **en minuscules** |
+| `firstName` | le prénom affiché dans l'application |
+| `role` | `parent` ou `child` |
+
+Retirer un accès, c'est supprimer le document. Aucune écriture n'est possible
+depuis l'application : les règles l'interdisent.
+
+**L'identifiant doit être en minuscules.** L'application cherche le document par
+identifiant exact : une fiche saisie `Sophie.Martin@gmail.com` ne sera jamais
+trouvée. En cas de doute, l'écran « Accès refusé » affiche l'adresse exacte que
+l'application a cherchée — il suffit de la comparer à l'identifiant du document.
+
+### Variables d'environnement
+
+| Nom | Où |
+| --- | --- |
+| `VITE_FIREBASE_API_KEY` | `.env.local` en local, *Variables* GitHub Actions en CI |
+| `VITE_FIREBASE_AUTH_DOMAIN` | idem |
+| `VITE_FIREBASE_PROJECT_ID` | idem |
+| `VITE_FIREBASE_APP_ID` | idem |
+
+Ces valeurs ne sont pas des secrets : elles partent dans le bundle que n'importe
+qui télécharge. Partir de `.env.example` et les copier depuis *Console Firebase →
+Paramètres du projet → Vos applications → Configuration SDK*.
+
+Elles sont requises **au build** : sans elles dans le job `verify`, le `dist/`
+publié en production contiendrait des `undefined`.
+
+### Règles de sécurité
+
+`firestore.rules` est versionné. Après modification :
+
+```bash
+npm run test:rules    # 8 tests contre l'émulateur — nécessite Java
+npm run rules:deploy  # publie les règles
+```
+
+Java est requis pour l'émulateur Firestore (`brew install temurin`).
+
+### Domaines autorisés
+
+Toute nouvelle origine servant l'application doit être déclarée dans *Firebase →
+Authentication → Paramètres → Domaines autorisés*, sinon la connexion Google y
+échoue. `localhost` et `covoiturage-college.netlify.app` y sont déjà. Les
+*deploy previews* Netlify, si elles sont activées un jour, sortent sur d'autres
+sous-domaines et ne sont pas couvertes.
 
 ## Règle de contribution
 
