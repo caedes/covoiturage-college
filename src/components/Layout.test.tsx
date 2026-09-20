@@ -4,42 +4,42 @@ import { describe, expect, it } from 'vitest'
 import { renderRoute } from '../test/renderRoute'
 
 describe('Layout', () => {
-  it('expose les landmarks banner, navigation, main et contentinfo', () => {
-    renderRoute('/')
+  it('expose les landmarks banner, navigation, main et contentinfo', async () => {
+    await renderRoute('/')
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('navigation')).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   })
 
-  it('donne un libellé accessible à la landmark de navigation', () => {
-    renderRoute('/')
+  it('donne un libellé accessible à la landmark de navigation', async () => {
+    await renderRoute('/')
     expect(screen.getByRole('navigation', { name: /navigation principale/i })).toBeInTheDocument()
   })
 
-  it("fait pointer le lien d'évitement vers l'identifiant du contenu principal", () => {
-    renderRoute('/')
+  it("fait pointer le lien d'évitement vers l'identifiant du contenu principal", async () => {
+    await renderRoute('/')
     expect(screen.getByRole('link', { name: /aller au contenu/i })).toHaveAttribute('href', '#main')
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main')
   })
 
   it("place le lien d'évitement en premier dans l'ordre de tabulation", async () => {
     const user = userEvent.setup()
-    renderRoute('/')
+    await renderRoute('/')
     await user.tab()
     expect(screen.getByRole('link', { name: /aller au contenu/i })).toHaveFocus()
   })
 
   it("donne le focus au contenu principal quand on active le lien d'évitement", async () => {
     const user = userEvent.setup()
-    renderRoute('/')
+    await renderRoute('/')
     await user.click(screen.getByRole('link', { name: /aller au contenu/i }))
     expect(screen.getByRole('main')).toHaveFocus()
   })
 
   it("permet d'atteindre le menu au clavier et de changer de route", async () => {
     const user = userEvent.setup()
-    renderRoute('/adresse-inexistante')
+    await renderRoute('/adresse-inexistante')
     await user.tab()
     await user.tab()
     expect(screen.getByRole('link', { name: 'Accueil' })).toHaveFocus()
@@ -51,8 +51,8 @@ describe('Layout', () => {
 })
 
 describe.each(['/', '/adresse-inexistante'])('hiérarchie des titres sur %s', (path) => {
-  it("ne contient qu'un seul titre de niveau 1 et ne saute aucun niveau", () => {
-    renderRoute(path)
+  it("ne contient qu'un seul titre de niveau 1 et ne saute aucun niveau", async () => {
+    await renderRoute(path)
     const levels = screen.getAllByRole('heading').map((heading) => Number(heading.tagName.slice(1)))
 
     expect(levels.filter((level) => level === 1)).toHaveLength(1)
