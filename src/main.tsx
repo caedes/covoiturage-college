@@ -2,7 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
+import { AuthProvider } from './auth/AuthProvider'
 import { env } from './env'
+import { firebaseAuthPort } from './firebase/firebaseAuth'
+import { firebaseMemberRepository } from './firebase/firebaseMembers'
 import { routes } from './routes/routes'
 
 const router = createBrowserRouter(routes, { basename: env.BASE_URL })
@@ -14,6 +17,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider auth={firebaseAuthPort} members={firebaseMemberRepository}>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 )
