@@ -1,14 +1,20 @@
 import type { RouteObject } from 'react-router'
+import { AuthGate } from '../auth/AuthGate'
 import { Layout } from '../components/Layout'
 import { Home } from './Home'
 import { NotFound } from './NotFound'
 
 export const routes: RouteObject[] = [
   {
-    element: <Layout />,
+    element: <AuthGate />,
     children: [
-      { path: '/', element: <Home /> },
-      { path: '*', element: <NotFound /> },
+      {
+        element: <Layout />,
+        children: [
+          { path: '/', element: <Home /> },
+          { path: '*', element: <NotFound /> },
+        ],
+      },
     ],
   },
 ]
