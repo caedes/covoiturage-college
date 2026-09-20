@@ -7,6 +7,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setupTests.ts'],
+    env: {
+      VITE_FIREBASE_API_KEY: 'cle-de-test',
+      VITE_FIREBASE_AUTH_DOMAIN: 'test.firebaseapp.com',
+      VITE_FIREBASE_PROJECT_ID: 'projet-de-test',
+      VITE_FIREBASE_APP_ID: '1:0:web:test',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

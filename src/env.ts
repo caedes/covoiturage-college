@@ -5,6 +5,10 @@ const envSchema = z.object({
   BASE_URL: z.string().min(1),
   DEV: z.boolean(),
   PROD: z.boolean(),
+  VITE_FIREBASE_API_KEY: z.string().min(1),
+  VITE_FIREBASE_AUTH_DOMAIN: z.string().min(1),
+  VITE_FIREBASE_PROJECT_ID: z.string().min(1),
+  VITE_FIREBASE_APP_ID: z.string().min(1),
 })
 
 export type Env = z.infer<typeof envSchema>
