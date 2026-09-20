@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isVerifiedUser() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+
+    match /members/{memberEmail} {
+      // Chacun ne lit que sa propre fiche, et seulement par identifiant.
+      allow get: if isVerifiedUser()
+                 && memberEmail == request.auth.token.email.lower();
+      // Explicites bien que redondants : dire non tout haut vaut mieux
+      // que compter sur le refus par defaut. `list` refuse interdit
+      // d'aspirer les adresses des voisins, meme a un membre autorise.
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // Les collections metier a venir naissent fermees. Ce bloc ne restreint
+    // pas la regle ci-dessus : les regles Firestore s'unissent, un `allow`
+    // specifique l'emporte.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

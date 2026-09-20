@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only firestore \"vitest run -c vitest.rules.config.ts\"",
+    "rules:deploy": "npx --yes firebase-tools@15 deploy --only firestore:rules",
     "lint": "biome check .",
     "format": "biome format --write .",
     "prepare": "husky"
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
