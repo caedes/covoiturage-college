@@ -25,6 +25,23 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      # Sans cette garde, une Variable GitHub absente ou mal orthographiee
+      # part en `undefined` dans le build : celui-ci reussit quand meme, le
+      # dist/ est publie, et c'est src/env.ts qui leve au chargement, en
+      # prod, page blanche, CI verte.
+      - name: Verifier les Variables GitHub Firebase
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+        run: |
+          for name in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID; do
+            if [ -z "${!name}" ]; then
+              echo "Variable GitHub manquante ou vide : $name" >&2
+              exit 1
+            fi
+          done
       # Vite fige les VITE_* dans le bundle au moment du build. Sans ces
       # variables ici, le dist/ publie par le job deploy partirait avec des
       # undefined et l'application ne demarrerait pas.

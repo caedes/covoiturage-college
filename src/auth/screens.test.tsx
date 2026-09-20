@@ -87,4 +87,11 @@ describe('ErrorScreen', () => {
     await user.click(screen.getByRole('button', { name: /réessayer/i }))
     expect(value.retry).toHaveBeenCalledTimes(1)
   })
+
+  it("permet de se déconnecter quand l'échec persiste", async () => {
+    const user = userEvent.setup()
+    const { value } = renderWithAuth(<ErrorScreen />)
+    await user.click(screen.getByRole('button', { name: /se déconnecter/i }))
+    expect(value.signOut).toHaveBeenCalledTimes(1)
+  })
 })
