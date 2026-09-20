@@ -89,6 +89,11 @@ npm run rules:deploy  # publie les règles
 
 Java est requis pour l'émulateur Firestore (`brew install temurin`).
 
+**Les règles doivent être déployées avant le premier merge sur `main`.** Le job
+`deploy` part automatiquement à chaque push sur `main` ; si les règles en
+production sont encore en `allow read, write: if false`, tout membre légitime
+tombe sur l'écran « Problème technique » en boucle, jusqu'à leur publication.
+
 ### Domaines autorisés
 
 Toute nouvelle origine servant l'application doit être déclarée dans *Firebase →

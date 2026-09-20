@@ -263,8 +263,11 @@ service cloud.firestore {
       // Chacun ne lit que sa propre fiche, et seulement par identifiant.
       allow get: if isVerifiedUser()
                  && memberEmail == request.auth.token.email.lower();
-      // Explicites bien que redondants : dire non tout haut vaut mieux
-      // que compter sur le refus par defaut.
+      // Redondant avec le refus par defaut, et sans effet si un `allow read`
+      // etait ajoute plus haut : les regles Firestore s'unissent, ce `false`
+      // n'annulerait rien. Ce qui protege reellement l'invariant, c'est
+      // qu'aucun `read` ni `list` n'est jamais accorde ici - et c'est le
+      // test d'enumeration qui le verrouille.
       allow list: if false;
       allow write: if false;
     }
@@ -276,9 +279,12 @@ service cloud.firestore {
 }
 ```
 
-`allow list: if false` porte la garantie de confidentialité : un membre lit sa
-fiche, personne n'énumère la collection. Les huit adresses ne sont extractibles
-par aucun client, même autorisé.
+La garantie de confidentialité ne vient pas du `allow list: if false` — un
+`allow` refusé n'annule jamais un `allow` accordé ailleurs — mais du fait
+qu'aucun `read` ni `list` n'est accordé nulle part sur `members` : le seul droit
+ouvert est le `get` ci-dessus, borné à sa propre fiche. Les huit adresses ne sont
+extractibles par aucun client, même autorisé, et le test d'énumération verrouille
+cet invariant.
 
 Le `match /{document=**}` final **ne restreint pas** la règle du dessus : les
 règles Firestore s'unissent, un `allow` spécifique l'emporte. Ce bloc couvre les

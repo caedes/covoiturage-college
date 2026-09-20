@@ -1,7 +1,7 @@
 import { useAuth } from './useAuth'
 
 export function ErrorScreen() {
-  const { retry } = useAuth()
+  const { retry, signOut } = useAuth()
 
   return (
     <main id="main" tabIndex={-1}>
@@ -12,6 +12,9 @@ export function ErrorScreen() {
       </p>
       <button type="button" onClick={retry}>
         Réessayer
+      </button>
+      <button type="button" onClick={() => void signOut()}>
+        Se déconnecter
       </button>
     </main>
   )

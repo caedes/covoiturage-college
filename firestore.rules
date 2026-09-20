@@ -13,9 +13,11 @@ service cloud.firestore {
       // Chacun ne lit que sa propre fiche, et seulement par identifiant.
       allow get: if isVerifiedUser()
                  && memberEmail == request.auth.token.email.lower();
-      // Explicites bien que redondants : dire non tout haut vaut mieux
-      // que compter sur le refus par defaut. `list` refuse interdit
-      // d'aspirer les adresses des voisins, meme a un membre autorise.
+      // Redondant avec le refus par defaut, et sans effet si un `allow read`
+      // etait ajoute plus haut : les regles Firestore s'unissent, ce `false`
+      // n'annulerait rien. Ce qui protege reellement l'invariant, c'est
+      // qu'aucun `read` ni `list` n'est jamais accorde ici - et c'est le
+      // test d'enumeration qui le verrouille.
       allow list: if false;
       allow write: if false;
     }
