@@ -135,8 +135,7 @@ describe('AuthProvider', () => {
       result.current.retry()
     })
 
-    // On observe la resouscription, pas l'état : le provider était déjà en
-    // erreur, donc réassertion sur `error` passerait sans que `retry` marche.
+    // The provider was already in error, so asserting on status would pass even if retry did not.
     await waitFor(() => expect(current.subscribeCalls()).toBe(2))
   })
 })

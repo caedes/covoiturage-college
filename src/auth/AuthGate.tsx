@@ -6,8 +6,8 @@ import { SignInScreen } from './SignInScreen'
 import { useAuth } from './useAuth'
 
 /**
- * La porte unique. Le `default` n'est pas défensif : il force TypeScript à
- * refuser la compilation si un état est ajouté sans écran correspondant.
+ * The single gate. The `default` is not defensive: it makes TypeScript refuse to compile if a
+ * state is added without a matching screen.
  */
 export function AuthGate() {
   const { state } = useAuth()

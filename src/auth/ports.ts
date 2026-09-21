@@ -9,8 +9,9 @@ export type Member = {
 }
 
 /**
- * Issue d'une tentative de connexion, exprimée dans le vocabulaire du domaine.
- * `started` signifie que Google a accepté : l'identité arrivera par `subscribe`.
+ * Outcome of a sign-in attempt, expressed in the vocabulary of the domain.
+ *
+ * `started` means Google accepted: the identity will arrive through `subscribe`.
  */
 export type SignInOutcome = 'started' | 'cancelled' | 'popupBlocked' | 'unavailable'
 

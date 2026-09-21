@@ -1,6 +1,6 @@
 /**
- * Seule définition de « e-mail en minuscules » du projet. L'identifiant d'un
- * document `members` est produit par cette fonction, et par elle seule.
+ * The project's only definition of "lowercased e-mail". The id of a `members` document is
+ * produced by this function, and by it alone.
  */
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()

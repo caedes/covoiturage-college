@@ -68,7 +68,7 @@ function scenario(options: ScenarioOptions): AuthScenario {
   }
 }
 
-/** Le port n'émet jamais : l'état reste `loading`. */
+/** The port never emits: the state stays `loading`. */
 export function loading(): AuthScenario {
   return scenario({ neverEmits: true })
 }
@@ -104,7 +104,7 @@ export type ControllableScenario = AuthScenario & {
   emit(identity: Identity | null): void
 }
 
-/** Scénario piloté depuis le test : utile pour observer une transition. */
+/** Scenario driven from the test: useful to observe a transition. */
 export function controllable(
   options: { member?: Member | null; signInOutcome?: SignInOutcome } = {},
 ): ControllableScenario {

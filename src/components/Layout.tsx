@@ -4,6 +4,12 @@ import { useAuth } from '../auth/useAuth'
 
 const MAIN_ID = 'main'
 
+/**
+ * Application shell: skip link, main navigation, then the signed-in member.
+ *
+ * The identity block sits after the navigation on purpose. The tab order asserted by the tests
+ * runs from the skip link to the menu, and only then reaches the sign-out button.
+ */
 export function Layout() {
   const { state, signOut } = useAuth()
   const firstName = state.status === 'member' ? state.member.firstName : null
@@ -26,10 +32,6 @@ export function Layout() {
             </li>
           </ul>
         </nav>
-        {/*
-          Après la nav, délibérément : l'ordre de tabulation vérifié par les
-          tests mène du lien d'évitement au menu, puis seulement ici.
-        */}
         {firstName === null ? null : (
           <div>
             <span>Connecté en tant que {firstName}</span>

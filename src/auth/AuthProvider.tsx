@@ -3,7 +3,7 @@ import { AuthContext, type AuthContextValue } from './AuthContext'
 import { initialAuthState, reduce } from './authState'
 import type { AuthPort, MemberRepository } from './ports'
 
-/** Dix secondes : au-delà, on affiche une erreur plutôt qu'un écran figé. */
+/** Ten seconds: past that, an error is shown rather than a frozen screen. */
 export const LOADING_TIMEOUT_MS = 10_000
 
 type AuthProviderProps = {
