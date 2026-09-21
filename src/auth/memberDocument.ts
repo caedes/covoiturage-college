@@ -7,9 +7,9 @@ const memberDocumentSchema = z.object({
 })
 
 /**
- * L'existence du document *est* l'autorisation : un document mal formé ne doit
- * jamais exclure un membre légitime. La lecture est donc tolérante et retombe
- * sur des valeurs par défaut plutôt que d'échouer.
+ * The existence of the document *is* the authorization: a malformed document must never shut out
+ * a legitimate member. Reading is therefore tolerant and falls back to defaults rather than
+ * failing.
  */
 export function toMember(email: string, data: unknown): Member {
   const result = memberDocumentSchema.safeParse(data)

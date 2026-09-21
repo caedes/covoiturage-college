@@ -3,10 +3,9 @@ import type { Identity, Member } from './ports'
 export type SignInFailure = 'popupBlocked' | 'unavailable'
 
 /**
- * Cinq états, et rien d'autre. `error` couvre aussi bien l'échec de lecture
- * Firestore que l'expiration du chien de garde : sans lui, une panne réseau
- * retomberait sur `denied` et annoncerait à un membre légitime qu'il n'a pas
- * accès.
+ * Five states, and nothing else. `error` covers both a failed Firestore read and the watchdog
+ * expiring: without it, a network outage would fall back to `denied` and tell a legitimate member
+ * they have no access.
  */
 export type AuthState =
   | { status: 'loading' }

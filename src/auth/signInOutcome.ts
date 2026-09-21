@@ -3,9 +3,10 @@ import type { SignInOutcome } from './ports'
 const CANCELLED_CODES = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request']
 
 /**
- * Frontière entre les codes d'erreur Firebase et le vocabulaire du domaine.
- * Fermer la fenêtre Google est un geste délibéré, pas un incident : les deux
- * codes d'annulation ne produisent aucun message affiché.
+ * Boundary between Firebase error codes and the vocabulary of the domain.
+ *
+ * Closing the Google popup is a deliberate gesture, not an incident: neither cancellation code
+ * produces a message on screen.
  */
 export function toSignInOutcome(code: string): SignInOutcome {
   if (CANCELLED_CODES.includes(code)) {

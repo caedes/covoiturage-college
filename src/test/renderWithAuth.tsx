@@ -5,9 +5,8 @@ import { AuthContext, type AuthContextValue } from '../auth/AuthContext'
 import { initialAuthState } from '../auth/authState'
 
 /**
- * Monte un écran avec un contexte d'authentification contrôlé. Les actions sont
- * des espions : les écrans sont testés sur ce qu'ils déclenchent, pas sur ce que
- * le provider en fait.
+ * Mounts a screen with a controlled auth context. The actions are spies: screens are tested on
+ * what they trigger, not on what the provider makes of it.
  */
 export function renderWithAuth(ui: ReactNode, overrides: Partial<AuthContextValue> = {}) {
   const value: AuthContextValue = {

@@ -9,7 +9,7 @@ export type AuthContextValue = {
 }
 
 /**
- * `AuthState` reste une donnée pure : les actions vivent ici, pas dans l'état,
- * ce qui laisse `reduce` testable sans React.
+ * `AuthState` stays pure data: the actions live here rather than in the state, which keeps
+ * `reduce` testable without React.
  */
 export const AuthContext = createContext<AuthContextValue | null>(null)
