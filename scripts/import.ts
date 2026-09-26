@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import { cert, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
+import { parisToday } from '../src/planning/dates'
 import { type ExistingState, planImport } from './import/plan'
 import { describeTarget, resolveTarget } from './import/target'
-import { parisToday } from './import/today'
 
 function fail(message: string): never {
   console.error(message)
