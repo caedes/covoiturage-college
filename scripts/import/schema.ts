@@ -40,9 +40,13 @@ const child = z.strictObject({
   horaires: z.strictObject({ semaine_A: week, semaine_B: week }),
 })
 
+/**
+ * A family may list no parent yet: during a trial, a child appears in the planning while nobody
+ * answers for them in the app.
+ */
 const family = z.strictObject({
   enfants: z.array(childId).min(1),
-  parents: z.array(z.strictObject({ email, prenom: firstName })).min(1),
+  parents: z.array(z.strictObject({ email, prenom: firstName })),
 })
 
 const eveningBus = z

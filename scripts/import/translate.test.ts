@@ -60,6 +60,12 @@ describe('toMemberDocs', () => {
     })
   })
 
+  it('ne crée aucune fiche pour une famille sans parent inscrit', () => {
+    const file = validImportFile()
+    file.familles[0].parents = []
+    expect(Object.keys(toMemberDocs(parsed(file)))).not.toContain('camille@exemple.fr')
+  })
+
   it("réunit les enfants d'un parent présent dans deux familles, triés et sans doublon", () => {
     const file = validImportFile()
     file.familles[0].parents.push({ email: 'paul@exemple.fr', prenom: 'Paul' })

@@ -92,6 +92,12 @@ describe('parseImportFile', () => {
     expect(errorsOf(file)[0]).toMatch(/^enfants\.basile\.couleur : /)
   })
 
+  it('accepte une famille sans parent inscrit, en période de test', () => {
+    const file = validImportFile()
+    file.familles[0].parents = []
+    expect(errorsOf(file)).toEqual([])
+  })
+
   it('refuse une famille qui cite un enfant inconnu', () => {
     const file = validImportFile()
     file.familles[0].enfants = ['alice', 'zoe']
