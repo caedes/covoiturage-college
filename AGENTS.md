@@ -42,7 +42,13 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   l'identité passe par un port, jamais par le SDK Firebase directement.
 - **Autorisation** — l'accès est réservé aux membres inscrits : la fiche
   `members/{email}` fait foi. `firestore.rules` n'accorde que le `get` de sa propre
-  fiche — ni `list`, ni `write`, et les collections à venir naissent fermées.
+  fiche et la lecture de `timetables` aux membres, sans aucune écriture cliente. Les
+  autres collections naissent fermées.
+- **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
+  Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
+  `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.
+  Les données réelles (`data/*.json`) sont ignorées par Git : aucun exemple du dépôt ne
+  doit contenir de vrai prénom, de vraie adresse ni de vrai horaire.
 - **Environnement** — les variables sont validées par Zod dans `src/env.ts` ; toute
   nouvelle variable passe par ce schéma plutôt que par un accès direct à `import.meta.env`.
 - **Tests** — Vitest et Testing Library sur jsdom. `src/test/renderRoute.tsx` monte la

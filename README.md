@@ -18,6 +18,7 @@ et harnais de test. Aucune fonctionnalité métier n'est implémentée.
 | `npm run format` | Applique le formatage |
 | `npm run test:rules` | Tests des règles Firestore contre l'émulateur (Java requis) |
 | `npm run rules:deploy` | Déploie `firestore.rules` sur le projet Firebase |
+| `npm run import -- <fichier>` | Simule l'import des familles et des emplois du temps (`--apply` pour écrire) |
 
 ## Déploiement
 
@@ -46,21 +47,46 @@ Firestore.
 
 ### Ajouter ou retirer une personne
 
-Dans la console Firebase, collection `members` :
+Les fiches `members` et les emplois du temps s'écrivent **uniquement** par le script
+d'import. Aucune écriture n'est possible depuis l'application : les règles l'interdisent.
 
-| Élément | Valeur |
-| --- | --- |
-| Identifiant du document | l'adresse Google, **en minuscules** |
-| `firstName` | le prénom affiché dans l'application |
-| `role` | `parent` ou `child` |
+1. Partir de `data/import.example.json` (fictif) et rédiger `data/import.json`. Ce fichier
+   contient des emplois du temps réels et des adresses : il est ignoré par Git et ne doit
+   jamais quitter la machine.
+2. Simuler : `npm run import -- data/import.json`. Rien n'est écrit ; le script affiche la
+   version d'emploi du temps et les fiches créées (`+`), modifiées (`~`) ou absentes du
+   fichier (`!`).
+3. Appliquer : `npm run import -- data/import.json --apply`.
 
-Retirer un accès, c'est supprimer le document. Aucune écriture n'est possible
-depuis l'application : les règles l'interdisent.
+Retirer un accès, c'est retirer la personne du fichier puis relancer avec
+`--apply --prune`. Sans `--prune`, une fiche absente du fichier est seulement signalée.
 
-**L'identifiant doit être en minuscules.** L'application cherche le document par
-identifiant exact : une fiche saisie `Sophie.Martin@gmail.com` ne sera jamais
-trouvée. En cas de doute, l'écran « Accès refusé » affiche l'adresse exacte que
-l'application a cherchée — il suffit de la comparer à l'identifiant du document.
+Le script passe les adresses en minuscules. En cas de doute, l'écran « Accès refusé »
+affiche l'adresse exacte que l'application a cherchée.
+
+**Changer d'emploi du temps** — nouveau trimestre, erreur découverte : importer une
+nouvelle version avec un `valableDu` postérieur à aujourd'hui. Une version déjà en vigueur
+n'est jamais réécrite, pour ne pas modifier les journées passées.
+
+**Essayer sans risque** contre un Firestore local jetable :
+
+```bash
+npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only firestore \
+  "npm run import -- data/import.json --apply"
+```
+
+### Compte de service
+
+Le script écrit avec le SDK Admin, qui ignore les règles : sa clé donne un accès complet
+à la base.
+
+1. *Console Firebase → Paramètres du projet → Comptes de service → Générer une nouvelle
+   clé privée.*
+2. Ranger le fichier **hors du dépôt**, par exemple
+   `~/.config/covoiturage-college/service-account.json`, puis `chmod 600` dessus.
+3. Avant l'import : `export GOOGLE_APPLICATION_CREDENTIALS=~/.config/covoiturage-college/service-account.json`.
+
+Jamais dans le dépôt, jamais dans `.env*`, jamais en CI.
 
 ### Variables d'environnement
 
