@@ -83,13 +83,13 @@ describe('buildWeek', () => {
     expect(wednesday?.covered).toBe(true)
   })
 
-  it('sort du récapitulatif les trajets sans passager', () => {
+  it('sort du récapitulatif les trajets sans passager, et tient pour couvert un jour sans rien à organiser', () => {
     const everyoneAway = ['alice', 'basile', 'chloe'].map((childId) =>
       childDay({ date: '2026-09-30', childId, presence: 'absent' }),
     )
     const week = buildWeek(input({ childDays: everyoneAway }))
     expect(week.days[2]?.aller[0]?.status).toEqual({ kind: 'void', driverName: null, mine: false })
-    expect(week.days[2]?.covered).toBe(false)
+    expect(week.days[2]?.covered).toBe(true)
     expect(week.recap.total).toBe(13)
   })
 
