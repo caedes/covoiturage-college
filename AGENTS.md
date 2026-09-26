@@ -55,6 +55,11 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   `AAAA-MM-JJ` et `HH:MM` ; `parisToday` (`src/planning/dates.ts`) est la seule lecture de
   l'horloge du projet, partagée avec le script d'import. Le calendrier des vacances
   (`holidays.ts`) se met à jour chaque année avec l'import.
+  `PlanningPage` (`src/components/pages/`) est le seul composant qui lit le port
+  `PlanningRepository` (`src/planning/ports.ts`) et appelle `buildWeek` ; le port et
+  l'horloge sont injectés par `PlanningProvider`, comme les ports d'authentification.
+  Les tests passent par `renderRoute(path, { planning, now })` et les faux de
+  `src/test/fakePlanning.ts`.
 - **Environnement** — les variables sont validées par Zod dans `src/env.ts` ; toute
   nouvelle variable passe par ce schéma plutôt que par un accès direct à `import.meta.env`.
 - **Tests** — Vitest et Testing Library sur jsdom. `src/test/renderRoute.tsx` monte la
@@ -64,7 +69,9 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
 - **Qualité** — Biome pour le lint et le format, appliqué aux fichiers stagés par le
   hook `pre-commit` (Husky). La suite de tests n'est pas lancée au commit.
 - **Déploiement** — Netlify, via le job `deploy` du workflow CI sur merge vers `main`.
-  Les règles Firestore se déploient à part, avec `npm run rules:deploy`.
+  Les règles Firestore se déploient à part, avec `npm run rules:deploy`. Un lot qui ouvre
+  une lecture ou une écriture Firestore exige `npm run rules:deploy` **avant** la fusion :
+  Netlify déploie l'application dès le merge.
 - **Conception** — les specs vivent dans `docs/superpowers/specs/`, les plans
   d'implémentation dans `docs/superpowers/plans/`.
 

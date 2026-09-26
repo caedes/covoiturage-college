@@ -46,7 +46,7 @@ describe('Layout', () => {
     expect(screen.getByRole('link', { name: 'Accueil' })).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(
-      await screen.findByRole('heading', { level: 1, name: /covoiturage collège/i }),
+      await screen.findByRole('heading', { level: 1, name: /trajets collège/i }),
     ).toBeInTheDocument()
   })
 

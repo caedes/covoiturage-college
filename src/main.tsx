@@ -9,12 +9,16 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import { AuthProvider } from './auth/AuthProvider'
+import { PlanningProvider } from './components/pages/PlanningProvider'
 import { env } from './env'
 import { firebaseAuthPort } from './firebase/firebaseAuth'
 import { firebaseMemberRepository } from './firebase/firebaseMembers'
+import { firebasePlanningRepository } from './firebase/firebasePlanning'
 import { routes } from './routes/routes'
 
 const router = createBrowserRouter(routes, { basename: env.BASE_URL })
+
+const clock = () => new Date()
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
@@ -24,7 +28,9 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <AuthProvider auth={firebaseAuthPort} members={firebaseMemberRepository}>
-      <RouterProvider router={router} />
+      <PlanningProvider repository={firebasePlanningRepository} now={clock}>
+        <RouterProvider router={router} />
+      </PlanningProvider>
     </AuthProvider>
   </StrictMode>,
 )
