@@ -43,6 +43,12 @@ export function dayNumber(date: IsoDate): number {
   return Number(date.slice(8, 10))
 }
 
+/** Accessible name of a day button: "mercredi 30", plus the coverage the green dot only shows. */
+export function dayButtonLabel(weekday: Weekday, date: IsoDate, covered: boolean): string {
+  const label = `${dayLongLabel(weekday)} ${dayNumber(date)}`
+  return covered ? `${label}, tous les trajets sont couverts` : label
+}
+
 export function presenceLabel(firstName: string, gender: Gender, presence: Presence): string {
   if (presence === 'absent') {
     return `${firstName} · ${gender === 'female' ? 'absente' : 'absent'}`

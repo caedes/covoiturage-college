@@ -28,7 +28,7 @@ describe('DayPill', () => {
   })
 
   it('dit en toutes lettres que le jour est couvert', () => {
-    renderPill({ covered: true })
+    renderPill({ covered: true, label: 'mercredi 30, tous les trajets sont couverts' })
     expect(
       screen.getByRole('button', { name: 'mercredi 30, tous les trajets sont couverts' }),
     ).toBeInTheDocument()

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  dayButtonLabel,
   dayLongLabel,
   dayNumber,
   dayShortLabel,
@@ -30,6 +31,18 @@ describe('jours', () => {
 
   it('rend le numéro du jour sans zéro initial', () => {
     expect(dayNumber('2026-10-05')).toBe(5)
+  })
+})
+
+describe('dayButtonLabel', () => {
+  it('nomme le jour sans mention de couverture quand tout ne l’est pas', () => {
+    expect(dayButtonLabel('wed', '2026-09-30', false)).toBe('mercredi 30')
+  })
+
+  it('ajoute la couverture en toutes lettres quand le jour est couvert', () => {
+    expect(dayButtonLabel('mon', '2026-10-05', true)).toBe(
+      'lundi 5, tous les trajets sont couverts',
+    )
   })
 })
 
