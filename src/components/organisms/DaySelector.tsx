@@ -10,7 +10,8 @@ type DaySelectorProps = {
 
 export function DaySelector({ days, selected, onSelect }: DaySelectorProps) {
   return (
-    <fieldset aria-label="Jours de la semaine" className="grid grid-cols-5 gap-2 border-0 p-0 m-0">
+    <fieldset className="grid min-w-0 grid-cols-5 gap-2 border-0 m-0 p-0">
+      <legend className="sr-only">Jours de la semaine</legend>
       {days.map((day) => (
         <DayPill
           key={day.date}
