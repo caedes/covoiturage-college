@@ -66,6 +66,10 @@ function orderedChildren(timetable: Timetable): ChildId[] {
     .map(([id]) => id)
 }
 
+/**
+ * Plans one school day. A day counts as covered once every trip with riders has a driver — so a
+ * day where nobody needs a ride, everyone being absent, has nothing left to organise and is covered.
+ */
 function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Carpool>): DayPlan {
   const weekday = weekdayOf(date) ?? 'mon'
   const empty: DayPlan = {
@@ -120,7 +124,7 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
 
   return {
     ...empty,
-    covered: countable.length > 0 && countable.every(isCovered),
+    covered: planned.length > 0 && countable.every(isCovered),
     aller: planned.filter((trip) => trip.direction === 'aller'),
     retour: planned.filter((trip) => trip.direction === 'retour'),
   }
