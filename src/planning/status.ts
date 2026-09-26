@@ -6,7 +6,11 @@ export function resolveStatus(
   viewerUid: string,
 ): TripStatus {
   if (trip.riders.length === 0) {
-    return { kind: 'void', driverName: carpool?.driverName ?? null }
+    return {
+      kind: 'void',
+      driverName: carpool?.driverName ?? null,
+      mine: carpool !== undefined && carpool.driverUid === viewerUid,
+    }
   }
   if (carpool === undefined) {
     return { kind: 'open' }

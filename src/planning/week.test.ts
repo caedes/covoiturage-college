@@ -88,7 +88,7 @@ describe('buildWeek', () => {
       childDay({ date: '2026-09-30', childId, presence: 'absent' }),
     )
     const week = buildWeek(input({ childDays: everyoneAway }))
-    expect(week.days[2]?.aller[0]?.status).toEqual({ kind: 'void', driverName: null })
+    expect(week.days[2]?.aller[0]?.status).toEqual({ kind: 'void', driverName: null, mine: false })
     expect(week.days[2]?.covered).toBe(false)
     expect(week.recap.total).toBe(13)
   })
@@ -108,17 +108,55 @@ describe('buildWeek', () => {
     expect(orphan).toMatchObject({
       label: 'Collège → Maison',
       riders: [],
-      status: { kind: 'void', driverName: 'Paul' },
+      status: { kind: 'void', driverName: 'Paul', mine: false },
     })
     expect(week.recap.total).toBe(14)
   })
 
-  it('joint les offres de permanence du jour', () => {
+  it('laisse le conducteur reconnaître son covoiturage orphelin', () => {
+    const week = buildWeek(
+      input({
+        carpools: [
+          carpool({
+            date: '2026-10-01',
+            direction: 'retour',
+            place: 'college',
+            time: '14:55',
+            driverUid: VIEWER,
+          }),
+        ],
+        childDays: [childDay({ date: '2026-10-01', childId: 'alice', permanence: '16:00' })],
+      }),
+    )
+    const orphan = week.days[3]?.retour.find(
+      (trip) => trip.key === '2026-10-01_retour_college_1455',
+    )
+    expect(orphan?.status).toMatchObject({ kind: 'void', mine: true })
+  })
+
+  it('attache chaque offre de permanence au trajet qu’elle vise', () => {
     const monday = buildWeek(input()).days[0]
-    expect(monday?.offers.map((offer) => [offer.childId, offer.exitTime])).toEqual([
+    const bus = monday?.retour.find((trip) => trip.key === '2026-09-28_retour_centre-bourg_1745')
+    expect(bus?.offers.map((offer) => [offer.childId, offer.exitTime])).toEqual([
       ['alice', '17:00'],
       ['chloe', '17:00'],
     ])
+    expect(monday?.aller[0]?.offers).toEqual([])
+  })
+
+  it('crée, sans passager, le trajet visé par une offre quand personne ne le prend encore', () => {
+    const table = timetable({ eveningBuses: [{ classEnd: '16:30', arrival: '17:15' }] })
+    const week = buildWeek(input({ timetables: [table] }))
+    const target = week.days[0]?.retour.find(
+      (trip) => trip.key === '2026-09-28_retour_centre-bourg_1715',
+    )
+    expect(target).toMatchObject({
+      label: 'Centre-bourg → Maison',
+      riders: [],
+      status: { kind: 'void', driverName: null, mine: false },
+    })
+    expect(target?.offers.map((offer) => offer.childId)).toEqual(['alice', 'chloe'])
+    expect(week.recap.total).toBe(15)
   })
 
   it('vide les jours de vacances et les sort du récapitulatif', () => {

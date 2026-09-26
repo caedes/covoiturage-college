@@ -1,6 +1,6 @@
 import { schoolDays, weekdayOf, weekType } from './dates'
 import { isHoliday } from './holidays'
-import { applyChildDay, defaultLegs, timetableFor } from './legs'
+import { applyChildDay, defaultLegs, retourPlacement, timetableFor } from './legs'
 import { resolveStatus } from './status'
 import { carpoolKey, describeTrip, groupTrips, permanenceOffers } from './trips'
 import type {
@@ -8,9 +8,12 @@ import type {
   ChildDay,
   ChildId,
   DayPlan,
+  Direction,
   HolidayCalendar,
   IsoDate,
+  Place,
   PlannedTrip,
+  Time,
   Timetable,
   Trip,
   WeekPlan,
@@ -31,15 +34,24 @@ function isCovered(trip: PlannedTrip): boolean {
   return trip.status.kind === 'mine' || trip.status.kind === 'covered'
 }
 
-/** A carpool whose children all left keeps a void trip until its driver cancels it. */
-function orphanTrip(key: string, carpool: Carpool): Trip {
+/**
+ * A trip nobody rides: a carpool whose children all left, kept until its driver cancels it, or
+ * the target of a permanence offer that no child has taken up yet.
+ */
+function emptyTrip(
+  key: string,
+  date: IsoDate,
+  direction: Direction,
+  place: Place,
+  time: Time,
+): Trip {
   return {
     key,
-    date: carpool.date,
-    direction: carpool.direction,
-    place: carpool.place,
-    time: carpool.time,
-    ...describeTrip(carpool.direction, carpool.place),
+    date,
+    direction,
+    place,
+    time,
+    ...describeTrip(direction, place),
     riders: [],
     excluded: [],
   }
@@ -65,7 +77,6 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
     covered: false,
     aller: [],
     retour: [],
-    offers: [],
   }
   const timetable = timetableFor(date, input.timetables)
   if (empty.holiday || timetable === null) {
@@ -83,7 +94,16 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
   const known = new Set(trips.map((trip) => trip.key))
   for (const [key, carpool] of carpools) {
     if (carpool.date === date && !known.has(key)) {
-      trips.push(orphanTrip(key, carpool))
+      trips.push(emptyTrip(key, date, carpool.direction, carpool.place, carpool.time))
+      known.add(key)
+    }
+  }
+  const offers = permanenceOffers(timetable, date, childIds, days)
+  for (const offer of offers) {
+    if (!known.has(offer.tripKey)) {
+      const { place, time } = retourPlacement(timetable, date, offer.exitTime)
+      trips.push(emptyTrip(offer.tripKey, date, 'retour', place, time))
+      known.add(offer.tripKey)
     }
   }
 
@@ -91,6 +111,7 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
     .map((trip) => ({
       ...trip,
       status: resolveStatus(trip, carpools.get(trip.key), input.viewerUid),
+      offers: offers.filter((offer) => offer.tripKey === trip.key),
     }))
     .sort(
       (left, right) => left.time.localeCompare(right.time) || left.place.localeCompare(right.place),
@@ -102,7 +123,6 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
     covered: countable.length > 0 && countable.every(isCovered),
     aller: planned.filter((trip) => trip.direction === 'aller'),
     retour: planned.filter((trip) => trip.direction === 'retour'),
-    offers: permanenceOffers(timetable, date, childIds, days),
   }
 }
 
