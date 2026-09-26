@@ -5,7 +5,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 const MEMBER = 'sophie.martin@exemple.fr'
@@ -118,6 +118,41 @@ describe('règles de la collection timetables', () => {
   it('refuse toute écriture depuis le client, même à un membre', async () => {
     await assertFails(
       setDoc(doc(asSignedIn(MEMBER), 'timetables', '2026-09-01'), { validFrom: '2026-09-01' }),
+    )
+  })
+})
+
+describe.each(['carpools', 'childDays'])('règles de la collection %s', (name) => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), name, '2026-09-28_quelconque'), { date: '2026-09-28' })
+    })
+  })
+
+  it('autorise un membre à lire un document', async () => {
+    await assertSucceeds(getDoc(doc(asSignedIn(MEMBER), name, '2026-09-28_quelconque')))
+  })
+
+  it('autorise un membre à lister une fenêtre de dates', async () => {
+    const database = asSignedIn(MEMBER)
+    await assertSucceeds(
+      getDocs(
+        query(
+          collection(database, name),
+          where('date', '>=', '2026-09-28'),
+          where('date', '<=', '2026-10-09'),
+        ),
+      ),
+    )
+  })
+
+  it('refuse la lecture à un compte hors liste', async () => {
+    await assertFails(getDoc(doc(asSignedIn(OUTSIDER), name, '2026-09-28_quelconque')))
+  })
+
+  it("refuse toute écriture tant qu'aucun lot ne l'ouvre", async () => {
+    await assertFails(
+      setDoc(doc(asSignedIn(MEMBER), name, '2026-09-28_quelconque'), { date: '2026-09-28' }),
     )
   })
 })

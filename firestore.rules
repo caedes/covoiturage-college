@@ -35,6 +35,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Covoiturages et options des enfants : lus par les membres. Les ecritures
+    // arrivent aux lots suivants ; d'ici la, le refus par defaut s'applique.
+    match /carpools/{carpoolId} {
+      allow read: if isMember();
+    }
+
+    match /childDays/{childDayId} {
+      allow read: if isMember();
+    }
+
     // Les collections metier a venir naissent fermees. Ce bloc ne restreint
     // pas la regle ci-dessus : les regles Firestore s'unissent, un `allow`
     // specifique l'emporte.
