@@ -5,10 +5,16 @@ export function WeekTabs({ range }: { range: string }) {
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <TabsList className="rounded-full">
-        <TabsTrigger value="current" className="rounded-full font-heading">
+        <TabsTrigger
+          value="current"
+          className="rounded-full font-heading data-[state=inactive]:text-secondary-foreground"
+        >
           Cette semaine
         </TabsTrigger>
-        <TabsTrigger value="next" className="rounded-full font-heading">
+        <TabsTrigger
+          value="next"
+          className="rounded-full font-heading data-[state=inactive]:text-secondary-foreground"
+        >
           Semaine prochaine
         </TabsTrigger>
       </TabsList>

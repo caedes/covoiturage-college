@@ -1,8 +1,9 @@
 # Covoiturage collège
 
 Application d'entraide entre parents pour organiser les trajets domicile ↔ collège.
-Ce dépôt ne contient pour l'instant que le socle technique : routage, layout accessible
-et harnais de test. Aucune fonctionnalité métier n'est implémentée.
+Ce dépôt contient le socle technique (routage, layout accessible et harnais de test)
+et le planning de la semaine en lecture seule. La prise de trajets et les options des
+enfants arrivent aux lots suivants.
 
 ## Commandes
 

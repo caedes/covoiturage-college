@@ -55,6 +55,7 @@ describe('feuille de style globale', () => {
     ['--muted-foreground', '--card'],
     ['--muted-foreground', '--background'],
     ['--secondary-foreground', '--background'],
+    ['--secondary-foreground', '--muted'],
     ['--primary', '--background'],
     ['--primary-foreground', '--primary'],
     ['--warning-foreground', '--warning'],

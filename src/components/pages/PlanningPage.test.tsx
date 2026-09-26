@@ -1,8 +1,13 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { defaultUid } from '../../test/fakeAuth'
-import { failingPlanning, pendingPlanning, planning } from '../../test/fakePlanning'
+import {
+  failingPlanning,
+  pendingPlanning,
+  planning,
+  recoveringPlanning,
+} from '../../test/fakePlanning'
 import { carpool, childDay } from '../../test/planningFixtures'
 import { renderRoute } from '../../test/renderRoute'
 
@@ -137,6 +142,49 @@ describe('PlanningPage', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/impossible de charger le planning/i)
     await user.click(screen.getByRole('button', { name: 'Réessayer' }))
     expect(refused.subscribeCalls()).toBe(2)
+  })
+
+  it('rétablit le planning après un « Réessayer » réussi', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: recoveringPlanning() })
+    expect(screen.getByRole('alert')).toHaveTextContent(/impossible de charger le planning/i)
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('heading', { level: 2, name: 'Aller' })).toBeInTheDocument()
+  })
+
+  it('se désabonne du planning au démontage', async () => {
+    const scenario = planning()
+    const result = await renderRoute('/', { planning: scenario })
+    result.unmount()
+    expect(scenario.unsubscribeCalls()).toBeGreaterThanOrEqual(1)
+  })
+
+  it("suit l'horloge et rebascule sur aujourd'hui quand l'onglet redevient visible", async () => {
+    let current = new Date('2026-10-02T16:00:00Z')
+    await renderRoute('/', { now: () => current })
+    expect(screen.getByRole('button', { name: /^vendredi 2/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    current = new Date('2026-10-05T06:00:00Z')
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(screen.getByText('5 – 9 octobre')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^lundi 5/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('ne change rien quand le jour est inchangé', async () => {
+    const current = new Date('2026-10-02T16:00:00Z')
+    await renderRoute('/', { now: () => current })
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(screen.getByRole('button', { name: /^vendredi 2/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 
   it('permet de choisir un jour au clavier', async () => {

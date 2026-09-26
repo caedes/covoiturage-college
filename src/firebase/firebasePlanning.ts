@@ -22,7 +22,11 @@ function readAll<T>(documents: QueryDocumentSnapshot[], read: (data: unknown) =>
 export const firebasePlanningRepository: PlanningRepository = {
   subscribe(range, listener, onError) {
     const current: Partial<PlanningSnapshot> = {}
+    let failed = false
     const emit = () => {
+      if (failed) {
+        return
+      }
       const { timetables, carpools, childDays } = current
       if (timetables !== undefined && carpools !== undefined && childDays !== undefined) {
         listener({ timetables, carpools, childDays })
@@ -34,6 +38,14 @@ export const firebasePlanningRepository: PlanningRepository = {
         where('date', '>=', range.from),
         where('date', '<=', range.to),
       )
+    const fail = (error: unknown) => {
+      console.error('Lecture du planning impossible', error)
+      failed = true
+      for (const unsubscribe of unsubscribers) {
+        unsubscribe()
+      }
+      onError()
+    }
 
     const unsubscribers = [
       onSnapshot(
@@ -42,7 +54,7 @@ export const firebasePlanningRepository: PlanningRepository = {
           current.timetables = readAll(snapshot.docs, toTimetable)
           emit()
         },
-        () => onError(),
+        fail,
       ),
       onSnapshot(
         inRange('carpools'),
@@ -50,7 +62,7 @@ export const firebasePlanningRepository: PlanningRepository = {
           current.carpools = readAll(snapshot.docs, toCarpool)
           emit()
         },
-        () => onError(),
+        fail,
       ),
       onSnapshot(
         inRange('childDays'),
@@ -58,7 +70,7 @@ export const firebasePlanningRepository: PlanningRepository = {
           current.childDays = readAll(snapshot.docs, toChildDay)
           emit()
         },
-        () => onError(),
+        fail,
       ),
     ]
     return () => {
