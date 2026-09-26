@@ -10,6 +10,7 @@ const STYLES: Record<TripStatus['kind'], string> = {
   covered: 'bg-success font-heading text-base font-semibold text-success-foreground',
 }
 
+/** The trip's status in words, on the background of its kind. */
 export function TripStatusBar({ status }: { status: TripStatus }) {
   return (
     <div

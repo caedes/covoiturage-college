@@ -10,15 +10,15 @@ type DayPillProps = {
 }
 
 /**
- * One day of the selector. The accessible name spells out the full day and the coverage, which
- * the green dot alone would only tell sighted users.
+ * One day of the selector. `label` is the final accessible name — the full day and, when covered,
+ * the coverage the green dot alone would only tell sighted users — built by `dayButtonLabel`.
  */
 export function DayPill({ short, label, dayNumber, selected, covered, onSelect }: DayPillProps) {
   return (
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={covered ? `${label}, tous les trajets sont couverts` : label}
+      aria-label={label}
       onClick={onSelect}
       className={cn(
         'flex w-full flex-col items-center gap-0.5 rounded-2xl border pt-2 pb-1.5',
