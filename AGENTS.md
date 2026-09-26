@@ -49,6 +49,12 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.
   Les données réelles (`data/*.json`) sont ignorées par Git : aucun exemple du dépôt ne
   doit contenir de vrai prénom, de vraie adresse ni de vrai horaire.
+- **Planning** — `src/planning/` calcule la semaine en fonctions pures, sans React ni
+  Firebase : `buildWeek` assemble les jours, les trajets Aller et Retour, les offres de
+  permanence, les statuts et le récapitulatif. Le domaine ne manipule que des chaînes
+  `AAAA-MM-JJ` et `HH:MM` ; `parisToday` (`src/planning/dates.ts`) est la seule lecture de
+  l'horloge du projet, partagée avec le script d'import. Le calendrier des vacances
+  (`holidays.ts`) se met à jour chaque année avec l'import.
 - **Environnement** — les variables sont validées par Zod dans `src/env.ts` ; toute
   nouvelle variable passe par ce schéma plutôt que par un accès direct à `import.meta.env`.
 - **Tests** — Vitest et Testing Library sur jsdom. `src/test/renderRoute.tsx` monte la
