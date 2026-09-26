@@ -42,7 +42,9 @@
   --success: oklch(0.949 0.008 157);
   --success-foreground: oklch(0.485 0.078 147.5);
   --warning: oklch(0.959 0.023 78);
-  --warning-foreground: oklch(0.544 0.087 80.8);
+  --warning-foreground: oklch(
+    0.52 0.087 80.8
+  ); /* 0.544 dans le prototype, assombri pour le contraste AA */
 
   /* Enfants — fond / bordure / texte */
   --child-1: oklch(0.941 0.012 210);

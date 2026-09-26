@@ -11,16 +11,33 @@ const css = readFileSync('src/index.css', 'utf8')
 const html = readFileSync('index.html', 'utf8')
 
 /**
- * Relative luminance of an achromatic `oklch(L 0 0)` token. With no chroma, OKLab maps to linear
- * sRGB as L³ on every channel, so the WCAG luminance is L³ too. A chromatic token would need the
- * full conversion: the test refuses it rather than compute a wrong ratio.
+ * WCAG relative luminance of an `oklch(L C H)` token. OKLab maps to linear sRGB with Björn
+ * Ottosson's matrices, and the luminance is taken from linear sRGB directly.
  */
-function greyLuminance(token: string): number {
-  const match = new RegExp(`${token}:\\s*oklch\\(([\\d.]+) 0 0\\)`).exec(css)
+function luminance(token: string): number {
+  const match = new RegExp(
+    `${token}:\\s*oklch\\(\\s*([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)\\s*\\)`,
+    's',
+  ).exec(css)
   if (match === null) {
-    throw new Error(`${token} n'est pas un gris oklch(L 0 0).`)
+    throw new Error(`${token} n'est pas une couleur oklch(L C H) opaque.`)
   }
-  return Number(match[1]) ** 3
+  const [lightness, chroma, hue] = [Number(match[1]), Number(match[2]), Number(match[3])]
+  const a = chroma * Math.cos((hue * Math.PI) / 180)
+  const b = chroma * Math.sin((hue * Math.PI) / 180)
+  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3
+  const clamp = (value: number) => Math.min(1, Math.max(0, value))
+  const red = clamp(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s)
+  const green = clamp(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s)
+  const blue = clamp(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s)
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+}
+
+function contrast(text: string, surface: string): number {
+  const [lighter, darker] = [luminance(text), luminance(surface)].sort((x, y) => y - x)
+  return ((lighter ?? 0) + 0.05) / ((darker ?? 0) + 0.05)
 }
 
 describe('feuille de style globale', () => {
@@ -33,12 +50,19 @@ describe('feuille de style globale', () => {
     expect(css).toContain('--color-primary: var(--primary)')
   })
 
-  it('donne au texte atténué un contraste AA (4,5:1) sur les cartes et sur le fond', () => {
-    const muted = greyLuminance('--muted-foreground')
-    for (const surface of ['--card', '--background']) {
-      const ratio = (greyLuminance(surface) + 0.05) / (muted + 0.05)
-      expect(ratio, `${surface} / --muted-foreground`).toBeGreaterThanOrEqual(4.5)
-    }
+  it.each([
+    ['--foreground', '--background'],
+    ['--muted-foreground', '--card'],
+    ['--muted-foreground', '--background'],
+    ['--secondary-foreground', '--background'],
+    ['--primary', '--background'],
+    ['--primary-foreground', '--primary'],
+    ['--warning-foreground', '--warning'],
+    ['--success-foreground', '--success'],
+    ['--accent-foreground', '--accent'],
+    ['--destructive', '--card'],
+  ])('donne à %s sur %s un contraste AA (4,5:1)', (text, surface) => {
+    expect(contrast(text, surface)).toBeGreaterThanOrEqual(4.5)
   })
 
   it('dessine le contour de focus dans la couleur primaire, visible autour des boutons primaires', () => {
