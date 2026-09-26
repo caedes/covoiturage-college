@@ -19,11 +19,26 @@ const COVER = carpool({ date: '2026-09-28', direction: 'retour', place: 'college
 
 describe('resolveStatus', () => {
   it('rend « Personne à transporter » sans passager', () => {
-    expect(resolveStatus(EMPTY, undefined, VIEWER)).toEqual({ kind: 'void', driverName: null })
+    expect(resolveStatus(EMPTY, undefined, VIEWER)).toEqual({
+      kind: 'void',
+      driverName: null,
+      mine: false,
+    })
   })
 
   it('garde le conducteur d’un trajet vidé de ses passagers', () => {
-    expect(resolveStatus(EMPTY, COVER, VIEWER)).toEqual({ kind: 'void', driverName: 'Paul' })
+    expect(resolveStatus(EMPTY, COVER, VIEWER)).toEqual({
+      kind: 'void',
+      driverName: 'Paul',
+      mine: false,
+    })
+  })
+
+  it('reconnaît le conducteur d’un trajet vidé, pour qu’il puisse l’annuler', () => {
+    expect(resolveStatus(EMPTY, { ...COVER, driverUid: VIEWER }, VIEWER)).toMatchObject({
+      kind: 'void',
+      mine: true,
+    })
   })
 
   it('rend « Personne pour l’instant » sans covoiturage', () => {

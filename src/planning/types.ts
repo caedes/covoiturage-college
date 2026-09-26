@@ -75,12 +75,14 @@ export type Trip = {
 }
 
 export type TripStatus =
-  | { kind: 'void'; driverName: string | null }
+  /** No rider. A leftover carpool keeps its driver, who alone may cancel it: hence `mine`. */
+  | { kind: 'void'; driverName: string | null; mine: boolean }
   | { kind: 'open' }
   | { kind: 'mine' }
   | { kind: 'covered'; driverName: string; replacedYou: boolean }
 
-export type PlannedTrip = Trip & { status: TripStatus }
+/** A trip as displayed: its status, and the "Permanence HH:MM" offers that would join it. */
+export type PlannedTrip = Trip & { status: TripStatus; offers: PermanenceOffer[] }
 
 /** "Permanence HH:MM": the child could stay at school until `exitTime` and join `tripKey`. */
 export type PermanenceOffer = {
@@ -105,7 +107,6 @@ export type DayPlan = {
   covered: boolean
   aller: PlannedTrip[]
   retour: PlannedTrip[]
-  offers: PermanenceOffer[]
 }
 
 export type WeekRecap = { covered: number; total: number }
