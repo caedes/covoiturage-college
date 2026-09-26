@@ -1,4 +1,4 @@
-export type Identity = { email: string; displayName: string | null }
+export type Identity = { uid: string; email: string; displayName: string | null }
 
 export type MemberRole = 'parent' | 'child'
 

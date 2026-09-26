@@ -16,6 +16,8 @@ export const defaultMember: Member = {
   childId: null,
 }
 
+export const defaultUid = 'uid-sophie'
+
 type ScenarioOptions = {
   identity?: Identity | null
   member?: Member | null
@@ -80,20 +82,20 @@ export function signedOut(): AuthScenario {
 }
 
 export function denied(email: string): AuthScenario {
-  return scenario({ identity: { email, displayName: null }, member: null })
+  return scenario({ identity: { uid: 'uid-inconnu', email, displayName: null }, member: null })
 }
 
 export function member(overrides: Partial<Member> = {}): AuthScenario {
   const current = { ...defaultMember, ...overrides }
   return scenario({
-    identity: { email: current.email, displayName: current.firstName },
+    identity: { uid: defaultUid, email: current.email, displayName: current.firstName },
     member: current,
   })
 }
 
 export function failingLookup(): AuthScenario {
   return scenario({
-    identity: { email: defaultMember.email, displayName: null },
+    identity: { uid: defaultUid, email: defaultMember.email, displayName: null },
     lookupFails: true,
   })
 }

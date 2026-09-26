@@ -20,7 +20,7 @@ export const firebaseAuthPort: AuthPort = {
         listener(null)
         return
       }
-      listener({ email: normalizeEmail(user.email), displayName: user.displayName })
+      listener({ uid: user.uid, email: normalizeEmail(user.email), displayName: user.displayName })
     })
   },
 
