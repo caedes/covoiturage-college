@@ -60,6 +60,19 @@ describe('Layout', () => {
     expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument()
   })
 
+  it('donne au bouton de déconnexion le type button', async () => {
+    await renderRoute('/')
+    expect(screen.getByRole('button', { name: /se déconnecter/i })).toHaveAttribute(
+      'type',
+      'button',
+    )
+  })
+
+  it('pose le titre de la page dans la police des titres', async () => {
+    await renderRoute('/')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('font-heading')
+  })
+
   it('déconnecte le membre au clic', async () => {
     const user = userEvent.setup()
     const scenario = member()
