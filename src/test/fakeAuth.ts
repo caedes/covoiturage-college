@@ -12,6 +12,8 @@ export const defaultMember: Member = {
   email: 'sophie.martin@exemple.fr',
   firstName: 'Sophie',
   role: 'parent',
+  childIds: [],
+  childId: null,
 }
 
 type ScenarioOptions = {

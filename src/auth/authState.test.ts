@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { type AuthState, initialAuthState, reduce } from './authState'
 import type { Member } from './ports'
 
-const sophie: Member = { email: 'sophie@exemple.fr', firstName: 'Sophie', role: 'parent' }
+const sophie: Member = {
+  email: 'sophie@exemple.fr',
+  firstName: 'Sophie',
+  role: 'parent',
+  childIds: [],
+  childId: null,
+}
 
 describe('initialAuthState', () => {
   it('démarre en chargement', () => {
