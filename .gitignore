@@ -14,3 +14,10 @@ ui-debug.log
 
 # Fichiers de travail locaux (prototype, exports) : jamais dans ce dépôt public
 /tmp
+
+# Données réelles d'import (emplois du temps, adresses) : jamais dans ce dépôt public
+/data/*.json
+!/data/import.example.json
+
+# Clés de compte de service Firebase, si l'une atterrit par erreur dans le dossier
+*firebase-adminsdk*.json

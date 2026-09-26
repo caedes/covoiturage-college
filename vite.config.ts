@@ -11,7 +11,7 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   test: {
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
     environment: 'jsdom',
     setupFiles: ['./src/test/setupTests.ts'],
     env: {
@@ -23,7 +23,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/**/*.{ts,tsx}'],
+      include: ['src/**/*.{ts,tsx}', 'scripts/**/*.ts'],
       exclude: ['src/main.tsx', 'src/test/**', 'src/firebase/**', 'src/components/atoms/ui/**'],
       thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
     },
