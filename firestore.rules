@@ -9,6 +9,13 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // Membre = compte verifie dont la fiche existe. L'existence de la fiche est
+    // l'autorisation, comme cote application.
+    function isMember() {
+      return isVerifiedUser()
+        && exists(/databases/$(database)/documents/members/$(request.auth.token.email.lower()));
+    }
+
     match /members/{memberEmail} {
       // Chacun ne lit que sa propre fiche, et seulement par identifiant.
       allow get: if isVerifiedUser()
@@ -19,6 +26,12 @@ service cloud.firestore {
       // qu'aucun `read` ni `list` n'est jamais accorde ici - et c'est le
       // test d'enumeration qui le verrouille.
       allow list: if false;
+      allow write: if false;
+    }
+
+    // Emplois du temps : ecrits par le script d'import (SDK Admin), lus par les membres.
+    match /timetables/{validFrom} {
+      allow read: if isMember();
       allow write: if false;
     }
 

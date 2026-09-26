@@ -11,6 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 const MEMBER = 'sophie.martin@exemple.fr'
 const OTHER_MEMBER = 'karim.benali@exemple.fr'
 const OUTSIDER = 'inconnu@exemple.fr'
+const CHILD_MEMBER = 'lou@exemple.fr'
 
 let testEnv: RulesTestEnvironment
 
@@ -72,6 +73,51 @@ describe('règles de la collection members', () => {
   it('refuse toute écriture depuis le client', async () => {
     await assertFails(
       setDoc(doc(asSignedIn(MEMBER), 'members', MEMBER), { firstName: 'Pirate', role: 'parent' }),
+    )
+  })
+})
+
+describe('règles de la collection timetables', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore()
+      await setDoc(doc(database, 'members', CHILD_MEMBER), {
+        firstName: 'Lou',
+        role: 'child',
+        childId: 'lou',
+      })
+      await setDoc(doc(database, 'timetables', '2026-09-01'), { validFrom: '2026-09-01' })
+    })
+  })
+
+  it('autorise un parent membre à lire une version', async () => {
+    await assertSucceeds(getDoc(doc(asSignedIn(MEMBER), 'timetables', '2026-09-01')))
+  })
+
+  it('autorise un compte enfant membre à lire une version', async () => {
+    await assertSucceeds(getDoc(doc(asSignedIn(CHILD_MEMBER), 'timetables', '2026-09-01')))
+  })
+
+  it('autorise un membre à lister les versions', async () => {
+    await assertSucceeds(getDocs(collection(asSignedIn(MEMBER), 'timetables')))
+  })
+
+  it('refuse la lecture à un compte hors liste', async () => {
+    await assertFails(getDoc(doc(asSignedIn(OUTSIDER), 'timetables', '2026-09-01')))
+  })
+
+  it('refuse la lecture à un visiteur non authentifié', async () => {
+    const database = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(database, 'timetables', '2026-09-01')))
+  })
+
+  it("refuse la lecture à un membre dont l'adresse n'est pas vérifiée", async () => {
+    await assertFails(getDoc(doc(asSignedIn(MEMBER, false), 'timetables', '2026-09-01')))
+  })
+
+  it('refuse toute écriture depuis le client, même à un membre', async () => {
+    await assertFails(
+      setDoc(doc(asSignedIn(MEMBER), 'timetables', '2026-09-01'), { validFrom: '2026-09-01' }),
     )
   })
 })
