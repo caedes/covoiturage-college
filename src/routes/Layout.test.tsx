@@ -68,6 +68,14 @@ describe('Layout', () => {
     )
   })
 
+  it("n'emploie pas la couleur atténuée, sous le seuil AA, pour l'identité et le pied de page", async () => {
+    await renderRoute('/')
+    expect(screen.getByText(/connecté en tant que/i).parentElement).not.toHaveClass(
+      'text-muted-foreground',
+    )
+    expect(screen.getByRole('contentinfo')).not.toHaveClass('text-muted-foreground')
+  })
+
   it('pose le titre de la page dans la police des titres', async () => {
     await renderRoute('/')
     expect(screen.getByRole('heading', { level: 1 })).toHaveClass('font-heading')
