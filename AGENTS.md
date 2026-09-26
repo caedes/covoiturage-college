@@ -5,9 +5,9 @@ Consignes pour les agents de code (Claude Code, Codex, Cursor…) travaillant su
 ## Le projet
 
 Covoiturage collège — application d'entraide entre parents pour organiser les trajets
-domicile ↔ collège. Le dépôt contient le socle technique et la porte d'authentification.
-Aucune fonctionnalité métier — trajets, disponibilités, inscriptions — n'est encore
-implémentée.
+domicile ↔ collège. Le dépôt contient le socle technique, la porte d'authentification et
+le planning de la semaine en lecture seule. La prise de trajets et les options des
+enfants arrivent aux lots suivants.
 
 ## Commandes
 
@@ -42,8 +42,8 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   l'identité passe par un port, jamais par le SDK Firebase directement.
 - **Autorisation** — l'accès est réservé aux membres inscrits : la fiche
   `members/{email}` fait foi. `firestore.rules` n'accorde que le `get` de sa propre
-  fiche et la lecture de `timetables` aux membres, sans aucune écriture cliente. Les
-  autres collections naissent fermées.
+  fiche et la lecture de `timetables`, `carpools` et `childDays` aux membres, sans
+  aucune écriture cliente. Les autres collections naissent fermées.
 - **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
   Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.

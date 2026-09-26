@@ -12,7 +12,8 @@ export const TEST_NOW = new Date('2026-09-30T08:00:00Z')
 type RenderRouteOptions = {
   auth?: AuthScenario
   planning?: PlanningScenario
-  now?: Date
+  /** A fixed instant, or a clock function for tests that move time forward. */
+  now?: Date | (() => Date)
   /** Pass `false` to observe a loading screen itself. */
   waitForSettled?: boolean
 }
@@ -28,11 +29,12 @@ export async function renderRoute(initialPath: string, options: RenderRouteOptio
   const scenario = options.auth ?? member()
   const current = options.planning ?? planning()
   const now = options.now ?? TEST_NOW
+  const clock = typeof now === 'function' ? now : () => now
   const router = createMemoryRouter(routes, { initialEntries: [initialPath] })
 
   const result = render(
     <AuthProvider auth={scenario.auth} members={scenario.members}>
-      <PlanningProvider repository={current.repository} now={() => now}>
+      <PlanningProvider repository={current.repository} now={clock}>
         <RouterProvider router={router} />
       </PlanningProvider>
     </AuthProvider>,

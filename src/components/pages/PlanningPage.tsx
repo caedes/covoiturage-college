@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { weekRangeLabel } from '../../lib/planningLabels'
 import { addDays, displayedMonday, initialDay, parisToday } from '../../planning/dates'
@@ -34,7 +34,7 @@ function noticeFor(day: DayPlan, today: string): string | null {
 export function PlanningPage() {
   const { now } = usePlanningContext()
   const { state } = useAuth()
-  const [today] = useState(() => parisToday(now()))
+  const [today, setToday] = useState(() => parisToday(now()))
   const thisMonday = displayedMonday(today)
   const nextMonday = addDays(thisMonday, 7)
   const range = useMemo(
@@ -43,6 +43,32 @@ export function PlanningPage() {
   )
   const [tab, setTab] = useState<WeekTab>('current')
   const [selected, setSelected] = useState(() => initialDay(today))
+
+  /** Keeps "today" true while the page stays open: on tab focus, on return from another app, and every minute. */
+  useEffect(() => {
+    function checkToday() {
+      const next = parisToday(now())
+      if (next !== today) {
+        setToday(next)
+        setTab('current')
+        setSelected(initialDay(next))
+      }
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        checkToday()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('focus', checkToday)
+    const interval = setInterval(checkToday, 60_000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('focus', checkToday)
+      clearInterval(interval)
+    }
+  }, [now, today])
+
   const { load, retry } = usePlanning(range)
 
   if (load.status === 'loading') {

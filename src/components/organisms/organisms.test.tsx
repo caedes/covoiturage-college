@@ -54,6 +54,17 @@ describe('WeekTabs', () => {
     )
     expect(screen.getByText('28 septembre – 2 octobre')).toBeInTheDocument()
   })
+
+  it('donne à l’onglet inactif une couleur de texte assez contrastée', () => {
+    render(
+      <Tabs value="current">
+        <WeekTabs range="28 septembre – 2 octobre" />
+      </Tabs>,
+    )
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine' })).toHaveClass(
+      'data-[state=inactive]:text-secondary-foreground',
+    )
+  })
 })
 
 describe('DaySelector', () => {
@@ -144,5 +155,12 @@ describe('WeeklyRecap', () => {
     expect(
       screen.getByRole('progressbar', { name: 'Part des trajets couverts' }),
     ).toBeInTheDocument()
+  })
+
+  it("ne montre ni pourcentage ni barre quand il n'y a rien à couvrir", () => {
+    render(<WeeklyRecap recap={{ covered: 0, total: 0 }} period="cette semaine" />)
+    expect(screen.getByText('Aucun trajet à couvrir cette semaine')).toBeInTheDocument()
+    expect(screen.queryByText('100 %')).toBeNull()
+    expect(screen.queryByRole('progressbar')).toBeNull()
   })
 })
