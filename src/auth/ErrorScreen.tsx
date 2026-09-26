@@ -1,21 +1,22 @@
+import { Button } from '../components/atoms/ui/button'
+import { AuthTemplate } from '../components/templates/AuthTemplate'
 import { useAuth } from './useAuth'
 
 export function ErrorScreen() {
   const { retry, signOut } = useAuth()
 
   return (
-    <main id="main" tabIndex={-1}>
-      <h1>Problème technique</h1>
-      <p role="alert">
+    <AuthTemplate title="Problème technique">
+      <p role="alert" className="text-destructive">
         Impossible de vérifier votre accès pour le moment. Vérifiez votre connexion internet, puis
         réessayez.
       </p>
-      <button type="button" onClick={retry}>
+      <Button type="button" onClick={retry}>
         Réessayer
-      </button>
-      <button type="button" onClick={() => void signOut()}>
+      </Button>
+      <Button type="button" variant="outline" onClick={() => void signOut()}>
         Se déconnecter
-      </button>
-    </main>
+      </Button>
+    </AuthTemplate>
   )
 }

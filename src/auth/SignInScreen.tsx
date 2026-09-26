@@ -1,3 +1,5 @@
+import { Button } from '../components/atoms/ui/button'
+import { AuthTemplate } from '../components/templates/AuthTemplate'
 import type { SignInFailure } from './authState'
 import { useAuth } from './useAuth'
 
@@ -11,13 +13,16 @@ export function SignInScreen({ failure }: { failure?: SignInFailure }) {
   const { signIn } = useAuth()
 
   return (
-    <main id="main" tabIndex={-1}>
-      <h1>Covoiturage collège</h1>
+    <AuthTemplate title="Covoiturage collège">
       <p>Cette application est réservée aux parents inscrits. Connectez-vous pour continuer.</p>
-      {failure === undefined ? null : <p role="alert">{FAILURE_MESSAGES[failure]}</p>}
-      <button type="button" onClick={() => void signIn()}>
+      {failure === undefined ? null : (
+        <p role="alert" className="text-sm text-destructive">
+          {FAILURE_MESSAGES[failure]}
+        </p>
+      )}
+      <Button type="button" onClick={() => void signIn()}>
         Se connecter avec Google
-      </button>
-    </main>
+      </Button>
+    </AuthTemplate>
   )
 }
