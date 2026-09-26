@@ -1,7 +1,7 @@
 # Planning de covoiturage — covoiturage-college
 
 Date : 2026-09-26
-Statut : en relecture
+Statut : validé
 
 ## Objet
 
