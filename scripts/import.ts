@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
-import { applicationDefault, initializeApp } from 'firebase-admin/app'
+import { cert, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { type ExistingState, planImport } from './import/plan'
+import { describeTarget, resolveTarget } from './import/target'
 import { parisToday } from './import/today'
 
 function fail(message: string): never {
@@ -30,19 +31,34 @@ try {
   fail(`Lecture de ${path} impossible : ${error instanceof Error ? error.message : String(error)}`)
 }
 
-// Against the emulator no credential is needed; against the real project, the service account
-// key must be pointed at explicitly, never looked up implicitly from gcloud.
-const emulator = process.env.FIRESTORE_EMULATOR_HOST
-if (emulator === undefined && process.env.GOOGLE_APPLICATION_CREDENTIALS === undefined) {
-  fail(
-    'GOOGLE_APPLICATION_CREDENTIALS doit désigner la clé du compte de service, rangée hors du dépôt.',
-  )
+const resolved = resolveTarget(process.env)
+if (!resolved.ok) {
+  fail(resolved.error)
 }
-initializeApp(
-  emulator === undefined
-    ? { credential: applicationDefault() }
-    : { projectId: process.env.GCLOUD_PROJECT ?? 'demo-covoiturage' },
-)
+const { target } = resolved
+
+let projectId: string
+if (target.kind === 'emulator') {
+  projectId = target.projectId
+  initializeApp({ projectId })
+} else {
+  // `cert` takes the project from the key itself: neither GCLOUD_PROJECT left over from another
+  // context nor the gcloud credentials can redirect the writes.
+  let key: { project_id?: unknown }
+  try {
+    key = JSON.parse(readFileSync(target.keyPath, 'utf8'))
+  } catch (error) {
+    fail(
+      `Clé illisible (${target.keyPath}) : ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+  if (typeof key.project_id !== 'string') {
+    fail(`La clé ${target.keyPath} ne précise pas de project_id.`)
+  }
+  projectId = key.project_id
+  initializeApp({ credential: cert(target.keyPath), projectId })
+}
+console.log(describeTarget(target, projectId))
 const database = getFirestore()
 
 const [membersSnapshot, timetablesSnapshot] = await Promise.all([
