@@ -42,7 +42,7 @@ export function Layout() {
           </ul>
         </nav>
         {firstName === null ? null : (
-          <div className="flex items-center gap-2 text-sm text-secondary-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Connecté en tant que {firstName}</span>
             <Button type="button" variant="ghost" size="sm" onClick={() => void signOut()}>
               Se déconnecter
@@ -53,7 +53,7 @@ export function Layout() {
       <main id={MAIN_ID} tabIndex={-1} className="flex-1 py-4">
         <Outlet />
       </main>
-      <footer className="py-4 text-xs text-secondary-foreground">
+      <footer className="py-4 text-xs text-muted-foreground">
         <p>Projet personnel, licence GPL-3.0.</p>
       </footer>
     </div>
