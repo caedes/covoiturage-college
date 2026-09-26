@@ -25,7 +25,7 @@
 - **Imports relatifs dans le code écrit à la main**, comme dans le reste de `src/`. L'alias `@/` existe pour le code généré par shadcn, qui l'emploie.
 - **Tout `<Button>` porte `type="button"` explicitement** : le composant shadcn ne fixe pas de type par défaut, et un bouton sans type devient `submit` dans un formulaire.
 - **Commits :** Conventional Commits en français (`docs/rules/commits.md`), un commit par tâche au moins, jamais de `Co-Authored-By`.
-- **Exécution sur une branche dédiée** `feat/socle-ui`, créée depuis `main`.
+- **Exécution sur une branche dédiée** `feat/socle-ui` (voir tâche 1, étape 1).
 
 ## Review Focus
 
@@ -85,8 +85,18 @@
 
 - [ ] **Step 1: Créer la branche**
 
+La spec et ce plan vivent sur la branche `docs/spec-planning-covoiturage`. Si elle est
+déjà fusionnée dans `main`, partir de `main` ; sinon partir d'elle, sans quoi l'étape 11
+modifierait une spec absente :
+
 ```bash
-git switch main && git pull --ff-only && git switch -c feat/socle-ui
+git fetch origin
+if git merge-base --is-ancestor docs/spec-planning-covoiturage origin/main; then
+  git switch main && git pull --ff-only
+else
+  git switch docs/spec-planning-covoiturage
+fi
+git switch -c feat/socle-ui
 ```
 
 - [ ] **Step 2: Écrire le test qui échoue**
