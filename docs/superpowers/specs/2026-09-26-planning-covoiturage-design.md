@@ -311,7 +311,9 @@ export type PlanningRepository = {
 
 - Tailwind v4 par `@tailwindcss/vite`, shadcn initialisé avec le thème
   `theme-trajets-college.css`, repris tel quel dans `src/index.css` à côté des styles
-  existants (skip link, focus). Polices Barlow et Barlow Condensed depuis Google Fonts.
+  existants (skip link, focus). Polices Barlow et Barlow Condensed hébergées avec
+  l'application (Fontsource) : Google Fonts transmettrait l'adresse IP de chaque
+  visiteur à un tiers, ce que le socle a déjà refusé pour Analytics.
 - Thème clair uniquement. Mobile d'abord, colonne centrée de 28rem au plus sur ordinateur.
 - `components.json` range les composants shadcn dans `src/components/atoms/ui/`.
 

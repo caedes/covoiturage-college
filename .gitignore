@@ -11,3 +11,6 @@ coverage
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+# Fichiers de travail locaux (prototype, exports) : jamais dans ce dépôt public
+/tmp
