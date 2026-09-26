@@ -28,7 +28,7 @@
 - **Identifiants en anglais, messages et tests en français**, JSDoc en anglais. Les erreurs Zod sont traduites avec `z.locales.fr()`.
 - **Style Biome :** guillemets simples, pas de point-virgule, largeur 100, imports triés ; `verbatimModuleSyntax`, `noUnusedLocals`, `noUnusedParameters`.
 - **Commits :** Conventional Commits en français, jamais de `Co-Authored-By`.
-- **Branche :** `feat/donnees-import`, créée depuis `main` à jour.
+- **Branche :** `feat/donnees-import` (voir tâche 1, étape 1).
 
 ## Review Focus
 
@@ -88,8 +88,10 @@
 
 - [ ] **Step 1: Créer la branche**
 
+Ce plan est commité sur `docs/plan-lot-2-donnees-import`, créée depuis `main` à jour : partir de cette branche pour que la PR porte le plan avec le code.
+
 ```bash
-git switch main && git pull --ff-only && git switch -c feat/donnees-import
+git switch docs/plan-lot-2-donnees-import && git switch -c feat/donnees-import
 ```
 
 - [ ] **Step 2: Écrire les tests qui échouent**
