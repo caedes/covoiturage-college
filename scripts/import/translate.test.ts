@@ -22,7 +22,7 @@ describe('toTimetableDoc', () => {
     ])
     expect(doc.children.basile).toEqual({
       firstName: 'Basile',
-      feminine: false,
+      gender: 'male',
       colorSlot: 2,
       weeks: {
         A: {

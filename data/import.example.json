@@ -7,7 +7,7 @@
   "enfants": {
     "alice": {
       "prenom": "Alice",
-      "feminin": true,
+      "genre": "female",
       "couleur": 1,
       "regime": "DPS",
       "autorisation_sortie": "En fonction des cours assurés",
@@ -30,7 +30,7 @@
     },
     "basile": {
       "prenom": "Basile",
-      "feminin": false,
+      "genre": "male",
       "couleur": 2,
       "email": "basile@exemple.fr",
       "regime": "DP4",
@@ -54,7 +54,7 @@
     },
     "chloe": {
       "prenom": "Chloé",
-      "feminin": true,
+      "genre": "female",
       "couleur": 3,
       "horaires": {
         "semaine_A": {

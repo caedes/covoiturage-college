@@ -61,12 +61,12 @@ describe('parseImportFile', () => {
     const file = validImportFile()
     const alice: Record<string, unknown> = file.enfants.alice
     const basile: Record<string, unknown> = file.enfants.basile
-    delete alice.feminin
-    delete basile.feminin
+    delete alice.genre
+    delete basile.genre
     const errors = errorsOf(file)
     expect(errors).toHaveLength(2)
-    expect(errors[0]).toMatch(/^enfants\.alice\.feminin : /)
-    expect(errors[1]).toMatch(/^enfants\.basile\.feminin : /)
+    expect(errors[0]).toMatch(/^enfants\.alice\.genre : /)
+    expect(errors[1]).toMatch(/^enfants\.basile\.genre : /)
   })
 
   it("refuse un identifiant d'enfant avec majuscule ou tiret bas", () => {
@@ -78,6 +78,12 @@ describe('parseImportFile', () => {
     expect(errorsOf(file).some((error) => error.includes('minuscules, chiffres et tirets'))).toBe(
       true,
     )
+  })
+
+  it('refuse un genre autre que female ou male', () => {
+    const file: { enfants: { alice: Record<string, unknown> } } = validImportFile()
+    file.enfants.alice.genre = 'féminin'
+    expect(errorsOf(file)[0]).toMatch(/^enfants\.alice\.genre : /)
   })
 
   it('refuse deux enfants de la même couleur', () => {

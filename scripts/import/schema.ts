@@ -32,7 +32,7 @@ const week = z.strictObject({ lundi: day, mardi: day, mercredi: day, jeudi: day,
 
 const child = z.strictObject({
   prenom: firstName,
-  feminin: z.boolean(),
+  genre: z.enum(['female', 'male']),
   couleur: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   email: email.optional(),
   regime: z.string().optional(),

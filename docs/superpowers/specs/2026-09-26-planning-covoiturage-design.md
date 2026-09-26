@@ -61,7 +61,7 @@ messages d'assertion.
 | **Personne à transporter** | trajet sans passager |
 | **N trajets sur M couverts cette semaine / la semaine prochaine** | récapitulatif |
 
-L'accord « absente / absent » dépend de l'enfant (`feminine`).
+L'accord « absente / absent » dépend du genre de l'enfant (`gender` : `female` ou `male`).
 
 ## Décisions
 
@@ -151,7 +151,7 @@ timetables/{validFrom}                       écrit par le script d'import
   eveningBuses: [{ classEnd: "16:00", arrival: "16:55" }, …]
   children: {
     basile: {
-      firstName: "Basile", feminine: false, colorSlot: 2,
+      firstName: "Basile", gender: "male", colorSlot: 2,
       weeks: {
         A: { mon: { start: "08:25", end: "16:00" }, tue: …, wed: …, thu: …, fri: … },
         B: { … }
@@ -391,7 +391,7 @@ remplace la création manuelle des fiches dans la console.
 ### Format d'entrée
 
 Le format d'extraction des emplois du temps est conservé tel quel, complété de
-`valableDu`, `busDuSoir`, `familles` et de trois champs par enfant (`feminin`,
+`valableDu`, `busDuSoir`, `familles` et de trois champs par enfant (`genre`,
 `couleur`, `email` facultatif). Exemple fictif :
 
 ```json
@@ -404,7 +404,7 @@ Le format d'extraction des emplois du temps est conservé tel quel, complété d
   "enfants": {
     "basile": {
       "prenom": "Basile",
-      "feminin": false,
+      "genre": "male",
       "couleur": 2,
       "email": "basile@exemple.fr",
       "regime": "DPS",

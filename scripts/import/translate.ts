@@ -14,7 +14,7 @@ export type WeekDoc = Record<Weekday, DaySlot>
 
 export type ChildDoc = {
   firstName: string
-  feminine: boolean
+  gender: 'female' | 'male'
   colorSlot: 1 | 2 | 3
   weeks: { A: WeekDoc; B: WeekDoc }
 }
@@ -53,7 +53,7 @@ export function toTimetableDoc(file: ImportFile): TimetableDoc {
         id,
         {
           firstName: entry.prenom,
-          feminine: entry.feminin,
+          gender: entry.genre,
           colorSlot: entry.couleur,
           weeks: { A: toWeekDoc(entry.horaires.semaine_A), B: toWeekDoc(entry.horaires.semaine_B) },
         },

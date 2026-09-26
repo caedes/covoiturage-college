@@ -20,13 +20,13 @@ export function validImportFile() {
     enfants: {
       alice: {
         prenom: 'Alice',
-        feminin: true,
+        genre: 'female',
         couleur: 1,
         horaires: { semaine_A: week(), semaine_B: week() },
       },
       basile: {
         prenom: 'Basile',
-        feminin: false,
+        genre: 'male',
         couleur: 2,
         email: 'basile@exemple.fr',
         regime: 'DPS',
