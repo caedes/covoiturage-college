@@ -58,6 +58,10 @@ d'import. Aucune écriture n'est possible depuis l'application : les règles l'i
    fichier (`!`).
 3. Appliquer : `npm run import -- data/import.json --apply`.
 
+La première ligne affichée donne toujours la cible : `Cible : émulateur …` ou
+`Cible : PRODUCTION, projet …`, lu dans la clé du compte de service. La vérifier avant
+chaque `--apply`.
+
 Retirer un accès, c'est retirer la personne du fichier puis relancer avec
 `--apply --prune`. Sans `--prune`, une fiche absente du fichier est seulement signalée.
 
