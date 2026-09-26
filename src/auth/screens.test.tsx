@@ -95,3 +95,22 @@ describe('ErrorScreen', () => {
     expect(value.signOut).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('écrans migrés sur les atomes', () => {
+  it.each([
+    ['SignInScreen', <SignInScreen key="sign-in" />],
+    ['AccessDeniedScreen', <AccessDeniedScreen key="denied" email="inconnu@exemple.fr" />],
+    ['ErrorScreen', <ErrorScreen key="error" />],
+  ])('%s ne rend que des boutons de type button', (_name, ui) => {
+    renderWithAuth(ui)
+    for (const button of screen.getAllByRole('button')) {
+      expect(button).toHaveAttribute('type', 'button')
+    }
+  })
+
+  it("coupe une adresse longue pour qu'elle tienne en largeur mobile", () => {
+    const email = 'une.adresse.vraiment.tres.longue.sans.espace@un-domaine-interminable.fr'
+    renderWithAuth(<AccessDeniedScreen email={email} />)
+    expect(screen.getByText(email)).toHaveClass('break-all')
+  })
+})
