@@ -5,11 +5,9 @@ import { renderRoute } from '../test/renderRoute'
 import { routes } from './routes'
 
 describe('table de routes', () => {
-  it("rend la page d'accueil sur /", async () => {
+  it('rend le planning sur /', async () => {
     await renderRoute('/')
-    expect(
-      screen.getByRole('heading', { level: 1, name: /covoiturage collège/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Trajets collège' })).toBeInTheDocument()
   })
 
   it('rend la page 404 sur une adresse inconnue', async () => {
