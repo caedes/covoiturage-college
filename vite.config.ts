@@ -24,7 +24,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/main.tsx', 'src/test/**', 'src/firebase/**'],
+      exclude: ['src/main.tsx', 'src/test/**', 'src/firebase/**', 'src/components/atoms/ui/**'],
       thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
     },
   },

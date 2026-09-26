@@ -25,6 +25,17 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
 
 - **Socle** — React 19 sur Vite 8, TypeScript en mode strict.
 - **Routage** — `react-router` v8, table de routes déclarative dans `src/routes/routes.tsx`.
+- **UI** — Tailwind v4 et shadcn, thème « Trajets collège » dans `src/index.css` (clair
+  uniquement, jetons `success`, `warning`, `child-1` à `child-3`, police `font-heading`).
+  Les composants shadcn se génèrent avec `npx shadcn@latest add <nom>` dans
+  `src/components/atoms/ui/` ; ils sont exclus de la couverture et ne se modifient pas à
+  la main sans raison. Vérifier après génération que `cn` est importé de `@/lib/utils` :
+  la CLI l'a déjà résolu vers un paquet npm homonyme.
+- **Atomic Design** — `src/components/` est rangé en `atoms`, `molecules`, `organisms`,
+  `templates`, `pages`. Un fichier importe son niveau ou un niveau inférieur, jamais un
+  niveau supérieur ; sous les pages, aucun import de valeur depuis `src/auth/` ou
+  `src/planning/` — les composants ne reçoivent que des props. Aucun composant n'importe
+  Firebase. `src/components/architecture.test.ts` vérifie ces trois règles.
 - **Authentification** — connexion Google via Firebase Auth. Le domaine ne connaît que
   les ports déclarés dans `src/auth/ports.ts` (`AuthPort`, `MemberRepository`) ; les
   adaptateurs Firebase vivent dans `src/firebase/`. Une fonctionnalité qui a besoin de

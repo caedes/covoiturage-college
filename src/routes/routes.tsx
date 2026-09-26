@@ -1,7 +1,7 @@
 import type { RouteObject } from 'react-router'
 import { AuthGate } from '../auth/AuthGate'
-import { Layout } from '../components/Layout'
 import { Home } from './Home'
+import { Layout } from './Layout'
 import { NotFound } from './NotFound'
 
 export const routes: RouteObject[] = [
