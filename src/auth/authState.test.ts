@@ -26,20 +26,24 @@ describe('reduce', () => {
   it('reste en chargement le temps de résoudre la fiche du membre', () => {
     const state = reduce(
       { status: 'signedOut' },
-      { type: 'identityChanged', identity: { email: 'sophie@exemple.fr', displayName: 'Sophie' } },
+      {
+        type: 'identityChanged',
+        identity: { uid: 'uid-sophie', email: 'sophie@exemple.fr', displayName: 'Sophie' },
+      },
     )
     expect(state).toEqual({ status: 'loading' })
   })
 
-  it('passe en membre quand la fiche existe', () => {
+  it("passe en membre quand la fiche existe, en retenant l'uid", () => {
     expect(
       reduce(initialAuthState, {
         type: 'memberResolved',
         member: sophie,
+        uid: 'uid-sophie',
         email: sophie.email,
         displayName: 'Sophie M.',
       }),
-    ).toEqual({ status: 'member', member: sophie, displayName: 'Sophie M.' })
+    ).toEqual({ status: 'member', member: sophie, uid: 'uid-sophie', displayName: 'Sophie M.' })
   })
 
   it("passe en accès refusé quand la fiche est absente, en conservant l'adresse cherchée", () => {
@@ -47,6 +51,7 @@ describe('reduce', () => {
       reduce(initialAuthState, {
         type: 'memberResolved',
         member: null,
+        uid: 'uid-inconnu',
         email: 'inconnu@exemple.fr',
         displayName: null,
       }),
@@ -74,7 +79,12 @@ describe('reduce', () => {
   })
 
   it('ignore une expiration survenue hors chargement', () => {
-    const settled: AuthState = { status: 'member', member: sophie, displayName: null }
+    const settled: AuthState = {
+      status: 'member',
+      member: sophie,
+      uid: 'uid-sophie',
+      displayName: null,
+    }
     expect(reduce(settled, { type: 'timedOut' })).toBe(settled)
   })
 

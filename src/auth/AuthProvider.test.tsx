@@ -5,6 +5,7 @@ import {
   type AuthScenario,
   controllable,
   defaultMember,
+  defaultUid,
   denied,
   failingLookup,
   loading,
@@ -46,6 +47,7 @@ describe('AuthProvider', () => {
     expect(result.current.state).toEqual({
       status: 'member',
       member: defaultMember,
+      uid: defaultUid,
       displayName: 'Sophie',
     })
   })
@@ -111,7 +113,7 @@ describe('AuthProvider', () => {
     expect(current.signInCalls()).toBe(1)
 
     act(() => {
-      current.emit({ email: defaultMember.email, displayName: 'Sophie' })
+      current.emit({ uid: defaultUid, email: defaultMember.email, displayName: 'Sophie' })
     })
     await waitFor(() => expect(result.current.state.status).toBe('member'))
   })

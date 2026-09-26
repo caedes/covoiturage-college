@@ -11,12 +11,18 @@ export type AuthState =
   | { status: 'loading' }
   | { status: 'signedOut'; failure?: SignInFailure }
   | { status: 'denied'; email: string }
-  | { status: 'member'; member: Member; displayName: string | null }
+  | { status: 'member'; member: Member; uid: string; displayName: string | null }
   | { status: 'error' }
 
 export type AuthEvent =
   | { type: 'identityChanged'; identity: Identity | null }
-  | { type: 'memberResolved'; member: Member | null; email: string; displayName: string | null }
+  | {
+      type: 'memberResolved'
+      member: Member | null
+      uid: string
+      email: string
+      displayName: string | null
+    }
   | { type: 'lookupFailed' }
   | { type: 'signInFailed'; failure: SignInFailure }
   | { type: 'signInCancelled' }
@@ -32,7 +38,7 @@ export function reduce(state: AuthState, event: AuthEvent): AuthState {
     case 'memberResolved':
       return event.member === null
         ? { status: 'denied', email: event.email }
-        : { status: 'member', member: event.member, displayName: event.displayName }
+        : { status: 'member', member: event.member, uid: event.uid, displayName: event.displayName }
     case 'lookupFailed':
       return { status: 'error' }
     case 'signInFailed':

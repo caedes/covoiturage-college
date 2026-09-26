@@ -34,6 +34,7 @@ export function AuthProvider({ auth, members, children }: AuthProviderProps) {
           dispatch({
             type: 'memberResolved',
             member: found,
+            uid: identity.uid,
             email: identity.email,
             displayName: identity.displayName,
           })
