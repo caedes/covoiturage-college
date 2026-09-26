@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { renderWithAuth } from '../test/renderWithAuth'
@@ -112,5 +112,17 @@ describe('écrans migrés sur les atomes', () => {
     const email = 'une.adresse.vraiment.tres.longue.sans.espace@un-domaine-interminable.fr'
     renderWithAuth(<AccessDeniedScreen email={email} />)
     expect(screen.getByText(email)).toHaveClass('break-all')
+  })
+})
+
+describe('contraste du texte courant', () => {
+  it("n'emploie pas la couleur atténuée, sous le seuil AA, pour les textes explicatifs", () => {
+    renderWithAuth(<LoadingScreen />)
+    expect(screen.getByRole('status')).not.toHaveClass('text-muted-foreground')
+    cleanup()
+    renderWithAuth(<AccessDeniedScreen email="inconnu@exemple.fr" />)
+    expect(screen.getByText(/si vous pensez qu'il s'agit d'une erreur/i)).not.toHaveClass(
+      'text-muted-foreground',
+    )
   })
 })

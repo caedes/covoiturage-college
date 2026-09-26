@@ -11,7 +11,7 @@ export function AccessDeniedScreen({ email }: { email: string }) {
         Le compte <strong className="break-all">{email}</strong> ne fait pas partie des parents
         inscrits.
       </p>
-      <p className="text-muted-foreground">
+      <p className="text-secondary-foreground">
         Si vous pensez qu'il s'agit d'une erreur, vérifiez que vous êtes connecté avec le bon compte
         Google, puis contactez l'organisateur.
       </p>
