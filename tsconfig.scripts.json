@@ -16,5 +16,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["scripts", "src/auth/email.ts"]
+  "include": ["scripts", "src/auth/email.ts", "src/planning/dates.ts", "src/planning/types.ts"]
 }
