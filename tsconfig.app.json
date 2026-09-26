@@ -15,7 +15,8 @@
     "moduleDetection": "force",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src"]
 }

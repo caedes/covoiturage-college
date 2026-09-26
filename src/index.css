@@ -1,13 +1,170 @@
+@import "tailwindcss";
+
+/*
+ * Thème shadcn/ui — « Trajets collège », repris tel quel du prototype.
+ * Polices : Barlow (texte) + Barlow Condensed (titres, heures, boutons),
+ * hébergées avec l'application via Fontsource (voir src/main.tsx).
+ */
+
+:root {
+  --radius: 1rem;
+
+  /* Surfaces */
+  --background: oklch(0.961 0 0);
+  --foreground: oklch(0.226 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.226 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.226 0 0);
+
+  /* Bleu ardoise — onglet actif, jour sélectionné, « Je prends » */
+  --primary: oklch(0.525 0.06 241);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Segmented control inactif */
+  --secondary: oklch(0.927 0 0);
+  --secondary-foreground: oklch(0.45 0 0);
+
+  --muted: oklch(0.927 0 0);
+  --muted-foreground: oklch(0.58 0 0);
+
+  --accent: oklch(0.941 0.012 229);
+  --accent-foreground: oklch(0.525 0.06 241);
+
+  --destructive: oklch(0.561 0.158 26.7);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.913 0 0);
+  --input: oklch(0.913 0 0);
+  --ring: oklch(0.525 0.06 241 / 50%);
+
+  /* Statuts */
+  --success: oklch(0.949 0.008 157);
+  --success-foreground: oklch(0.485 0.078 147.5);
+  --warning: oklch(0.959 0.023 78);
+  --warning-foreground: oklch(0.544 0.087 80.8);
+
+  /* Enfants — fond / bordure / texte */
+  --child-1: oklch(0.941 0.012 210);
+  --child-1-border: oklch(0.786 0.037 214);
+  --child-1-foreground: oklch(0.567 0.056 217);
+  --child-2: oklch(0.939 0.019 57);
+  --child-2-border: oklch(0.806 0.049 56);
+  --child-2-foreground: oklch(0.569 0.085 47.5);
+  --child-3: oklch(0.946 0.013 286);
+  --child-3-border: oklch(0.817 0.045 282.5);
+  --child-3-foreground: oklch(0.51 0.099 279);
+
+  /* Graphiques */
+  --chart-1: oklch(0.525 0.06 241);
+  --chart-2: oklch(0.567 0.056 217);
+  --chart-3: oklch(0.569 0.085 47.5);
+  --chart-4: oklch(0.51 0.099 279);
+  --chart-5: oklch(0.485 0.078 147.5);
+
+  /* Sidebar */
+  --sidebar: oklch(0.961 0 0);
+  --sidebar-foreground: oklch(0.226 0 0);
+  --sidebar-primary: oklch(0.525 0.06 241);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.927 0 0);
+  --sidebar-accent-foreground: oklch(0.226 0 0);
+  --sidebar-border: oklch(0.913 0 0);
+  --sidebar-ring: oklch(0.525 0.06 241 / 50%);
+
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+}
+
+/* Mapping standard shadcn : expose les jetons aux utilitaires Tailwind (bg-primary, border-border…). */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Jetons propres au prototype (bg-success, text-child-2-foreground…). */
+@theme inline {
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-child-1: var(--child-1);
+  --color-child-1-border: var(--child-1-border);
+  --color-child-1-foreground: var(--child-1-foreground);
+  --color-child-2: var(--child-2);
+  --color-child-2-border: var(--child-2-border);
+  --color-child-2-foreground: var(--child-2-foreground);
+  --color-child-3: var(--child-3);
+  --color-child-3-border: var(--child-3-border);
+  --color-child-3-foreground: var(--child-3-foreground);
+  --font-heading: var(--font-heading);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+/*
+ * Hors couche, donc prioritaires sur le preflight de Tailwind : le lien
+ * d'évitement et le focus ne doivent dépendre d'aucune classe utilitaire.
+ */
 .skip-link {
   position: absolute;
   left: -9999px;
 }
 
 .skip-link:focus {
-  left: 0;
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 50;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--foreground);
 }
 
+/* Bleu ardoise sur fond clair : contraste supérieur à 3:1, visible aussi autour d'un bouton primaire. */
 :focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
