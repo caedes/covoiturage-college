@@ -79,6 +79,7 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
     holiday: isHoliday(input.holidays, date),
     locked: date < input.today,
     covered: false,
+    children: [],
     aller: [],
     retour: [],
   }
@@ -124,6 +125,20 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
 
   return {
     ...empty,
+    children: childIds.flatMap((childId) => {
+      const child = timetable.children[childId]
+      return child === undefined
+        ? []
+        : [
+            {
+              childId,
+              firstName: child.firstName,
+              gender: child.gender,
+              colorSlot: child.colorSlot,
+              presence: days.get(childId)?.presence ?? 'present',
+            },
+          ]
+    }),
     covered: planned.length > 0 && countable.every(isCovered),
     aller: planned.filter((trip) => trip.direction === 'aller'),
     retour: planned.filter((trip) => trip.direction === 'retour'),

@@ -11,12 +11,14 @@ export type Gender = 'female' | 'male'
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri'
 export type WeekType = 'A' | 'B'
 
+export type ColorSlot = 1 | 2 | 3
+
 export type DaySlot = { start: Time; end: Time }
 
 export type TimetableChild = {
   firstName: string
   gender: Gender
-  colorSlot: 1 | 2 | 3
+  colorSlot: ColorSlot
   weeks: Record<WeekType, Record<Weekday, DaySlot>>
 }
 
@@ -98,6 +100,15 @@ export type HolidayCalendar = {
   publicHolidays: IsoDate[]
 }
 
+/** A child as the day shows them: who they are, and whether they ride today. */
+export type DayChild = {
+  childId: ChildId
+  firstName: string
+  gender: Gender
+  colorSlot: ColorSlot
+  presence: Presence
+}
+
 export type DayPlan = {
   date: IsoDate
   weekday: Weekday
@@ -105,6 +116,7 @@ export type DayPlan = {
   holiday: boolean
   locked: boolean
   covered: boolean
+  children: DayChild[]
   aller: PlannedTrip[]
   retour: PlannedTrip[]
 }

@@ -188,4 +188,27 @@ describe('buildWeek', () => {
     expect(week.days[0]?.aller[0]?.riders).toEqual(['alice', 'basile', 'chloe'])
     expect(week.days[1]?.aller[0]?.riders).toEqual(['alice', 'basile'])
   })
+
+  it("liste les enfants du jour avec leur présence, dans l'ordre des couleurs", () => {
+    const week = buildWeek(
+      input({
+        childDays: [childDay({ date: MONDAY_A, childId: 'basile', presence: 'sansCovoiturage' })],
+      }),
+    )
+    expect(week.days[0]?.children).toEqual([
+      { childId: 'alice', firstName: 'Alice', gender: 'female', colorSlot: 1, presence: 'present' },
+      {
+        childId: 'basile',
+        firstName: 'Basile',
+        gender: 'male',
+        colorSlot: 2,
+        presence: 'sansCovoiturage',
+      },
+      { childId: 'chloe', firstName: 'Chloé', gender: 'female', colorSlot: 3, presence: 'present' },
+    ])
+  })
+
+  it('ne liste aucun enfant un jour de vacances', () => {
+    expect(buildWeek(input({ monday: '2026-10-19' })).days[0]?.children).toEqual([])
+  })
 })
