@@ -6,6 +6,10 @@ export type Member = {
   email: string
   firstName: string
   role: MemberRole
+  /** Children this parent answers for. Always empty for a child account. */
+  childIds: string[]
+  /** The child a child account stands for. Always `null` for a parent. */
+  childId: string | null
 }
 
 /**
