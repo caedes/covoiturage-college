@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:rules": "npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only firestore \"vitest run -c vitest.rules.config.ts\"",
     "rules:deploy": "npx --yes firebase-tools@15 deploy --only firestore:rules",
+    "import": "tsx scripts/import.ts",
     "lint": "biome check .",
     "format": "biome format --write .",
     "prepare": "husky"
@@ -43,9 +44,11 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.1",
+    "firebase-admin": "^13.10.0",
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
