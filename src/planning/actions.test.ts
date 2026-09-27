@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { decideCancel, decideTake, tripAction } from './actions'
 
 describe('tripAction', () => {
-  it("propose 'Je prends' sur un trajet libre", () => {
+  it('propose « Je prends » sur un trajet libre', () => {
     expect(tripAction({ kind: 'open' }, true)).toBe('take')
   })
 
-  it("propose 'Annuler' sur un trajet que je conduis", () => {
+  it('propose « Annuler » sur un trajet que je conduis', () => {
     expect(tripAction({ kind: 'mine' }, true)).toBe('cancel')
   })
 
-  it("propose 'Je le prends' sur le trajet d un autre parent", () => {
+  it("propose « Je le prends » sur le trajet d'un autre parent", () => {
     expect(
       tripAction(
         { kind: 'covered', driverName: 'Paul', driverUid: 'uid-paul', replacedYou: false },
@@ -19,7 +19,7 @@ describe('tripAction', () => {
     ).toBe('takeOver')
   })
 
-  it('ne propose rien au conducteur qu on vient de remplacer', () => {
+  it("ne propose rien au conducteur qu'on vient de remplacer", () => {
     expect(
       tripAction(
         { kind: 'covered', driverName: 'Paul', driverUid: 'uid-paul', replacedYou: true },
@@ -28,45 +28,45 @@ describe('tripAction', () => {
     ).toBeNull()
   })
 
-  it("propose 'Annuler' sur un trajet vide que je conduis encore, rien sinon", () => {
-    expect(tripAction({ kind: 'void', driverName: 'Lea', mine: true }, true)).toBe('cancel')
+  it('propose « Annuler » sur un trajet vidé que je conduis encore, rien sinon', () => {
+    expect(tripAction({ kind: 'void', driverName: 'Léa', mine: true }, true)).toBe('cancel')
     expect(tripAction({ kind: 'void', driverName: 'Paul', mine: false }, true)).toBeNull()
     expect(tripAction({ kind: 'void', driverName: null, mine: false }, true)).toBeNull()
   })
 
-  it('ne propose rien quand le visiteur ne peut pas conduire ce jour-la', () => {
+  it('ne propose rien quand le visiteur ne peut pas conduire ce jour-là', () => {
     expect(tripAction({ kind: 'open' }, false)).toBeNull()
     expect(tripAction({ kind: 'mine' }, false)).toBeNull()
   })
 })
 
 describe('decideTake', () => {
-  it('ecrit un trajet encore libre', () => {
+  it('écrit un trajet encore libre', () => {
     expect(decideTake(null, null)).toEqual({ kind: 'write', replacedDriverUid: null })
   })
 
-  it('refuse de prendre un trajet deja pris, en nommant son conducteur', () => {
+  it('refuse de prendre un trajet déjà pris, en nommant son conducteur', () => {
     expect(decideTake({ driverUid: 'uid-maud', driverName: 'Maud' }, null)).toEqual({
       kind: 'conflict',
       driverName: 'Maud',
     })
   })
 
-  it('reprend un trajet a son conducteur attendu', () => {
+  it('reprend un trajet à son conducteur attendu', () => {
     expect(decideTake({ driverUid: 'uid-paul', driverName: 'Paul' }, 'uid-paul')).toEqual({
       kind: 'write',
       replacedDriverUid: 'uid-paul',
     })
   })
 
-  it('refuse de reprendre un trajet que quelqu un d autre a repris entre-temps', () => {
+  it("refuse de reprendre un trajet que quelqu'un d'autre a repris entre-temps", () => {
     expect(decideTake({ driverUid: 'uid-maud', driverName: 'Maud' }, 'uid-paul')).toEqual({
       kind: 'conflict',
       driverName: 'Maud',
     })
   })
 
-  it('prend simplement un trajet libere entre-temps', () => {
+  it('prend simplement un trajet libéré entre-temps', () => {
     expect(decideTake(null, 'uid-paul')).toEqual({ kind: 'write', replacedDriverUid: null })
   })
 })
@@ -76,7 +76,7 @@ describe('decideCancel', () => {
     expect(decideCancel({ driverUid: 'uid-sophie' }, 'uid-sophie')).toBe('delete')
   })
 
-  it('ne fait rien quand le trajet a disparu ou qu un autre l a repris', () => {
+  it("ne fait rien quand le trajet a disparu ou qu'un autre l'a repris", () => {
     expect(decideCancel(null, 'uid-sophie')).toBe('nothing')
     expect(decideCancel({ driverUid: 'uid-maud' }, 'uid-sophie')).toBe('nothing')
   })

@@ -213,7 +213,7 @@ describe('buildWeek', () => {
     expect(buildWeek(input({ monday: '2026-10-19' })).days[0]?.children).toEqual([])
   })
 
-  it("attache a chaque trajet l'action offerte au visiteur", () => {
+  it("attache à chaque trajet l'action offerte au visiteur", () => {
     const week = buildWeek(
       input({
         today: '2026-09-29',
@@ -233,7 +233,7 @@ describe('buildWeek', () => {
     expect(week.days[1]?.retour[0]?.action).toBe('take')
   })
 
-  it("n'offre aucune action a qui ne peut pas conduire", () => {
+  it("n'offre aucune action à qui ne peut pas conduire", () => {
     const week = buildWeek(input({ viewerCanDrive: false }))
     expect(
       week.days

@@ -131,19 +131,19 @@ describe('récapitulatif', () => {
 })
 
 describe('actions', () => {
-  it('reprend les libelles du prototype', () => {
+  it('reprend les libellés du prototype', () => {
     expect(actionLabel('take')).toBe('Je prends')
     expect(actionLabel('takeOver')).toBe('Je le prends')
     expect(actionLabel('cancel')).toBe('Annuler')
   })
 
-  it('nomme le trajet dans le nom accessible, apres le libelle visible', () => {
+  it('nomme le trajet dans le nom accessible, après le libellé visible', () => {
     expect(actionAccessibleLabel('take', '07:40', 'Maison → Centre-bourg')).toBe(
       'Je prends — trajet de 07:40, Maison → Centre-bourg',
     )
   })
 
-  it('explique un conflit ou un echec en vouvoyant', () => {
+  it('explique un conflit ou un échec en vouvoyant', () => {
     expect(writeFailureMessage({ status: 'alreadyTaken', driverName: 'Maud' })).toBe(
       'Maud a pris ce trajet juste avant vous.',
     )
