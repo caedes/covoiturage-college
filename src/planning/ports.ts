@@ -36,4 +36,9 @@ export type PlanningRepository = {
   takeOver(ref: CarpoolRef, driver: Driver, currentDriverUid: string): Promise<WriteOutcome>
   /** « Annuler ». */
   cancel(ref: CarpoolRef, driver: Driver): Promise<WriteOutcome>
+  /**
+   * Presence, « Qui prend ce trajet ? » and permanence: the day's whole options for one child,
+   * signed by `authorUid`. The document is replaced, never merged.
+   */
+  saveChildDay(childDay: ChildDay, authorUid: string): Promise<WriteOutcome>
 }

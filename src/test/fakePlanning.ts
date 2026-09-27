@@ -1,4 +1,5 @@
 import { decideCancel, decideTake } from '../planning/actions'
+import { childDayKey } from '../planning/childOptions'
 import type {
   CarpoolRef,
   Driver,
@@ -7,9 +8,12 @@ import type {
   WriteOutcome,
 } from '../planning/ports'
 import { carpoolKey } from '../planning/trips'
+import type { ChildDay } from '../planning/types'
 import { timetable } from './planningFixtures'
 
-type WriteCall = { kind: 'take' | 'takeOver' | 'cancel'; key: string; currentDriverUid?: string }
+type WriteCall =
+  | { kind: 'take' | 'takeOver' | 'cancel'; key: string; currentDriverUid?: string }
+  | { kind: 'saveChildDay'; key: string; childDay: ChildDay; authorUid: string }
 
 export type PlanningScenario = {
   repository: PlanningRepository
@@ -50,7 +54,7 @@ export function planning(
   const count = counters()
   const emit = () => {
     for (const listener of listeners) {
-      listener({ ...state, carpools: [...state.carpools] })
+      listener({ ...state, carpools: [...state.carpools], childDays: [...state.childDays] })
     }
   }
   const write = (apply: () => void): Promise<WriteOutcome> => {
@@ -80,7 +84,7 @@ export function planning(
       subscribe(_range, listener) {
         count.subscribes += 1
         listeners.add(listener)
-        listener({ ...state, carpools: [...state.carpools] })
+        listener({ ...state, carpools: [...state.carpools], childDays: [...state.childDays] })
         return () => {
           count.unsubscribes += 1
           listeners.delete(listener)
@@ -160,6 +164,16 @@ export function planning(
           state.carpools = others(ref)
         })
       },
+      saveChildDay(childDay: ChildDay, authorUid: string) {
+        const key = childDayKey(childDay.date, childDay.childId)
+        count.writes.push({ kind: 'saveChildDay', key, childDay, authorUid })
+        return settle(() => {
+          state.childDays = [
+            ...state.childDays.filter((day) => childDayKey(day.date, day.childId) !== key),
+            childDay,
+          ]
+        })
+      },
     },
     subscribeCalls: () => count.subscribes,
     unsubscribeCalls: () => count.unsubscribes,
@@ -184,6 +198,7 @@ function readOnly(
       take: async () => FAILED,
       takeOver: async () => FAILED,
       cancel: async () => FAILED,
+      saveChildDay: async () => FAILED,
     },
     subscribeCalls: () => count.subscribes,
     unsubscribeCalls: () => count.unsubscribes,
