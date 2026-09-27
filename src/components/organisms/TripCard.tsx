@@ -1,7 +1,9 @@
-import { actionAccessibleLabel, skipNote } from '../../lib/planningLabels'
+import { useId } from 'react'
+import { actionAccessibleLabel, skipNote, tripDescription } from '../../lib/planningLabels'
 import { cn } from '../../lib/utils'
-import type { DayChild, PlannedTrip, TripStatus } from '../../planning/types'
+import type { ChildId, DayChild, PlannedTrip, TripStatus } from '../../planning/types'
 import { ChildAvatar } from '../atoms/ChildAvatar'
+import { ChildChip } from '../molecules/ChildChip'
 import { TripStatusBar } from '../molecules/TripStatusBar'
 
 const CARD: Record<TripStatus['kind'], string> = {
@@ -15,16 +17,23 @@ type TripCardProps = {
   trip: PlannedTrip
   roster: DayChild[]
   onAction?: (trip: PlannedTrip) => void
+  onToggleRider?: (trip: PlannedTrip, childId: ChildId) => void
   pendingKey?: string | null
 }
 
-export function TripCard({ trip, roster, onAction, pendingKey }: TripCardProps) {
+export function TripCard({ trip, roster, onAction, onToggleRider, pendingKey }: TripCardProps) {
+  const whoId = useId()
   const nameOf = (childId: string) =>
     roster.find((child) => child.childId === childId)?.firstName ?? childId
-  const skipped = trip.excluded
+  const skippedIds = trip.excluded
     .filter((exclusion) => exclusion.reason === 'skipped')
-    .map((exclusion) => nameOf(exclusion.childId))
-  const note = skipNote(skipped)
+    .map((exclusion) => exclusion.childId)
+  const note = skipNote(skippedIds.map(nameOf))
+  /** The viewer's children on this trip, riding or taken off it: the ones they may move. */
+  const own = roster.filter(
+    (child) =>
+      child.editable && (trip.riders.includes(child.childId) || skippedIds.includes(child.childId)),
+  )
 
   return (
     <div className={cn('flex flex-col gap-3 rounded-3xl border p-4', CARD[trip.status.kind])}>
@@ -44,6 +53,28 @@ export function TripCard({ trip, roster, onAction, pendingKey }: TripCardProps) 
         </span>
       </div>
       {note === '' ? null : <p className="text-sm text-secondary-foreground">{note}</p>}
+      {own.length === 0 || onToggleRider === undefined ? null : (
+        // biome-ignore lint/a11y/useSemanticElements: a <fieldset> would break this inline flex row; role="group" plus aria-labelledby is a valid ARIA group.
+        <div role="group" aria-labelledby={whoId} className="flex flex-wrap items-center gap-2">
+          <span id={whoId} className="text-sm text-secondary-foreground">
+            Qui prend ce trajet ?{' '}
+            <span className="sr-only">— {tripDescription(trip.time, trip.label)}</span>
+          </span>
+          {own.map((child) => {
+            const rides = trip.riders.includes(child.childId)
+            return (
+              <ChildChip
+                key={child.childId}
+                label={child.firstName}
+                colorSlot={child.colorSlot}
+                active={rides}
+                pressed={rides}
+                onClick={() => onToggleRider(trip, child.childId)}
+              />
+            )
+          })}
+        </div>
+      )}
       <TripStatusBar
         status={trip.status}
         action={
