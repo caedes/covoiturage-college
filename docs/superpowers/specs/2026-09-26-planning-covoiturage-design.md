@@ -381,8 +381,13 @@ Jour passé : tout en affichage seul, mention « Journée passée ». Jour de va
 ### Réactivité
 
 Les écritures simples (`childDays`) profitent de la compensation de latence de
-Firestore : `onSnapshot` renvoie l'état local sans attendre le serveur. « Je prends »,
-« Je le prends » et « Annuler » passent tous par une transaction : le bouton est
+Firestore : `onSnapshot` renvoie l'état local sans attendre le serveur.
+
+Chaque option réécrit le document de la journée en entier. Si les deux parents d'un enfant
+modifient la même journée au même instant, la dernière écriture l'emporte : le cas est rare,
+l'enjeu faible, et une transaction n'apporterait rien d'autre qu'un aller-retour réseau.
+
+« Je prends », « Je le prends » et « Annuler » passent tous par une transaction : le bouton est
 désactivé, avec un état « en cours », jusqu'à la réponse ; hors ligne ou en cas de
 promesse rejetée, l'échec est annoncé comme les autres.
 
@@ -392,6 +397,9 @@ Une erreur d'abonnement affiche un message avec « Réessayer », sur le modèle
 Un refus par les règles Firestore (jour verrouillé, trajet déjà modifié) se distingue
 d'un problème de connexion : « Ce trajet ne peut plus être modifié. Rechargez la page
 pour voir son état actuel. »
+
+Pour les options d'un enfant, le même refus s'annonce « Cette journée ne peut plus être
+modifiée. Rechargez la page pour voir son état actuel. »
 
 ## Script d'import
 
