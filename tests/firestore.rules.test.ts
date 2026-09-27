@@ -51,6 +51,22 @@ function carpoolOf(date: string, driverUid: string, driverName: string, extra: o
   }
 }
 
+function childDayId(date: string, childId: string): string {
+  return `${date}_${childId}`
+}
+
+function childDayOf(date: string, childId: string, updatedByUid: string, extra: object = {}) {
+  return {
+    date,
+    childId,
+    presence: 'absent',
+    skipped: [],
+    updatedByUid,
+    updatedAt: serverTimestamp(),
+    ...extra,
+  }
+}
+
 let testEnv: RulesTestEnvironment
 
 function asSignedIn(email: string, emailVerified = true) {
@@ -186,14 +202,6 @@ describe.each(['carpools', 'childDays'])('règles de la collection %s', (name) =
 
   it('refuse la lecture à un compte hors liste', async () => {
     await assertFails(getDoc(doc(asSignedIn(OUTSIDER), name, '2026-09-28_quelconque')))
-  })
-})
-
-describe('règles de la collection childDays', () => {
-  it("refuse toute écriture tant qu'aucun lot ne l'ouvre", async () => {
-    await assertFails(
-      setDoc(doc(asSignedIn(MEMBER), 'childDays', '2026-09-28_quelconque'), { date: '2026-09-28' }),
-    )
   })
 })
 
@@ -350,6 +358,210 @@ describe('écritures sur la collection carpools', () => {
   it("refuse d'annuler un trajet d'un jour passé, même le sien", async () => {
     await seed(YESTERDAY, MEMBER, 'Sophie')
     await assertFails(deleteDoc(doc(asSignedIn(MEMBER), 'carpools', carpoolId(YESTERDAY))))
+  })
+
+  it('refuse à un compte enfant de reprendre un trajet', async () => {
+    await seed(TOMORROW, OTHER_MEMBER, 'Karim')
+    await assertFails(
+      setDoc(
+        doc(asSignedIn(CHILD_MEMBER), 'carpools', carpoolId(TOMORROW)),
+        carpoolOf(TOMORROW, CHILD_MEMBER, 'Lou', { replacedDriverUid: OTHER_MEMBER }),
+      ),
+    )
+  })
+
+  it("refuse à un compte enfant d'annuler un trajet, même à son nom", async () => {
+    await seed(TOMORROW, CHILD_MEMBER, 'Lou')
+    await assertFails(deleteDoc(doc(asSignedIn(CHILD_MEMBER), 'carpools', carpoolId(TOMORROW))))
+  })
+
+  it("refuse une date ou une heure qui n'est pas une chaîne", async () => {
+    await assertFails(
+      setDoc(
+        doc(asSignedIn(MEMBER), 'carpools', carpoolId(TOMORROW)),
+        carpoolOf(TOMORROW, MEMBER, 'Sophie', { time: 1600 }),
+      ),
+    )
+    await assertFails(
+      setDoc(
+        doc(asSignedIn(MEMBER), 'carpools', carpoolId(TOMORROW)),
+        carpoolOf(TOMORROW, MEMBER, 'Sophie', { date: 20261001 }),
+      ),
+    )
+  })
+
+  it('accepte le quatorzième jour et refuse le quinzième', async () => {
+    const [last, beyond] = [isoDay(14), isoDay(15)]
+    await assertSucceeds(
+      setDoc(
+        doc(asSignedIn(MEMBER), 'carpools', carpoolId(last)),
+        carpoolOf(last, MEMBER, 'Sophie'),
+      ),
+    )
+    await assertFails(
+      setDoc(
+        doc(asSignedIn(MEMBER), 'carpools', carpoolId(beyond)),
+        carpoolOf(beyond, MEMBER, 'Sophie'),
+      ),
+    )
+  })
+})
+
+describe('écritures sur la collection childDays', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore()
+      await setDoc(doc(database, 'members', MEMBER), {
+        firstName: 'Sophie',
+        role: 'parent',
+        childIds: ['alice'],
+      })
+      await setDoc(doc(database, 'members', OTHER_MEMBER), {
+        firstName: 'Karim',
+        role: 'parent',
+        childIds: ['alice'],
+      })
+      await setDoc(doc(database, 'members', CHILD_MEMBER), {
+        firstName: 'Lou',
+        role: 'child',
+        childId: 'lou',
+      })
+    })
+  })
+
+  function save(email: string, date: string, childId: string, data: object) {
+    return setDoc(doc(asSignedIn(email), 'childDays', childDayId(date, childId)), data)
+  }
+
+  async function seed(date: string, childId: string, updatedByUid: string) {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(
+        doc(context.firestore(), 'childDays', childDayId(date, childId)),
+        childDayOf(date, childId, updatedByUid),
+      )
+    })
+  }
+
+  it('autorise un parent à régler la présence de son enfant', async () => {
+    await assertSucceeds(save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', MEMBER)))
+  })
+
+  it("autorise une permanence et le retrait d'un sens", async () => {
+    await assertSucceeds(
+      save(
+        MEMBER,
+        TOMORROW,
+        'alice',
+        childDayOf(TOMORROW, 'alice', MEMBER, {
+          presence: 'present',
+          permanence: '17:00',
+          skipped: ['aller'],
+        }),
+      ),
+    )
+  })
+
+  it("autorise un parent à modifier la journée réglée par l'autre parent", async () => {
+    await seed(TOMORROW, 'alice', OTHER_MEMBER)
+    await assertSucceeds(
+      save(
+        MEMBER,
+        TOMORROW,
+        'alice',
+        childDayOf(TOMORROW, 'alice', MEMBER, { presence: 'present' }),
+      ),
+    )
+  })
+
+  it("refuse l'enfant d'une autre famille", async () => {
+    await assertFails(save(MEMBER, TOMORROW, 'basile', childDayOf(TOMORROW, 'basile', MEMBER)))
+  })
+
+  it("refuse une écriture signée au nom d'un autre parent", async () => {
+    await assertFails(save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', OTHER_MEMBER)))
+  })
+
+  it('refuse toute écriture à un compte enfant, même pour lui-même', async () => {
+    await assertFails(
+      save(CHILD_MEMBER, TOMORROW, 'lou', childDayOf(TOMORROW, 'lou', CHILD_MEMBER)),
+    )
+  })
+
+  it('refuse une présence hors liste', async () => {
+    await assertFails(
+      save(
+        MEMBER,
+        TOMORROW,
+        'alice',
+        childDayOf(TOMORROW, 'alice', MEMBER, { presence: 'malade' }),
+      ),
+    )
+  })
+
+  it("refuse une permanence hors format ou qui n'est pas une chaîne", async () => {
+    for (const permanence of ['17h00', '25:00', 1700]) {
+      await assertFails(
+        save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', MEMBER, { permanence })),
+      )
+    }
+  })
+
+  it('refuse un sens de retrait inconnu, répété ou hors liste', async () => {
+    for (const skipped of [['midi'], ['aller', 'aller'], 'aller']) {
+      await assertFails(
+        save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', MEMBER, { skipped })),
+      )
+    }
+  })
+
+  it('refuse un identifiant ou une date incohérents avec les champs', async () => {
+    await assertFails(save(MEMBER, TOMORROW, 'basile', childDayOf(TOMORROW, 'alice', MEMBER)))
+    await assertFails(
+      save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', MEMBER, { date: 20261001 })),
+    )
+  })
+
+  it('refuse un champ inventé ou un champ obligatoire manquant', async () => {
+    await assertFails(
+      save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', MEMBER, { note: 'dentiste' })),
+    )
+    await assertFails(
+      save(MEMBER, TOMORROW, 'alice', {
+        date: TOMORROW,
+        childId: 'alice',
+        presence: 'absent',
+        updatedByUid: MEMBER,
+        updatedAt: serverTimestamp(),
+      }),
+    )
+  })
+
+  it('refuse une date de mise à jour fournie par le client', async () => {
+    await assertFails(
+      save(
+        MEMBER,
+        TOMORROW,
+        'alice',
+        childDayOf(TOMORROW, 'alice', MEMBER, { updatedAt: new Date('2026-01-01T00:00:00Z') }),
+      ),
+    )
+  })
+
+  it('refuse un jour passé', async () => {
+    await assertFails(save(MEMBER, YESTERDAY, 'alice', childDayOf(YESTERDAY, 'alice', MEMBER)))
+  })
+
+  it('accepte le quatorzième jour et refuse le quinzième', async () => {
+    const [last, beyond] = [isoDay(14), isoDay(15)]
+    await assertSucceeds(save(MEMBER, last, 'alice', childDayOf(last, 'alice', MEMBER)))
+    await assertFails(save(MEMBER, beyond, 'alice', childDayOf(beyond, 'alice', MEMBER)))
+  })
+
+  it("refuse toute suppression, même au parent de l'enfant", async () => {
+    await seed(TOMORROW, 'alice', MEMBER)
+    await assertFails(
+      deleteDoc(doc(asSignedIn(MEMBER), 'childDays', childDayId(TOMORROW, 'alice'))),
+    )
   })
 })
 

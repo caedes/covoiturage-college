@@ -58,6 +58,25 @@ service cloud.firestore {
       return data.driverUid == request.auth.uid && data.driverName == member().firstName;
     }
 
+    function isChildDayShape(childDayId, data) {
+      return data.keys().hasOnly(['date', 'childId', 'presence', 'permanence', 'skipped',
+                                  'updatedByUid', 'updatedAt'])
+        && data.keys().hasAll(['date', 'childId', 'presence', 'skipped', 'updatedByUid',
+                               'updatedAt'])
+        && data.date is string
+        && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.childId is string
+        && childDayId == data.date + '_' + data.childId
+        && data.presence in ['present', 'absent', 'sansCovoiturage']
+        && (!('permanence' in data)
+            || (data.permanence is string
+                && data.permanence.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')))
+        && data.skipped is list
+        && data.skipped.hasOnly(['aller', 'retour'])
+        && data.skipped.toSet().size() == data.skipped.size()
+        && data.updatedAt == request.time;
+    }
+
     match /members/{memberEmail} {
       // Chacun ne lit que sa propre fiche, et seulement par identifiant.
       allow get: if isVerifiedUser()
@@ -77,8 +96,7 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Covoiturages : lus par les membres, ecrits par leur conducteur. Options des enfants :
-    // lues par les membres, ecrites au lot suivant.
+    // Covoiturages : lus par les membres, ecrits par leur conducteur.
     match /carpools/{carpoolId} {
       allow read: if isMember();
       allow create: if isParent()
@@ -97,8 +115,15 @@ service cloud.firestore {
         && isEditableDay(resource.data.date);
     }
 
+    // Options des enfants : lues par les membres, ecrites par un parent de l'enfant, a son nom.
+    // Jamais supprimees : revenir a la valeur par defaut s'ecrit comme une autre option.
     match /childDays/{childDayId} {
       allow read: if isMember();
+      allow create, update: if isParent()
+        && isChildDayShape(childDayId, request.resource.data)
+        && request.resource.data.childId in member().childIds
+        && request.resource.data.updatedByUid == request.auth.uid
+        && isEditableDay(request.resource.data.date);
     }
 
     // Les collections metier a venir naissent fermees. Ce bloc ne restreint
