@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import type { DayChild, PermanenceOffer, PlannedTrip } from '../../planning/types'
+import type { ChildId, DayChild, PermanenceOffer, PlannedTrip } from '../../planning/types'
 import { PermanenceRow } from './PermanenceRow'
 import { TripCard } from './TripCard'
 
@@ -8,6 +8,8 @@ type TripSectionProps = {
   trips: PlannedTrip[]
   roster: DayChild[]
   onAction?: (trip: PlannedTrip) => void
+  onToggleRider?: (trip: PlannedTrip, childId: ChildId) => void
+  onTogglePermanence?: (offer: PermanenceOffer) => void
   pendingKey?: string | null
 }
 
@@ -19,7 +21,15 @@ function byExitTime(offers: PermanenceOffer[]): [string, PermanenceOffer[]][] {
   return [...groups.entries()]
 }
 
-export function TripSection({ title, trips, roster, onAction, pendingKey }: TripSectionProps) {
+export function TripSection({
+  title,
+  trips,
+  roster,
+  onAction,
+  onToggleRider,
+  onTogglePermanence,
+  pendingKey,
+}: TripSectionProps) {
   const titleId = useId()
   return (
     <section aria-labelledby={titleId} className="flex flex-col gap-2.5">
@@ -36,9 +46,21 @@ export function TripSection({ title, trips, roster, onAction, pendingKey }: Trip
           {trips.map((trip) => (
             <li key={trip.key} className="flex flex-col gap-2">
               {byExitTime(trip.offers).map(([exitTime, offers]) => (
-                <PermanenceRow key={exitTime} exitTime={exitTime} offers={offers} roster={roster} />
+                <PermanenceRow
+                  key={exitTime}
+                  exitTime={exitTime}
+                  offers={offers}
+                  roster={roster}
+                  onToggle={onTogglePermanence}
+                />
               ))}
-              <TripCard trip={trip} roster={roster} onAction={onAction} pendingKey={pendingKey} />
+              <TripCard
+                trip={trip}
+                roster={roster}
+                onAction={onAction}
+                onToggleRider={onToggleRider}
+                pendingKey={pendingKey}
+              />
             </li>
           ))}
         </ul>

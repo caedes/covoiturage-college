@@ -59,6 +59,11 @@ const BUS: PlannedTrip = {
   action: 'take',
 }
 
+/** The same children, the viewer being the parent of those listed. */
+function rosterOf(...editable: string[]): DayChild[] {
+  return ROSTER.map((child) => ({ ...child, editable: editable.includes(child.childId) }))
+}
+
 describe('WeekTabs', () => {
   it('propose les deux semaines en onglets, avec la période', () => {
     render(
@@ -123,6 +128,40 @@ describe('PresenceBar', () => {
     expect(within(section).getByText('Alice')).toBeInTheDocument()
     expect(within(section).getByText('Basile · absent')).toHaveAttribute('data-active', 'false')
   })
+
+  it('ouvre le panneau de présence de son enfant et enregistre le choix', async () => {
+    const user = userEvent.setup()
+    const onPresenceChange = vi.fn()
+    render(<PresenceBar roster={rosterOf('basile')} onPresenceChange={onPresenceChange} />)
+    const chip = screen.getByRole('button', { name: 'Basile · absent' })
+    expect(chip).toHaveAttribute('aria-expanded', 'false')
+    await user.click(chip)
+    expect(chip).toHaveAttribute('aria-expanded', 'true')
+    const panel = screen.getByRole('radiogroup', { name: 'Présence de Basile' })
+    expect(chip).toHaveAttribute('aria-controls', panel.id)
+    expect(within(panel).getByRole('radio', { name: 'Absent du collège' })).toBeChecked()
+    await user.click(
+      within(panel).getByRole('radio', { name: 'Au collège, mais sans covoiturage' }),
+    )
+    expect(onPresenceChange).toHaveBeenCalledWith('basile', 'sansCovoiturage')
+  })
+
+  it('ferme le panneau avec Échap et rend le focus à la puce', async () => {
+    const user = userEvent.setup()
+    render(<PresenceBar roster={rosterOf('basile')} onPresenceChange={vi.fn()} />)
+    const chip = screen.getByRole('button', { name: 'Basile · absent' })
+    await user.click(chip)
+    await user.click(screen.getByRole('radio', { name: 'Absent du collège' }))
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('radiogroup')).toBeNull()
+    expect(chip).toHaveFocus()
+    expect(chip).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it("laisse en affichage seul la présence des enfants d'une autre famille", () => {
+    render(<PresenceBar roster={ROSTER} onPresenceChange={vi.fn()} />)
+    expect(screen.queryByRole('button')).toBeNull()
+  })
 })
 
 describe('TripCard', () => {
@@ -169,6 +208,32 @@ describe('TripCard', () => {
     render(<TripCard trip={BUS} roster={ROSTER} />)
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it('propose « Qui prend ce trajet ? » pour ses enfants, pressés quand ils y sont', async () => {
+    const user = userEvent.setup()
+    const onToggleRider = vi.fn()
+    render(
+      <TripCard trip={BUS} roster={rosterOf('alice', 'chloe')} onToggleRider={onToggleRider} />,
+    )
+    const group = screen.getByRole('group', {
+      name: 'Qui prend ce trajet ? — trajet de 17:45, Centre-bourg → Maison',
+    })
+    expect(within(group).getByRole('button', { name: 'Alice' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(within(group).getByRole('button', { name: 'Chloé' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    await user.click(within(group).getByRole('button', { name: 'Chloé' }))
+    expect(onToggleRider).toHaveBeenCalledWith(BUS, 'chloe')
+  })
+
+  it("n'affiche pas « Qui prend ce trajet ? » sans enfant à régler", () => {
+    render(<TripCard trip={BUS} roster={rosterOf('basile')} onToggleRider={vi.fn()} />)
+    expect(screen.queryByRole('group')).toBeNull()
+  })
 })
 
 describe('TripSection', () => {
@@ -186,6 +251,31 @@ describe('TripSection', () => {
   it('dit quand il n’y a aucun trajet', () => {
     render(<TripSection title="Aller" trips={[]} roster={ROSTER} />)
     expect(screen.getByText('Aucun trajet')).toBeInTheDocument()
+  })
+
+  it('rend la permanence réglable pour ses enfants', async () => {
+    const user = userEvent.setup()
+    const onTogglePermanence = vi.fn()
+    render(
+      <TripSection
+        title="Retour"
+        trips={[BUS]}
+        roster={rosterOf('chloe')}
+        onTogglePermanence={onTogglePermanence}
+      />,
+    )
+    const group = screen.getByRole('group', { name: 'Permanence 17:00' })
+    const chip = within(group).getByRole('button', { name: 'Chloé' })
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
+    await user.click(chip)
+    expect(onTogglePermanence).toHaveBeenCalledWith(BUS.offers[0])
+  })
+
+  it("laisse la permanence en affichage seul pour les enfants d'une autre famille", () => {
+    render(
+      <TripSection title="Retour" trips={[BUS]} roster={ROSTER} onTogglePermanence={vi.fn()} />,
+    )
+    expect(screen.queryByRole('button')).toBeNull()
   })
 })
 
