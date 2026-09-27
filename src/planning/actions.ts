@@ -1,8 +1,8 @@
 import type { TripAction, TripStatus } from './types'
 
 /**
- * The action offered on a trip. Nothing on a locked day or to someone who cannot drive; nothing to
- * a driver just replaced, who sees « X a pris votre place » instead.
+ * The action offered on a trip. Nothing on a locked day or to someone who cannot drive. A driver
+ * just replaced may take their trip back: « Je le prends » is offered to them as to anyone else.
  */
 export function tripAction(status: TripStatus, editable: boolean): TripAction | null {
   if (!editable) {
@@ -14,7 +14,7 @@ export function tripAction(status: TripStatus, editable: boolean): TripAction | 
     case 'mine':
       return 'cancel'
     case 'covered':
-      return status.replacedYou ? null : 'takeOver'
+      return 'takeOver'
     case 'void':
       return status.mine ? 'cancel' : null
   }

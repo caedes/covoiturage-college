@@ -216,11 +216,11 @@ describe('écritures sur la collection carpools', () => {
     })
   })
 
-  async function seed(date: string, driverUid: string, driverName: string) {
+  async function seed(date: string, driverUid: string, driverName: string, extra: object = {}) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       await setDoc(
         doc(context.firestore(), 'carpools', carpoolId(date)),
-        carpoolOf(date, driverUid, driverName),
+        carpoolOf(date, driverUid, driverName, extra),
       )
     })
   }
@@ -317,6 +317,16 @@ describe('écritures sur la collection carpools', () => {
 
   it('autorise à reprendre un trajet en nommant le conducteur remplacé', async () => {
     await seed(TOMORROW, OTHER_MEMBER, 'Karim')
+    await assertSucceeds(
+      setDoc(
+        doc(asSignedIn(MEMBER), 'carpools', carpoolId(TOMORROW)),
+        carpoolOf(TOMORROW, MEMBER, 'Sophie', { replacedDriverUid: OTHER_MEMBER }),
+      ),
+    )
+  })
+
+  it('autorise le conducteur remplacé à reprendre son trajet', async () => {
+    await seed(TOMORROW, OTHER_MEMBER, 'Karim', { replacedDriverUid: MEMBER })
     await assertSucceeds(
       setDoc(
         doc(asSignedIn(MEMBER), 'carpools', carpoolId(TOMORROW)),
