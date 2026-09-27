@@ -7,7 +7,7 @@ Consignes pour les agents de code (Claude Code, Codex, Cursor…) travaillant su
 Covoiturage collège — application d'entraide entre parents pour organiser les trajets
 domicile ↔ collège. Le dépôt contient le socle technique, la porte d'authentification et
 le planning de la semaine. Les parents peuvent désormais prendre, reprendre et annuler un
-trajet. Les options des enfants arrivent au lot suivant.
+trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs propres enfants.
 
 ## Commandes
 
@@ -44,9 +44,10 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   `members/{email}` fait foi. Membres lisent `timetables`, `carpools` et `childDays`.
   `carpools` s'écrit par son seul conducteur (création, reprise en nommant le
   conducteur remplacé, annulation) sur un jour non verrouillé (D 22:00 UTC) et à
-  14 jours au plus. Aucune autre écriture cliente : `timetables` et `members` par
-  `scripts/import.ts` (SDK Admin) uniquement, `childDays` au lot suivant. Les autres
-  collections naissent fermées.
+  14 jours au plus. `childDays` s'écrit par un parent de l'enfant (`childId` dans ses
+  `childIds`), à son nom (`updatedByUid`), dans les mêmes bornes, et ne se supprime
+  jamais. Aucune autre écriture cliente : `timetables` et `members` par
+  `scripts/import.ts` (SDK Admin) uniquement. Les autres collections naissent fermées.
 - **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
   Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.

@@ -3,7 +3,7 @@
 Application d'entraide entre parents pour organiser les trajets domicile ↔ collège.
 Ce dépôt contient le socle technique (routage, layout accessible et harnais de test)
 et le planning de la semaine. Les parents peuvent prendre, reprendre et annuler un
-trajet. Les options des enfants arrivent au lot suivant.
+trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs propres enfants.
 
 ## Commandes
 
