@@ -369,8 +369,9 @@ Jour passé : tout en affichage seul, mention « Journée passée ». Jour de va
 - La couleur n'est jamais seule porteuse de sens : l'initiale est visible et le prénom
   forme le nom accessible.
 - Les échecs d'écriture sont annoncés dans une toast `role="alert"`, sans déplacer le
-  focus : « Paul a pris ce trajet juste avant vous », « Enregistrement impossible,
-  vérifie ta connexion ».
+  focus : « Paul a pris ce trajet juste avant vous. », « Enregistrement impossible.
+  Vérifiez votre connexion internet, puis réessayez. » L'interface vouvoie
+  (`docs/rules/langue.md`).
 
 ### Réactivité
 
