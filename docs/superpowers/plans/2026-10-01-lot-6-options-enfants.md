@@ -16,7 +16,12 @@
 - **Libellés du prototype, exacts :** « Présence » ; les trois choix accordés au genre de l'enfant : « Présente · covoiturage normal » / « Présent · covoiturage normal », « Absente du collège » / « Absent du collège », « Au collège, mais sans covoiturage » ; « Qui prend ce trajet ? » ; « Permanence HH:MM » ; « Sans X sur ce trajet ».
 - **Droits d'affichage (spec) :** présence, « Qui prend ce trajet ? » et permanence sont **modifiables** par un parent de l'enfant (`childId` dans ses `childIds`), et en **affichage seul** pour les autres parents et les comptes enfants. Un jour passé est entièrement en affichage seul.
 - **Accessibilité (spec) :** la puce Présence ouvre son panneau (`aria-expanded`, `aria-controls`), qui est un `radiogroup`. Les puces de « Qui prend ce trajet ? » et de Permanence sont des boutons bascule (`aria-pressed`). Le prénom forme le nom accessible de la puce. Les échecs d'écriture passent par l'alerte existante (`role="alert"`), sans déplacer le focus.
-- **Sémantique des options (décision de ce plan) :** changer de présence repart d'une journée vierge (`skipped: []`, sans permanence) ; « covoiturage normal » veut dire « aucun retrait, aucune permanence ». Retirer ou remettre un enfant sur un trajet conserve sa permanence. Choisir à nouveau la permanence active revient à la fin des cours. Une option sans permanence n'écrit **aucun** champ `permanence` : Firestore refuse `undefined`.
+- **Sémantique des options :**
+  - changer la présence d'un enfant efface les autres réglages de sa journée (retraits et permanence) : « covoiturage normal » veut dire « tous les trajets par défaut, sans permanence » (`skipped: []`, aucun champ `permanence`) ;
+  - retirer un enfant du **Retour** efface aussi sa permanence. Décision du propriétaire du projet (2026-09-27) : un enfant retiré a une autre solution pour rentrer, ou quelqu'un d'extérieur au covoiturage vient le chercher. Remis sur le Retour, il repart à sa sortie habituelle ;
+  - retirer un enfant de l'**Aller** ne touche pas à sa permanence, qui ne concerne que le Retour ;
+  - choisir à nouveau la permanence active revient à la fin des cours ;
+  - une option sans permanence n'écrit **aucun** champ `permanence` : Firestore refuse `undefined`.
 - **Conducteur remplacé :** « Je le prends » est offert sur tout trajet `covered`, y compris au conducteur qui voit « [Prénom] a pris votre place ». Décision du propriétaire du projet (2026-09-27), qui remplace la contrainte inverse du lot 5.
 - **Règles `childDays` (spec) :**
   - création et mise à jour : `isParent()`, `childId in member().childIds`, `updatedByUid == request.auth.uid` ;
@@ -33,7 +38,7 @@
 - **Écriture falsifiée depuis la console du navigateur** (enfant d'une autre famille, signée au nom d'un autre parent, depuis un compte enfant, suppression, sens de retrait inventé ou répété, permanence mal formée) : les règles doivent refuser. Test : un scénario de règles par cas (tâche 1).
 - **Deux trajets pris coup sur coup :** le premier bouton ne doit pas se réactiver tant que sa transaction n'a pas répondu. Aujourd'hui, `pendingKey` n'en retient qu'un seul. Test : deux « Je prends » en attente restent tous deux `aria-disabled` (tâche 6).
 - **Option refusée après coup** (jour verrouillé à 22:00 UTC alors que la page est ouverte) : le parent doit l'apprendre, et l'écran doit revenir à l'état réel. Test : issue `refused` → « Cette journée ne peut plus être modifiée… », et la puce reste dans son état d'origine (tâche 6).
-- **Permanence et retrait combinés :** un enfant retiré de son trajet de permanence doit y rester affiché, prêt à être remis. Un retour à « covoiturage normal » ne doit laisser ni retrait ni permanence fantôme. Test : `toggleSkipped` conserve `permanence`, `withPresence` rend un document sans `permanence` (tâche 3), et la page écrit la journée existante complétée (tâche 6).
+- **Retrait et permanence combinés :** un enfant retiré du Retour ne doit garder aucune permanence fantôme. Ses parents ne doivent pas le retrouver en permanence en le remettant sur le trajet, et les autres parents ne doivent pas voir une permanence qui n'aura pas lieu. Un retour à « covoiturage normal » ne doit laisser ni retrait ni permanence. Test : `toggleSkipped` efface la permanence au retrait du Retour et la garde au retrait de l'Aller, `withPresence` rend un document sans `permanence` (tâche 3) ; la page écrit la journée sans permanence et montre l'enfant retiré de son trajet habituel (tâche 6) ; le focus ne se perd pas quand la puce quitte le trajet de permanence (tâche 7).
 - **Clavier dans le panneau de présence :** Échap ferme le panneau et rend le focus à la puce. Changer de jour ne laisse pas un panneau ouvert sur un autre enfant. Test : organisme `PresenceBar` (tâche 5) et page (tâche 6).
 
 ---
@@ -532,7 +537,7 @@ describe('childDayKey', () => {
 })
 
 describe('withPresence', () => {
-  it('règle la présence sur une journée vierge', () => {
+  it('règle la présence sans garder aucun autre réglage', () => {
     expect(withPresence(DATE, 'alice', 'absent')).toEqual({
       date: DATE,
       childId: 'alice',
@@ -568,14 +573,21 @@ describe('toggleSkipped', () => {
     expect(toggleSkipped(day, DATE, 'basile', 'aller').skipped).toEqual(['aller', 'retour'])
   })
 
-  it("garde la permanence : l'enfant reste affiché sur le trajet dont on l'a retiré", () => {
+  it("efface la permanence de l'enfant retiré du Retour : il a une autre solution pour rentrer", () => {
     const day = childDay({ date: DATE, childId: 'alice', permanence: '16:00' })
-    expect(toggleSkipped(day, DATE, 'alice', 'retour')).toEqual({
+    const next = toggleSkipped(day, DATE, 'alice', 'retour')
+    expect(next).toEqual({ date: DATE, childId: 'alice', presence: 'present', skipped: ['retour'] })
+    expect(next).not.toHaveProperty('permanence')
+  })
+
+  it("garde la permanence de l'enfant retiré de l'Aller, qui ne concerne que le Retour", () => {
+    const day = childDay({ date: DATE, childId: 'alice', permanence: '16:00' })
+    expect(toggleSkipped(day, DATE, 'alice', 'aller')).toEqual({
       date: DATE,
       childId: 'alice',
       presence: 'present',
       permanence: '16:00',
-      skipped: ['retour'],
+      skipped: ['aller'],
     })
   })
 })
@@ -687,16 +699,18 @@ function startingFrom(day: ChildDay | undefined, date: IsoDate, childId: ChildId
 }
 
 /**
- * A new presence starts the day afresh: « covoiturage normal » means no trip left out and no
- * permanence, and neither means anything to a child who is absent or makes their own way.
+ * Changing a child's presence clears the rest of their day: « covoiturage normal » means every
+ * default trip and no permanence, and neither means anything to a child who is absent or makes
+ * their own way.
  */
 export function withPresence(date: IsoDate, childId: ChildId, presence: Presence): ChildDay {
   return { date, childId, presence, skipped: [] }
 }
 
 /**
- * « Qui prend ce trajet ? »: takes the child off one direction, or puts them back. The permanence
- * is kept, so that a child taken off their permanence trip stays listed on it, ready to return.
+ * « Qui prend ce trajet ? »: takes the child off one direction, or puts them back. Taken off the
+ * retour, the child loses their permanence too: they have another way home, or someone outside
+ * the carpool collects them. Put back, they ride from the end of classes.
  */
 export function toggleSkipped(
   day: ChildDay | undefined,
@@ -705,10 +719,20 @@ export function toggleSkipped(
   direction: Direction,
 ): ChildDay {
   const current = startingFrom(day, date, childId)
-  const skipped = current.skipped.includes(direction)
-    ? current.skipped.filter((candidate) => candidate !== direction)
-    : [...current.skipped, direction]
-  return { ...current, skipped: DIRECTIONS.filter((candidate) => skipped.includes(candidate)) }
+  const skipping = !current.skipped.includes(direction)
+  const skipped = skipping
+    ? [...current.skipped, direction]
+    : current.skipped.filter((candidate) => candidate !== direction)
+  const next: ChildDay = {
+    date: current.date,
+    childId: current.childId,
+    presence: current.presence,
+    skipped: DIRECTIONS.filter((candidate) => skipped.includes(candidate)),
+  }
+  if (current.permanence === undefined || (skipping && direction === 'retour')) {
+    return next
+  }
+  return { ...next, permanence: current.permanence }
 }
 
 /**
@@ -817,7 +841,7 @@ export function childDayFailureMessage(outcome: Exclude<WriteOutcome, { status: 
 - [ ] **Step 6: Lancer les tests pour vérifier qu'ils passent**
 
 Run: `npx biome check --write src && npx vitest run src && npx tsc -b`
-Expected: PASS — 10 tests de `childOptions`, le nouveau test de semaine, 4 nouveaux tests de textes, et toute la suite existante ; aucune erreur TypeScript.
+Expected: PASS — 11 tests de `childOptions`, le nouveau test de semaine, 4 nouveaux tests de textes, et toute la suite existante ; aucune erreur TypeScript.
 
 - [ ] **Step 7: Commit**
 
@@ -1590,18 +1614,25 @@ describe('options des enfants', () => {
     })
   })
 
-  it('complète la journée déjà réglée au lieu de la remplacer', async () => {
+  it('retire du Retour un enfant en permanence : la permanence tombe, il apparaît retiré de son trajet habituel', async () => {
     const user = userEvent.setup()
     const store = planning({
-      childDays: [childDay({ date: THURSDAY, childId: 'alice', permanence: '16:00' })],
+      childDays: [
+        childDay({ date: THURSDAY, childId: 'alice', permanence: '16:00', skipped: ['aller'] }),
+      ],
     })
     await renderRoute('/', { auth: parentOf('alice'), planning: store })
     await user.click(screen.getByRole('button', { name: /^jeudi 1/ }))
     await user.click(within(whoRides('Retour')).getByRole('button', { name: 'Alice' }))
-    expect(store.writes().at(-1)).toMatchObject({
-      childDay: { date: THURSDAY, childId: 'alice', permanence: '16:00', skipped: ['retour'] },
+    expect(store.writes().at(-1)).toStrictEqual({
+      kind: 'saveChildDay',
+      key: '2026-10-01_alice',
+      childDay: { date: THURSDAY, childId: 'alice', presence: 'present', skipped: ['aller', 'retour'] },
+      authorUid: defaultUid,
     })
-    expect(within(region('Retour')).getByText('Sans Alice sur ce trajet')).toBeInTheDocument()
+    const usual = within(region('Retour')).getByText('14:55').closest('li')
+    expect(usual).toHaveTextContent('Sans Alice sur ce trajet')
+    expect(within(region('Retour')).queryByRole('group', { name: 'Permanence 16:00' })).toBeNull()
   })
 
   it("ne propose de réglage que pour ses propres enfants", async () => {
@@ -1667,7 +1698,7 @@ describe('options des enfants', () => {
 })
 ```
 
-Le jeudi, Alice seule sort à 14:55 : en permanence à 16:00, son trajet de 14:55 disparaît.
+Le jeudi, Alice seule sort à 14:55 : en permanence à 16:00, son trajet de 14:55 disparaît. Retirée du Retour, elle perd sa permanence : le trajet de 14:55 revient, sans passager, avec « Sans Alice sur ce trajet ». `toStrictEqual` vérifie aussi qu'aucun champ `permanence` n'est écrit, même `undefined` ; retirée du Retour, Alice n'a plus d'offre de permanence, d'où la disparition du groupe « Permanence 16:00 ».
 
 Dans `src/components/pages/PlanningPage.driving.test.tsx`, ajouter :
 
@@ -1791,10 +1822,10 @@ git commit -m "feat: 🎸 brancher les options des enfants dans le planning"
 
 ### Task 7: Dettes d'accessibilité du lot 5
 
-La relecture finale du lot 5 a différé trois points : le focus perdu après l'annulation d'un trajet vidé, un état « en cours » peu visible (seulement estompé) et un contour de focus d'environ 3:1 sur l'alerte sombre.
+La relecture finale du lot 5 a différé trois points : le focus perdu après l'annulation d'un trajet vidé, un état « en cours » peu visible (seulement estompé) et un contour de focus d'environ 3:1 sur l'alerte sombre. S'y ajoute un cas du même ordre, propre à ce lot : retiré du Retour, un enfant en permanence rejoint son trajet habituel, et la puce qu'on vient d'appuyer quitte l'écran.
 
 **Files:**
-- Modify: `src/components/molecules/TripStatusBar.tsx`, `src/components/molecules/TripStatusBar.test.tsx`, `src/index.css`, `src/styles.test.ts`, `src/components/organisms/TripSection.tsx`, `src/components/pages/PlanningPage.tsx`, `src/components/pages/PlanningPage.driving.test.tsx`
+- Modify: `src/components/molecules/TripStatusBar.tsx`, `src/components/molecules/TripStatusBar.test.tsx`, `src/index.css`, `src/styles.test.ts`, `src/components/organisms/TripSection.tsx`, `src/components/pages/PlanningPage.tsx`, `src/components/pages/PlanningPage.driving.test.tsx`, `src/components/pages/PlanningPage.children.test.tsx`
 
 **Interfaces:**
 - Consumes: `TripStatusBar`, `TripSection`, `act` (`PlanningPage`).
@@ -1855,6 +1886,23 @@ Dans `src/components/pages/PlanningPage.driving.test.tsx`, ajouter :
 
 Le mercredi, tous les enfants rentrent à 13:15 : le covoiturage de 16:00 n'a aucun passager, son conducteur ne peut que l'annuler, et le trajet disparaît avec son bouton.
 
+Dans `src/components/pages/PlanningPage.children.test.tsx`, ajouter :
+
+```tsx
+  it("rend le focus à la section Retour quand l'enfant quitte son trajet de permanence", async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', {
+      auth: parentOf('alice'),
+      planning: planning({
+        childDays: [childDay({ date: THURSDAY, childId: 'alice', permanence: '16:00' })],
+      }),
+    })
+    await user.click(screen.getByRole('button', { name: /^jeudi 1/ }))
+    await user.click(within(whoRides('Retour')).getByRole('button', { name: 'Alice' }))
+    expect(screen.getByRole('heading', { level: 2, name: 'Retour' })).toHaveFocus()
+  })
+```
+
 - [ ] **Step 2: Lancer les tests pour vérifier qu'ils échouent**
 
 Run: `npx vitest run src/components src/styles.test.ts`
@@ -1910,6 +1958,24 @@ Dans `src/components/pages/PlanningPage.tsx` :
             heading.current?.focus()
           }
         }
+```
+
+- remplacer `toggleRider` par :
+
+```tsx
+  const toggleRider = (trip: PlannedTrip, childId: ChildId) => {
+    const current = optionsOf(childId)
+    // Taken off the retour, a child on permanence goes back to their usual trip, chip and all:
+    // the focus goes to the section rather than being lost.
+    const leavesTrip =
+      trip.direction === 'retour' &&
+      current?.permanence !== undefined &&
+      trip.riders.includes(childId)
+    saveChildDay(toggleSkipped(current, day.date, childId, trip.direction))
+    if (leavesTrip) {
+      retourHeading.current?.focus()
+    }
+  }
 ```
 
 - les `TripSection` Aller et Retour reçoivent `headingRef={allerHeading}` et `headingRef={retourHeading}`.
