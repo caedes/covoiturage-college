@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { type Ref, useId } from 'react'
 import type { ChildId, DayChild, PermanenceOffer, PlannedTrip } from '../../planning/types'
 import { PermanenceRow } from './PermanenceRow'
 import { TripCard } from './TripCard'
@@ -11,6 +11,7 @@ type TripSectionProps = {
   onToggleRider?: (trip: PlannedTrip, childId: ChildId) => void
   onTogglePermanence?: (offer: PermanenceOffer) => void
   pendingKeys?: ReadonlySet<string>
+  headingRef?: Ref<HTMLHeadingElement>
 }
 
 function byExitTime(offers: PermanenceOffer[]): [string, PermanenceOffer[]][] {
@@ -29,12 +30,15 @@ export function TripSection({
   onToggleRider,
   onTogglePermanence,
   pendingKeys,
+  headingRef,
 }: TripSectionProps) {
   const titleId = useId()
   return (
     <section aria-labelledby={titleId} className="flex flex-col gap-2.5">
       <h2
         id={titleId}
+        ref={headingRef}
+        tabIndex={-1}
         className="font-heading text-sm font-semibold uppercase tracking-widest text-muted-foreground"
       >
         {title}

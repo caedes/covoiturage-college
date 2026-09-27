@@ -1,3 +1,4 @@
+import { LoaderCircle } from 'lucide-react'
 import { actionLabel, statusLabel } from '../../lib/planningLabels'
 import { cn } from '../../lib/utils'
 import type { TripAction, TripStatus } from '../../planning/types'
@@ -52,6 +53,9 @@ export function TripStatusBar({
           aria-disabled={action.pending}
           onClick={action.pending ? undefined : action.onClick}
         >
+          {action.pending ? (
+            <LoaderCircle aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
+          ) : null}
           {actionLabel(action.kind)}
         </Button>
       )}
