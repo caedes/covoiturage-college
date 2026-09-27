@@ -29,6 +29,7 @@ export type BuildWeekInput = {
   childDays: ChildDay[]
   viewerUid: string
   viewerCanDrive: boolean
+  viewerChildIds: ChildId[]
   holidays: HolidayCalendar
 }
 
@@ -142,6 +143,7 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
               gender: child.gender,
               colorSlot: child.colorSlot,
               presence: days.get(childId)?.presence ?? 'present',
+              editable: !empty.locked && input.viewerChildIds.includes(childId),
             },
           ]
     }),

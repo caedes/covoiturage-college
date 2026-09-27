@@ -65,6 +65,27 @@ export function presenceLabel(firstName: string, gender: Gender, presence: Prese
   return presence === 'sansCovoiturage' ? `${firstName} · sans covoiturage` : firstName
 }
 
+const PRESENCE_OPTION: Record<Presence, Record<Gender, string>> = {
+  present: { female: 'Présente · covoiturage normal', male: 'Présent · covoiturage normal' },
+  absent: { female: 'Absente du collège', male: 'Absent du collège' },
+  sansCovoiturage: {
+    female: 'Au collège, mais sans covoiturage',
+    male: 'Au collège, mais sans covoiturage',
+  },
+}
+
+/** One choice of the presence panel, in the prototype's words. */
+export function presenceOptionLabel(gender: Gender, presence: Presence): string {
+  return PRESENCE_OPTION[presence][gender]
+}
+
+/** "Présence de Basile", "Présence d'Alice": elided before a vowel. */
+export function presencePanelLabel(firstName: string): string {
+  return /^[aeiouyàâéèêëîïôœ]/i.test(firstName)
+    ? `Présence d'${firstName}`
+    : `Présence de ${firstName}`
+}
+
 /** "Sans Alice et Basile sur ce trajet", or an empty string when nobody was taken off. */
 export function skipNote(names: string[]): string {
   if (names.length === 0) {
@@ -115,9 +136,14 @@ export function actionLabel(action: TripAction): string {
   return ACTION[action]
 }
 
+/** "trajet de 07:40, Maison → Centre-bourg": what distinguishes one trip from another. */
+export function tripDescription(time: string, label: string): string {
+  return `trajet de ${time}, ${label}`
+}
+
 /** Starts with the visible label, so that voice control users can say what they see. */
 export function actionAccessibleLabel(action: TripAction, time: string, label: string): string {
-  return `${ACTION[action]} — trajet de ${time}, ${label}`
+  return `${ACTION[action]} — ${tripDescription(time, label)}`
 }
 
 export function writeFailureMessage(outcome: Exclude<WriteOutcome, { status: 'done' }>): string {
@@ -129,6 +155,13 @@ export function writeFailureMessage(outcome: Exclude<WriteOutcome, { status: 'do
     case 'failed':
       return 'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.'
   }
+}
+
+/** A presence, a trip left out or a permanence that did not go through. */
+export function childDayFailureMessage(outcome: Exclude<WriteOutcome, { status: 'done' }>): string {
+  return outcome.status === 'refused'
+    ? 'Cette journée ne peut plus être modifiée. Rechargez la page pour voir son état actuel.'
+    : 'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.'
 }
 
 const SUCCESS_VERB: Record<TripAction, string> = {

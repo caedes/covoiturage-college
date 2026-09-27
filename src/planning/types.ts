@@ -114,6 +114,8 @@ export type DayChild = {
   gender: Gender
   colorSlot: ColorSlot
   presence: Presence
+  /** The viewer is one of this child's parents, and the day is not locked. */
+  editable: boolean
 }
 
 export type DayPlan = {

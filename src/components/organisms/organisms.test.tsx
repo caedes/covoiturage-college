@@ -11,9 +11,30 @@ import { WeeklyRecap } from './WeeklyRecap'
 import { WeekTabs } from './WeekTabs'
 
 const ROSTER: DayChild[] = [
-  { childId: 'alice', firstName: 'Alice', gender: 'female', colorSlot: 1, presence: 'present' },
-  { childId: 'basile', firstName: 'Basile', gender: 'male', colorSlot: 2, presence: 'absent' },
-  { childId: 'chloe', firstName: 'Chloé', gender: 'female', colorSlot: 3, presence: 'present' },
+  {
+    childId: 'alice',
+    firstName: 'Alice',
+    gender: 'female',
+    colorSlot: 1,
+    presence: 'present',
+    editable: false,
+  },
+  {
+    childId: 'basile',
+    firstName: 'Basile',
+    gender: 'male',
+    colorSlot: 2,
+    presence: 'absent',
+    editable: false,
+  },
+  {
+    childId: 'chloe',
+    firstName: 'Chloé',
+    gender: 'female',
+    colorSlot: 3,
+    presence: 'present',
+    editable: false,
+  },
 ]
 
 const BUS: PlannedTrip = {
