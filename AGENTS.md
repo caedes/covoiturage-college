@@ -41,11 +41,12 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   adaptateurs Firebase vivent dans `src/firebase/`. Une fonctionnalité qui a besoin de
   l'identité passe par un port, jamais par le SDK Firebase directement.
 - **Autorisation** — l'accès est réservé aux membres inscrits : la fiche
-  `members/{email}` fait foi. `firestore.rules` n'accorde que le `get` de sa propre
-  fiche et la lecture de `timetables`, `carpools` et `childDays` aux membres, sans
-  aucune écriture cliente. Les autres collections naissent fermées. `carpools` s'écrit
-  par son seul conducteur (création, reprise en nommant le conducteur remplacé,
-  annulation), sur un jour non verrouillé (D 22:00 UTC) et à 14 jours au plus.
+  `members/{email}` fait foi. Membres lisent `timetables`, `carpools` et `childDays`.
+  `carpools` s'écrit par son seul conducteur (création, reprise en nommant le
+  conducteur remplacé, annulation) sur un jour non verrouillé (D 22:00 UTC) et à
+  14 jours au plus. Aucune autre écriture cliente : `timetables` et `members` par
+  `scripts/import.ts` (SDK Admin) uniquement, `childDays` au lot suivant. Les autres
+  collections naissent fermées.
 - **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
   Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.
