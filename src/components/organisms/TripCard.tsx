@@ -18,10 +18,10 @@ type TripCardProps = {
   roster: DayChild[]
   onAction?: (trip: PlannedTrip) => void
   onToggleRider?: (trip: PlannedTrip, childId: ChildId) => void
-  pendingKey?: string | null
+  pendingKeys?: ReadonlySet<string>
 }
 
-export function TripCard({ trip, roster, onAction, onToggleRider, pendingKey }: TripCardProps) {
+export function TripCard({ trip, roster, onAction, onToggleRider, pendingKeys }: TripCardProps) {
   const whoId = useId()
   const nameOf = (childId: string) =>
     roster.find((child) => child.childId === childId)?.firstName ?? childId
@@ -83,7 +83,7 @@ export function TripCard({ trip, roster, onAction, onToggleRider, pendingKey }: 
             : {
                 kind: trip.action,
                 accessibleLabel: actionAccessibleLabel(trip.action, trip.time, trip.label),
-                pending: pendingKey === trip.key,
+                pending: pendingKeys?.has(trip.key) ?? false,
                 onClick: () => onAction(trip),
               }
         }

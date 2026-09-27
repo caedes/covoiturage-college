@@ -148,4 +148,17 @@ describe('actions de conducteur', () => {
     await renderRoute('/', { auth: member({ role: 'child', childId: 'basile', childIds: [] }) })
     expect(within(aller()).queryByRole('button')).toBeNull()
   })
+
+  it('garde désactivés deux trajets pris coup sur coup, tant que leurs écritures sont en cours', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({}, { writeOutcome: 'pending' }) })
+    const first = within(aller()).getByRole('button', { name: TAKE_ALLER })
+    const second = within(screen.getByRole('region', { name: 'Retour' })).getByRole('button', {
+      name: /^Je prends — trajet de 13:15/,
+    })
+    await user.click(first)
+    await user.click(second)
+    expect(first).toHaveAttribute('aria-disabled', 'true')
+    expect(second).toHaveAttribute('aria-disabled', 'true')
+  })
 })

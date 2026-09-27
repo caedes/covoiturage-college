@@ -10,7 +10,7 @@ type TripSectionProps = {
   onAction?: (trip: PlannedTrip) => void
   onToggleRider?: (trip: PlannedTrip, childId: ChildId) => void
   onTogglePermanence?: (offer: PermanenceOffer) => void
-  pendingKey?: string | null
+  pendingKeys?: ReadonlySet<string>
 }
 
 function byExitTime(offers: PermanenceOffer[]): [string, PermanenceOffer[]][] {
@@ -28,7 +28,7 @@ export function TripSection({
   onAction,
   onToggleRider,
   onTogglePermanence,
-  pendingKey,
+  pendingKeys,
 }: TripSectionProps) {
   const titleId = useId()
   return (
@@ -59,7 +59,7 @@ export function TripSection({
                 roster={roster}
                 onAction={onAction}
                 onToggleRider={onToggleRider}
-                pendingKey={pendingKey}
+                pendingKeys={pendingKeys}
               />
             </li>
           ))}

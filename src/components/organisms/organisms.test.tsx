@@ -193,11 +193,13 @@ describe('TripCard', () => {
     const user = userEvent.setup()
     const onAction = vi.fn()
     const { rerender } = render(
-      <TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKey={null} />,
+      <TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKeys={new Set()} />,
     )
     await user.click(screen.getByRole('button', { name: /^Je prends — trajet de 17:45/ }))
     expect(onAction).toHaveBeenCalledWith(BUS)
-    rerender(<TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKey={BUS.key} />)
+    rerender(
+      <TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKeys={new Set([BUS.key])} />,
+    )
     expect(screen.getByRole('button', { name: /^Je prends/ })).toHaveAttribute(
       'aria-disabled',
       'true',

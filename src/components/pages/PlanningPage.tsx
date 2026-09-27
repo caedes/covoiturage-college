@@ -1,9 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
-import { weekRangeLabel, writeFailureMessage, writeSuccessMessage } from '../../lib/planningLabels'
+import {
+  childDayFailureMessage,
+  weekRangeLabel,
+  writeFailureMessage,
+  writeSuccessMessage,
+} from '../../lib/planningLabels'
+import { togglePermanence, toggleSkipped, withPresence } from '../../planning/childOptions'
 import { addDays, displayedMonday, initialDay, parisToday } from '../../planning/dates'
 import { ZONE_A_2026_2027 } from '../../planning/holidays'
-import type { DayPlan, PlannedTrip } from '../../planning/types'
+import type {
+  ChildDay,
+  ChildId,
+  DayPlan,
+  PermanenceOffer,
+  PlannedTrip,
+  Presence,
+} from '../../planning/types'
 import { buildWeek } from '../../planning/week'
 import { Button } from '../atoms/ui/button'
 import { ActionAlert } from '../molecules/ActionAlert'
@@ -72,7 +85,7 @@ export function PlanningPage() {
 
   const { load, retry } = usePlanning(range)
 
-  const [pendingKey, setPendingKey] = useState<string | null>(null)
+  const [pendingKeys, setPendingKeys] = useState<ReadonlySet<string>>(() => new Set())
   const [alert, setAlert] = useState<{ id: number; message: string } | null>(null)
   const [confirmation, setConfirmation] = useState('')
   const nextAlertId = useRef(1)
@@ -88,13 +101,17 @@ export function PlanningPage() {
     return () => clearTimeout(timer)
   }, [alert])
 
+  const showAlert = useCallback((message: string) => {
+    setAlert({ id: nextAlertId.current++, message })
+  }, [])
+
   const act = useCallback(
     async (trip: PlannedTrip) => {
       if (state.status !== 'member' || trip.action === null) {
         return
       }
       const driver = { uid: state.uid, firstName: state.member.firstName }
-      setPendingKey(trip.key)
+      setPendingKeys((keys) => new Set(keys).add(trip.key))
       try {
         const outcome =
           trip.action === 'take'
@@ -107,15 +124,40 @@ export function PlanningPage() {
         if (outcome.status === 'done') {
           setConfirmation(writeSuccessMessage(trip.action, trip.time, trip.label))
         } else {
-          setAlert({ id: nextAlertId.current++, message: writeFailureMessage(outcome) })
+          showAlert(writeFailureMessage(outcome))
         }
       } catch {
-        setAlert({ id: nextAlertId.current++, message: writeFailureMessage({ status: 'failed' }) })
+        showAlert(writeFailureMessage({ status: 'failed' }))
       } finally {
-        setPendingKey(null)
+        setPendingKeys((keys) => {
+          const next = new Set(keys)
+          next.delete(trip.key)
+          return next
+        })
       }
     },
-    [repository, state],
+    [repository, showAlert, state],
+  )
+
+  /**
+   * Options are written without a pending state: the snapshot shows them at once, and a refusal
+   * or a failure is announced afterwards, when Firestore has already put the screen back.
+   */
+  const saveChildDay = useCallback(
+    async (next: ChildDay) => {
+      if (state.status !== 'member') {
+        return
+      }
+      try {
+        const outcome = await repository.saveChildDay(next, state.uid)
+        if (outcome.status !== 'done') {
+          showAlert(childDayFailureMessage(outcome))
+        }
+      } catch {
+        showAlert(childDayFailureMessage({ status: 'failed' }))
+      }
+    },
+    [repository, showAlert, state],
   )
 
   if (load.status === 'loading') {
@@ -160,6 +202,23 @@ export function PlanningPage() {
   const notice = noticeFor(day, today)
   const empty = day.holiday || (day.aller.length === 0 && day.retour.length === 0)
 
+  /**
+   * Arrow functions rather than `function` declarations: TypeScript only keeps the narrowing of
+   * `day` (not `undefined`) and `load` (`ready`) inside closures created after the guard above.
+   */
+  const optionsOf = (childId: ChildId) =>
+    load.snapshot.childDays.find(
+      (candidate) => candidate.date === day.date && candidate.childId === childId,
+    )
+  const changePresence = (childId: ChildId, presence: Presence) =>
+    saveChildDay(withPresence(day.date, childId, presence))
+  const toggleRider = (trip: PlannedTrip, childId: ChildId) =>
+    saveChildDay(toggleSkipped(optionsOf(childId), day.date, childId, trip.direction))
+  const togglePermanenceOf = (offer: PermanenceOffer) =>
+    saveChildDay(
+      togglePermanence(optionsOf(offer.childId), day.date, offer.childId, offer.exitTime),
+    )
+
   function changeTab(next: WeekTab) {
     setTab(next)
     setSelected(next === 'current' ? initialDay(today) : nextMonday)
@@ -173,7 +232,11 @@ export function PlanningPage() {
         weekTabs={<WeekTabs range={weekRangeLabel(monday)} />}
         days={<DaySelector days={week.days} selected={day.date} onSelect={setSelected} />}
         notice={notice === null ? null : <p className="text-sm text-muted-foreground">{notice}</p>}
-        presence={empty ? null : <PresenceBar roster={day.children} />}
+        presence={
+          empty ? null : (
+            <PresenceBar key={day.date} roster={day.children} onPresenceChange={changePresence} />
+          )
+        }
         aller={
           empty ? null : (
             <TripSection
@@ -181,7 +244,9 @@ export function PlanningPage() {
               trips={day.aller}
               roster={day.children}
               onAction={act}
-              pendingKey={pendingKey}
+              onToggleRider={toggleRider}
+              onTogglePermanence={togglePermanenceOf}
+              pendingKeys={pendingKeys}
             />
           )
         }
@@ -192,7 +257,9 @@ export function PlanningPage() {
               trips={day.retour}
               roster={day.children}
               onAction={act}
-              pendingKey={pendingKey}
+              onToggleRider={toggleRider}
+              onTogglePermanence={togglePermanenceOf}
+              pendingKeys={pendingKeys}
             />
           )
         }
