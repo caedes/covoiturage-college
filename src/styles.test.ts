@@ -74,6 +74,13 @@ describe('feuille de style globale', () => {
     expect(css).toMatch(/\n\.skip-link:focus\s*\{/)
   })
 
+  it("dessine le contour de focus de l'alerte dans la couleur du fond, contrastée sur l'alerte sombre", () => {
+    expect(css).toMatch(
+      /\n\[role=["']alert["']\] :focus-visible\s*\{\s*outline-color: var\(--background\);/,
+    )
+    expect(contrast('--background', '--foreground')).toBeGreaterThanOrEqual(3)
+  })
+
   it('ne fait appel à aucun serveur de polices tiers', () => {
     for (const source of [css, html]) {
       expect(source).not.toContain('fonts.googleapis.com')

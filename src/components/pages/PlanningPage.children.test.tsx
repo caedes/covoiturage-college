@@ -102,6 +102,19 @@ describe('options des enfants', () => {
     expect(within(region('Retour')).queryByRole('group', { name: 'Permanence 16:00' })).toBeNull()
   })
 
+  it("rend le focus à la section Retour quand l'enfant quitte son trajet de permanence", async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', {
+      auth: parentOf('alice'),
+      planning: planning({
+        childDays: [childDay({ date: THURSDAY, childId: 'alice', permanence: '16:00' })],
+      }),
+    })
+    await user.click(screen.getByRole('button', { name: /^jeudi 1/ }))
+    await user.click(within(whoRides('Retour')).getByRole('button', { name: 'Alice' }))
+    expect(screen.getByRole('heading', { level: 2, name: 'Retour' })).toHaveFocus()
+  })
+
   it('ne propose de réglage que pour ses propres enfants', async () => {
     await renderRoute('/', { auth: parentOf('alice') })
     expect(within(region('Présence')).queryByRole('button', { name: /^Basile/ })).toBeNull()

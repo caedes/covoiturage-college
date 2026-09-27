@@ -149,6 +149,28 @@ describe('actions de conducteur', () => {
     expect(within(aller()).queryByRole('button')).toBeNull()
   })
 
+  it("rend le focus à la section après l'annulation d'un trajet vidé", async () => {
+    const user = userEvent.setup()
+    const orphan = carpool({
+      date: WEDNESDAY,
+      direction: 'retour',
+      place: 'college',
+      time: '16:00',
+      driverUid: defaultUid,
+      driverName: 'Sophie',
+    })
+    await renderRoute('/', { planning: planning({ carpools: [orphan] }) })
+    await user.click(
+      within(screen.getByRole('region', { name: 'Retour' })).getByRole('button', {
+        name: /^Annuler — trajet de 16:00/,
+      }),
+    )
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 2, name: 'Retour' })).toHaveFocus(),
+    )
+    expect(screen.queryByText('16:00')).toBeNull()
+  })
+
   it('garde désactivés deux trajets pris coup sur coup, tant que leurs écritures sont en cours', async () => {
     const user = userEvent.setup()
     await renderRoute('/', { planning: planning({}, { writeOutcome: 'pending' }) })

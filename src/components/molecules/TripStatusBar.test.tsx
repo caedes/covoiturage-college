@@ -78,4 +78,20 @@ describe('TripStatusBar avec action', () => {
     render(<TripStatusBar status={{ kind: 'open' }} action={null} />)
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it("montre un indicateur animé pendant l'écriture, sans changer le nom du bouton", () => {
+    const action = {
+      kind: 'take',
+      accessibleLabel: 'Je prends — trajet',
+      onClick: () => {},
+    } as const
+    const { rerender } = render(
+      <TripStatusBar status={{ kind: 'open' }} action={{ ...action, pending: false }} />,
+    )
+    const button = screen.getByRole('button', { name: 'Je prends — trajet' })
+    expect(button.querySelector('svg')).toBeNull()
+    rerender(<TripStatusBar status={{ kind: 'open' }} action={{ ...action, pending: true }} />)
+    expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(button).toHaveAccessibleName('Je prends — trajet')
+  })
 })

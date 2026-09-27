@@ -89,6 +89,8 @@ export function PlanningPage() {
   const [alert, setAlert] = useState<{ id: number; message: string } | null>(null)
   const [confirmation, setConfirmation] = useState('')
   const nextAlertId = useRef(1)
+  const allerHeading = useRef<HTMLHeadingElement>(null)
+  const retourHeading = useRef<HTMLHeadingElement>(null)
 
   /** An alert goes away by itself after eight seconds, or at once with « Fermer »; a repeated
    * alert gets a fresh id, so it is re-announced and its timer restarts even if the text is
@@ -123,6 +125,11 @@ export function PlanningPage() {
                 : await repository.take(trip, driver)
         if (outcome.status === 'done') {
           setConfirmation(writeSuccessMessage(trip.action, trip.time, trip.label))
+          // A cancelled empty trip leaves with its button: the focus goes to its section.
+          if (trip.action === 'cancel' && trip.status.kind === 'void') {
+            const heading = trip.direction === 'aller' ? allerHeading : retourHeading
+            heading.current?.focus()
+          }
         } else {
           showAlert(writeFailureMessage(outcome))
         }
@@ -212,8 +219,19 @@ export function PlanningPage() {
     )
   const changePresence = (childId: ChildId, presence: Presence) =>
     saveChildDay(withPresence(day.date, childId, presence))
-  const toggleRider = (trip: PlannedTrip, childId: ChildId) =>
-    saveChildDay(toggleSkipped(optionsOf(childId), day.date, childId, trip.direction))
+  const toggleRider = (trip: PlannedTrip, childId: ChildId) => {
+    const current = optionsOf(childId)
+    // Taken off the retour, a child on permanence goes back to their usual trip, chip and all:
+    // the focus goes to the section rather than being lost.
+    const leavesTrip =
+      trip.direction === 'retour' &&
+      current?.permanence !== undefined &&
+      trip.riders.includes(childId)
+    saveChildDay(toggleSkipped(current, day.date, childId, trip.direction))
+    if (leavesTrip) {
+      retourHeading.current?.focus()
+    }
+  }
   const togglePermanenceOf = (offer: PermanenceOffer) =>
     saveChildDay(
       togglePermanence(optionsOf(offer.childId), day.date, offer.childId, offer.exitTime),
@@ -247,6 +265,7 @@ export function PlanningPage() {
               onToggleRider={toggleRider}
               onTogglePermanence={togglePermanenceOf}
               pendingKeys={pendingKeys}
+              headingRef={allerHeading}
             />
           )
         }
@@ -260,6 +279,7 @@ export function PlanningPage() {
               onToggleRider={toggleRider}
               onTogglePermanence={togglePermanenceOf}
               pendingKeys={pendingKeys}
+              headingRef={retourHeading}
             />
           )
         }
