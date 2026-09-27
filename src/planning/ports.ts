@@ -29,4 +29,10 @@ export type PlanningRepository = {
     listener: (snapshot: PlanningSnapshot) => void,
     onError: () => void,
   ): () => void
+  /** « Je prends ». */
+  take(ref: CarpoolRef, driver: Driver): Promise<WriteOutcome>
+  /** « Je le prends », from the driver the viewer saw on screen. */
+  takeOver(ref: CarpoolRef, driver: Driver, currentDriverUid: string): Promise<WriteOutcome>
+  /** « Annuler ». */
+  cancel(ref: CarpoolRef, driver: Driver): Promise<WriteOutcome>
 }
