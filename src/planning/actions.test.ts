@@ -42,32 +42,51 @@ describe('tripAction', () => {
 
 describe('decideTake', () => {
   it('écrit un trajet encore libre', () => {
-    expect(decideTake(null, null)).toEqual({ kind: 'write', replacedDriverUid: null })
+    expect(decideTake(null, null, 'uid-sophie')).toEqual({ kind: 'write', replacedDriverUid: null })
   })
 
-  it('refuse de prendre un trajet déjà pris, en nommant son conducteur', () => {
-    expect(decideTake({ driverUid: 'uid-maud', driverName: 'Maud' }, null)).toEqual({
+  it('refuse de prendre un trajet déjà pris par un autre, en nommant son conducteur', () => {
+    expect(decideTake({ driverUid: 'uid-maud', driverName: 'Maud' }, null, 'uid-sophie')).toEqual({
       kind: 'conflict',
       driverName: 'Maud',
     })
   })
 
   it('reprend un trajet à son conducteur attendu', () => {
-    expect(decideTake({ driverUid: 'uid-paul', driverName: 'Paul' }, 'uid-paul')).toEqual({
+    expect(
+      decideTake({ driverUid: 'uid-paul', driverName: 'Paul' }, 'uid-paul', 'uid-sophie'),
+    ).toEqual({
       kind: 'write',
       replacedDriverUid: 'uid-paul',
     })
   })
 
   it("refuse de reprendre un trajet que quelqu'un d'autre a repris entre-temps", () => {
-    expect(decideTake({ driverUid: 'uid-maud', driverName: 'Maud' }, 'uid-paul')).toEqual({
+    expect(
+      decideTake({ driverUid: 'uid-maud', driverName: 'Maud' }, 'uid-paul', 'uid-sophie'),
+    ).toEqual({
       kind: 'conflict',
       driverName: 'Maud',
     })
   })
 
   it('prend simplement un trajet libéré entre-temps', () => {
-    expect(decideTake(null, 'uid-paul')).toEqual({ kind: 'write', replacedDriverUid: null })
+    expect(decideTake(null, 'uid-paul', 'uid-sophie')).toEqual({
+      kind: 'write',
+      replacedDriverUid: null,
+    })
+  })
+
+  it('ne signale aucun conflit quand le trajet affiché est déjà le sien (« Je prends » rejoué)', () => {
+    expect(
+      decideTake({ driverUid: 'uid-sophie', driverName: 'Sophie' }, null, 'uid-sophie'),
+    ).toEqual({ kind: 'already' })
+  })
+
+  it('ne signale aucun conflit quand le visiteur a déjà repris ce trajet (« Je le prends » rejoué)', () => {
+    expect(
+      decideTake({ driverUid: 'uid-sophie', driverName: 'Sophie' }, 'uid-paul', 'uid-sophie'),
+    ).toEqual({ kind: 'already' })
   })
 })
 

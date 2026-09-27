@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  FirestoreError,
   getFirestore,
   onSnapshot,
   type QueryDocumentSnapshot,
@@ -34,6 +35,13 @@ function carpoolDocument(ref: CarpoolRef) {
   return doc(database, 'carpools', carpoolKey(ref.date, ref.direction, ref.place, ref.time))
 }
 
+/** A Firestore rules refusal is reported to the viewer as `refused`, everything else as `failed`. */
+function writeOutcomeForError(error: unknown): WriteOutcome {
+  const status =
+    error instanceof FirestoreError && error.code === 'permission-denied' ? 'refused' : 'failed'
+  return { status }
+}
+
 /**
  * « Je prends » and « Je le prends » in one transaction: the decision is taken against the
  * document as it is at commit time, so two parents clicking together never overwrite each other.
@@ -48,9 +56,12 @@ async function drive(
       const reference = carpoolDocument(ref)
       const snapshot = await transaction.get(reference)
       const existing = snapshot.exists() ? toCarpool(snapshot.data()) : null
-      const decision = decideTake(existing, expectedDriverUid)
+      const decision = decideTake(existing, expectedDriverUid, driver.uid)
       if (decision.kind === 'conflict') {
         return { status: 'alreadyTaken', driverName: decision.driverName }
+      }
+      if (decision.kind === 'already') {
+        return { status: 'done' }
       }
       transaction.set(reference, {
         date: ref.date,
@@ -68,7 +79,7 @@ async function drive(
     })
   } catch (error) {
     console.error('Enregistrement du trajet impossible', error)
-    return { status: 'failed' }
+    return writeOutcomeForError(error)
   }
 }
 
@@ -154,7 +165,7 @@ export const firebasePlanningRepository: PlanningRepository = {
       })
     } catch (error) {
       console.error('Annulation du trajet impossible', error)
-      return { status: 'failed' }
+      return writeOutcomeForError(error)
     }
   },
 }

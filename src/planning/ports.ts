@@ -11,6 +11,7 @@ export type Driver = { uid: string; firstName: string }
 export type WriteOutcome =
   | { status: 'done' }
   | { status: 'alreadyTaken'; driverName: string }
+  | { status: 'refused' }
   | { status: 'failed' }
 
 export type PlanningSnapshot = {

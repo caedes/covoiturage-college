@@ -121,7 +121,23 @@ export function actionAccessibleLabel(action: TripAction, time: string, label: s
 }
 
 export function writeFailureMessage(outcome: Exclude<WriteOutcome, { status: 'done' }>): string {
-  return outcome.status === 'alreadyTaken'
-    ? `${outcome.driverName} a pris ce trajet juste avant vous.`
-    : 'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.'
+  switch (outcome.status) {
+    case 'alreadyTaken':
+      return `${outcome.driverName} a pris ce trajet juste avant vous.`
+    case 'refused':
+      return 'Ce trajet ne peut plus être modifié. Rechargez la page pour voir son état actuel.'
+    case 'failed':
+      return 'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.'
+  }
+}
+
+const SUCCESS_VERB: Record<TripAction, string> = {
+  take: 'prenez',
+  takeOver: 'reprenez',
+  cancel: 'avez annulé',
+}
+
+/** Confirms a successful write to screen readers, who saw no visible change worth announcing. */
+export function writeSuccessMessage(action: TripAction, time: string, label: string): string {
+  return `Vous ${SUCCESS_VERB[action]} le trajet de ${time}, ${label}.`
 }

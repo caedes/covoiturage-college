@@ -23,16 +23,24 @@ export function tripAction(status: TripStatus, editable: boolean): TripAction | 
 export type TakeDecision =
   | { kind: 'write'; replacedDriverUid: string | null }
   | { kind: 'conflict'; driverName: string }
+  | { kind: 'already' }
 
 /**
  * Decides a take inside the transaction, against the document as it is now. `expectedDriverUid`
  * is `null` for « Je prends » and the driver seen on screen for « Je le prends »: if someone else
- * got there first, the viewer is told who instead of overwriting them.
+ * got there first, the viewer is told who instead of overwriting them. When the document already
+ * names `viewerUid` as its driver — a retried write, a second tab, a click replayed before
+ * `onSnapshot` caught up — nothing needs writing, and no conflict is raised against the viewer's
+ * own name.
  */
 export function decideTake(
   existing: { driverUid: string; driverName: string } | null,
   expectedDriverUid: string | null,
+  viewerUid: string,
 ): TakeDecision {
+  if (existing !== null && existing.driverUid === viewerUid) {
+    return { kind: 'already' }
+  }
   if (existing === null) {
     return { kind: 'write', replacedDriverUid: null }
   }

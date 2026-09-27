@@ -80,6 +80,44 @@ describe('actions de conducteur', () => {
     )
   })
 
+  it('annonce un trajet qui ne peut plus être modifié', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({}, { writeOutcome: { status: 'refused' } }) })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Ce trajet ne peut plus être modifié. Rechargez la page pour voir son état actuel.',
+    )
+  })
+
+  it('rejoue une même alerte comme un nouveau nœud, réannoncé et retemporisé', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({}, { writeOutcome: { status: 'failed' } }) })
+    const button = within(aller()).getByRole('button', { name: TAKE_ALLER })
+    await user.click(button)
+    const firstAlert = await screen.findByRole('alert')
+    await waitFor(() => expect(button).not.toHaveAttribute('aria-disabled', 'true'))
+    await user.click(button)
+    await waitFor(() => expect(screen.getByRole('alert')).not.toBe(firstAlert))
+  })
+
+  it("annonce l'échec d'une écriture rejetée et réactive le bouton", async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({}, { writeOutcome: 'reject' }) })
+    const button = within(aller()).getByRole('button', { name: TAKE_ALLER })
+    await user.click(button)
+    expect(await screen.findByRole('alert')).toHaveTextContent(/enregistrement impossible/i)
+    await waitFor(() => expect(button).not.toHaveAttribute('aria-disabled', 'true'))
+  })
+
+  it('confirme un trajet pris pour les lecteurs d’écran', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning() })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(
+      await screen.findByText('Vous prenez le trajet de 07:40, Maison → Centre-bourg.'),
+    ).toBeInTheDocument()
+  })
+
   it('désactive le bouton tant que l’écriture est en cours', async () => {
     const user = userEvent.setup()
     await renderRoute('/', { planning: planning({}, { writeOutcome: 'pending' }) })

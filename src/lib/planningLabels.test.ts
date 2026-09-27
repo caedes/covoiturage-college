@@ -13,6 +13,7 @@ import {
   statusLabel,
   weekRangeLabel,
   writeFailureMessage,
+  writeSuccessMessage,
 } from './planningLabels'
 
 describe('weekRangeLabel', () => {
@@ -143,12 +144,27 @@ describe('actions', () => {
     )
   })
 
-  it('explique un conflit ou un échec en vouvoyant', () => {
+  it('explique un conflit, un refus ou un échec en vouvoyant', () => {
     expect(writeFailureMessage({ status: 'alreadyTaken', driverName: 'Maud' })).toBe(
       'Maud a pris ce trajet juste avant vous.',
     )
+    expect(writeFailureMessage({ status: 'refused' })).toBe(
+      'Ce trajet ne peut plus être modifié. Rechargez la page pour voir son état actuel.',
+    )
     expect(writeFailureMessage({ status: 'failed' })).toBe(
       'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.',
+    )
+  })
+
+  it('annonce le trajet pris, repris ou annulé pour les lecteurs d’écran', () => {
+    expect(writeSuccessMessage('take', '07:40', 'Maison → Centre-bourg')).toBe(
+      'Vous prenez le trajet de 07:40, Maison → Centre-bourg.',
+    )
+    expect(writeSuccessMessage('takeOver', '07:40', 'Maison → Centre-bourg')).toBe(
+      'Vous reprenez le trajet de 07:40, Maison → Centre-bourg.',
+    )
+    expect(writeSuccessMessage('cancel', '07:40', 'Maison → Centre-bourg')).toBe(
+      'Vous avez annulé le trajet de 07:40, Maison → Centre-bourg.',
     )
   })
 })

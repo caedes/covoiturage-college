@@ -1,3 +1,4 @@
+import { decideCancel, decideTake } from '../planning/actions'
 import type {
   CarpoolRef,
   Driver,
@@ -32,11 +33,12 @@ function counters() {
 /**
  * An in-memory planning. Writes change its carpools and every subscriber receives the new
  * snapshot, as Firestore would. `writeOutcome` forces an outcome without writing; `'pending'`
- * never settles, to observe the button while a write is in flight.
+ * never settles, to observe the button while a write is in flight; `'reject'` rejects the
+ * promise, as a write the port itself throws on rather than reports.
  */
 export function planning(
   snapshot: Partial<PlanningSnapshot> = {},
-  options: { writeOutcome?: WriteOutcome | 'pending' } = {},
+  options: { writeOutcome?: WriteOutcome | 'pending' | 'reject' } = {},
 ): PlanningScenario {
   const state: PlanningSnapshot = {
     timetables: [timetable()],
@@ -51,19 +53,27 @@ export function planning(
       listener({ ...state, carpools: [...state.carpools] })
     }
   }
-  const settle = (apply: () => void): Promise<WriteOutcome> => {
-    if (options.writeOutcome === 'pending') {
-      return new Promise(() => {})
-    }
-    if (options.writeOutcome !== undefined) {
-      return Promise.resolve(options.writeOutcome)
-    }
+  const write = (apply: () => void): Promise<WriteOutcome> => {
     apply()
     emit()
     return Promise.resolve({ status: 'done' })
   }
+  const settle = (apply: () => void): Promise<WriteOutcome> => {
+    if (options.writeOutcome === 'pending') {
+      return new Promise(() => {})
+    }
+    if (options.writeOutcome === 'reject') {
+      return Promise.reject(new Error('Firestore injoignable'))
+    }
+    if (options.writeOutcome !== undefined) {
+      return Promise.resolve(options.writeOutcome)
+    }
+    return write(apply)
+  }
   const others = (ref: CarpoolRef) =>
     state.carpools.filter((carpool) => keyOf(carpool) !== keyOf(ref))
+  const existingCarpool = (ref: CarpoolRef) =>
+    state.carpools.find((carpool) => keyOf(carpool) === keyOf(ref)) ?? null
 
   return {
     repository: {
@@ -78,7 +88,22 @@ export function planning(
       },
       take(ref: CarpoolRef, driver: Driver) {
         count.writes.push({ kind: 'take', key: keyOf(ref) })
-        return settle(() => {
+        if (options.writeOutcome !== undefined) {
+          return settle(() => {
+            state.carpools = [
+              ...others(ref),
+              { ...ref, driverUid: driver.uid, driverName: driver.firstName },
+            ]
+          })
+        }
+        const decision = decideTake(existingCarpool(ref), null, driver.uid)
+        if (decision.kind === 'already') {
+          return Promise.resolve({ status: 'done' })
+        }
+        if (decision.kind === 'conflict') {
+          return Promise.resolve({ status: 'alreadyTaken', driverName: decision.driverName })
+        }
+        return write(() => {
           state.carpools = [
             ...others(ref),
             { ...ref, driverUid: driver.uid, driverName: driver.firstName },
@@ -87,21 +112,51 @@ export function planning(
       },
       takeOver(ref: CarpoolRef, driver: Driver, currentDriverUid: string) {
         count.writes.push({ kind: 'takeOver', key: keyOf(ref), currentDriverUid })
-        return settle(() => {
+        if (options.writeOutcome !== undefined) {
+          return settle(() => {
+            state.carpools = [
+              ...others(ref),
+              {
+                ...ref,
+                driverUid: driver.uid,
+                driverName: driver.firstName,
+                replacedDriverUid: currentDriverUid,
+              },
+            ]
+          })
+        }
+        const decision = decideTake(existingCarpool(ref), currentDriverUid, driver.uid)
+        if (decision.kind === 'already') {
+          return Promise.resolve({ status: 'done' })
+        }
+        if (decision.kind === 'conflict') {
+          return Promise.resolve({ status: 'alreadyTaken', driverName: decision.driverName })
+        }
+        return write(() => {
           state.carpools = [
             ...others(ref),
             {
               ...ref,
               driverUid: driver.uid,
               driverName: driver.firstName,
-              replacedDriverUid: currentDriverUid,
+              ...(decision.replacedDriverUid === null
+                ? {}
+                : { replacedDriverUid: decision.replacedDriverUid }),
             },
           ]
         })
       },
-      cancel(ref: CarpoolRef) {
+      cancel(ref: CarpoolRef, driver: Driver) {
         count.writes.push({ kind: 'cancel', key: keyOf(ref) })
-        return settle(() => {
+        if (options.writeOutcome !== undefined) {
+          return settle(() => {
+            state.carpools = others(ref)
+          })
+        }
+        if (decideCancel(existingCarpool(ref), driver.uid) === 'nothing') {
+          return Promise.resolve({ status: 'done' })
+        }
+        return write(() => {
           state.carpools = others(ref)
         })
       },
