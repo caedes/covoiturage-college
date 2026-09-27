@@ -107,6 +107,7 @@ export function PlanningPage() {
     setAlert({ id: nextAlertId.current++, message })
   }, [])
 
+  /** A cancelled empty trip leaves with its button: the focus goes to its section. */
   const act = useCallback(
     async (trip: PlannedTrip) => {
       if (state.status !== 'member' || trip.action === null) {
@@ -125,7 +126,6 @@ export function PlanningPage() {
                 : await repository.take(trip, driver)
         if (outcome.status === 'done') {
           setConfirmation(writeSuccessMessage(trip.action, trip.time, trip.label))
-          // A cancelled empty trip leaves with its button: the focus goes to its section.
           if (trip.action === 'cancel' && trip.status.kind === 'void') {
             const heading = trip.direction === 'aller' ? allerHeading : retourHeading
             heading.current?.focus()
@@ -219,10 +219,12 @@ export function PlanningPage() {
     )
   const changePresence = (childId: ChildId, presence: Presence) =>
     saveChildDay(withPresence(day.date, childId, presence))
+  /**
+   * Taken off the retour, a child on permanence goes back to their usual trip, chip and all: the
+   * focus goes to the section rather than being lost.
+   */
   const toggleRider = (trip: PlannedTrip, childId: ChildId) => {
     const current = optionsOf(childId)
-    // Taken off the retour, a child on permanence goes back to their usual trip, chip and all:
-    // the focus goes to the section rather than being lost.
     const leavesTrip =
       trip.direction === 'retour' &&
       current?.permanence !== undefined &&
