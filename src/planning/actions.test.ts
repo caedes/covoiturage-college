@@ -19,13 +19,13 @@ describe('tripAction', () => {
     ).toBe('takeOver')
   })
 
-  it("ne propose rien au conducteur qu'on vient de remplacer", () => {
+  it('propose « Je le prends » au conducteur remplacé, pour reprendre son trajet', () => {
     expect(
       tripAction(
         { kind: 'covered', driverName: 'Paul', driverUid: 'uid-paul', replacedYou: true },
         true,
       ),
-    ).toBeNull()
+    ).toBe('takeOver')
   })
 
   it('propose « Annuler » sur un trajet vidé que je conduis encore, rien sinon', () => {

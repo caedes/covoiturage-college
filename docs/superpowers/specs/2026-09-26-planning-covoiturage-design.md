@@ -114,6 +114,11 @@ l'heure est passée.
 passagers sont partis reste affiché, avec son conducteur, jusqu'à ce que celui-ci
 l'annule. Personne n'est désinscrit sans le savoir.
 
+**Le conducteur remplacé peut reprendre son trajet.** « Je le prends » s'offre sur tout trajet
+couvert par un autre parent, y compris à celui qui voit « Paul a pris votre place ». La reprise
+suit la même règle que les autres : elle nomme le conducteur en place. Décision du propriétaire
+du projet, 2026-09-27.
+
 ## Trajets par défaut
 
 Calculés pour chaque enfant et chaque jour de classe à partir de son emploi du temps.

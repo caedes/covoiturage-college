@@ -46,12 +46,22 @@ describe('actions de conducteur', () => {
     expect(store.writes()[0]).toMatchObject({ kind: 'takeOver', currentDriverUid: 'uid-paul' })
   })
 
-  it("ne propose rien au conducteur qu'on vient de remplacer", async () => {
-    await renderRoute('/', {
-      planning: planning({ carpools: [carpool({ ...ALLER, replacedDriverUid: defaultUid })] }),
-    })
+  it('laisse le conducteur remplacé reprendre son trajet', async () => {
+    const user = userEvent.setup()
+    const store = planning({ carpools: [carpool({ ...ALLER, replacedDriverUid: defaultUid })] })
+    await renderRoute('/', { planning: store })
     expect(within(aller()).getByText('Paul a pris votre place')).toBeInTheDocument()
-    expect(within(aller()).queryByRole('button')).toBeNull()
+    await user.click(
+      within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ }),
+    )
+    expect(await within(aller()).findByText('Vous')).toBeInTheDocument()
+    expect(store.writes()).toEqual([
+      {
+        kind: 'takeOver',
+        key: '2026-09-30_aller_centre-bourg_0740',
+        currentDriverUid: 'uid-paul',
+      },
+    ])
   })
 
   it('annonce le parent qui a pris le trajet juste avant, puis ferme l’alerte', async () => {
