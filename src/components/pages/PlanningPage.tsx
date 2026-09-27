@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
-import { weekRangeLabel } from '../../lib/planningLabels'
+import { weekRangeLabel, writeFailureMessage } from '../../lib/planningLabels'
 import { addDays, displayedMonday, initialDay, parisToday } from '../../planning/dates'
 import { ZONE_A_2026_2027 } from '../../planning/holidays'
-import type { DayPlan } from '../../planning/types'
+import type { DayPlan, PlannedTrip } from '../../planning/types'
 import { buildWeek } from '../../planning/week'
 import { Button } from '../atoms/ui/button'
+import { ActionAlert } from '../molecules/ActionAlert'
 import { DaySelector } from '../organisms/DaySelector'
 import { PresenceBar } from '../organisms/PresenceBar'
 import { TripSection } from '../organisms/TripSection'
@@ -32,7 +33,7 @@ function noticeFor(day: DayPlan, today: string): string | null {
 
 /** The planning of `/`: the only component that reads the planning port and builds the week. */
 export function PlanningPage() {
-  const { now } = usePlanningContext()
+  const { now, repository } = usePlanningContext()
   const { state } = useAuth()
   const [today, setToday] = useState(() => parisToday(now()))
   const thisMonday = displayedMonday(today)
@@ -71,6 +72,41 @@ export function PlanningPage() {
 
   const { load, retry } = usePlanning(range)
 
+  const [pendingKey, setPendingKey] = useState<string | null>(null)
+  const [alert, setAlert] = useState<string | null>(null)
+
+  /** An alert goes away by itself after eight seconds, or at once with « Fermer ». */
+  useEffect(() => {
+    if (alert === null) {
+      return
+    }
+    const timer = setTimeout(() => setAlert(null), 8_000)
+    return () => clearTimeout(timer)
+  }, [alert])
+
+  const act = useCallback(
+    async (trip: PlannedTrip) => {
+      if (state.status !== 'member' || trip.action === null) {
+        return
+      }
+      const driver = { uid: state.uid, firstName: state.member.firstName }
+      setPendingKey(trip.key)
+      const outcome =
+        trip.action === 'take'
+          ? await repository.take(trip, driver)
+          : trip.action === 'cancel'
+            ? await repository.cancel(trip, driver)
+            : trip.status.kind === 'covered'
+              ? await repository.takeOver(trip, driver, trip.status.driverUid)
+              : await repository.take(trip, driver)
+      setPendingKey(null)
+      if (outcome.status !== 'done') {
+        setAlert(writeFailureMessage(outcome))
+      }
+    },
+    [repository, state],
+  )
+
   if (load.status === 'loading') {
     return (
       <>
@@ -102,7 +138,7 @@ export function PlanningPage() {
     today,
     ...load.snapshot,
     viewerUid: state.status === 'member' ? state.uid : '',
-    viewerCanDrive: state.status === 'member',
+    viewerCanDrive: state.status === 'member' && state.member.role === 'parent',
     holidays: ZONE_A_2026_2027,
   })
   const day = week.days.find((candidate) => candidate.date === selected) ?? week.days[0]
@@ -118,23 +154,44 @@ export function PlanningPage() {
   }
 
   return (
-    <PlanningTemplate
-      tab={tab}
-      onTabChange={changeTab}
-      weekTabs={<WeekTabs range={weekRangeLabel(monday)} />}
-      days={<DaySelector days={week.days} selected={day.date} onSelect={setSelected} />}
-      notice={notice === null ? null : <p className="text-sm text-muted-foreground">{notice}</p>}
-      presence={empty ? null : <PresenceBar roster={day.children} />}
-      aller={empty ? null : <TripSection title="Aller" trips={day.aller} roster={day.children} />}
-      retour={
-        empty ? null : <TripSection title="Retour" trips={day.retour} roster={day.children} />
-      }
-      recap={
-        <WeeklyRecap
-          recap={week.recap}
-          period={tab === 'current' ? 'cette semaine' : 'la semaine prochaine'}
-        />
-      }
-    />
+    <>
+      <PlanningTemplate
+        tab={tab}
+        onTabChange={changeTab}
+        weekTabs={<WeekTabs range={weekRangeLabel(monday)} />}
+        days={<DaySelector days={week.days} selected={day.date} onSelect={setSelected} />}
+        notice={notice === null ? null : <p className="text-sm text-muted-foreground">{notice}</p>}
+        presence={empty ? null : <PresenceBar roster={day.children} />}
+        aller={
+          empty ? null : (
+            <TripSection
+              title="Aller"
+              trips={day.aller}
+              roster={day.children}
+              onAction={act}
+              pendingKey={pendingKey}
+            />
+          )
+        }
+        retour={
+          empty ? null : (
+            <TripSection
+              title="Retour"
+              trips={day.retour}
+              roster={day.children}
+              onAction={act}
+              pendingKey={pendingKey}
+            />
+          )
+        }
+        recap={
+          <WeeklyRecap
+            recap={week.recap}
+            period={tab === 'current' ? 'cette semaine' : 'la semaine prochaine'}
+          />
+        }
+      />
+      {alert === null ? null : <ActionAlert message={alert} onDismiss={() => setAlert(null)} />}
+    </>
   )
 }
