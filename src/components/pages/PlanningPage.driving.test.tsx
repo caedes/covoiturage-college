@@ -73,15 +73,20 @@ describe('actions de conducteur', () => {
     await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/enregistrement impossible/i)
     await waitFor(() =>
-      expect(within(aller()).getByRole('button', { name: TAKE_ALLER })).toBeEnabled(),
+      expect(within(aller()).getByRole('button', { name: TAKE_ALLER })).not.toHaveAttribute(
+        'aria-disabled',
+        'true',
+      ),
     )
   })
 
   it('désactive le bouton tant que l’écriture est en cours', async () => {
     const user = userEvent.setup()
     await renderRoute('/', { planning: planning({}, { writeOutcome: 'pending' }) })
-    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
-    expect(within(aller()).getByRole('button', { name: TAKE_ALLER })).toBeDisabled()
+    const button = within(aller()).getByRole('button', { name: TAKE_ALLER })
+    await user.click(button)
+    expect(button).toHaveAttribute('aria-disabled', 'true')
+    expect(button).toHaveFocus()
   })
 
   it("n'offre aucune action sur un jour passé", async () => {

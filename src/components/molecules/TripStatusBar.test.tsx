@@ -53,7 +53,9 @@ describe('TripStatusBar avec action', () => {
     expect(onClick).toHaveBeenCalledTimes(1)
   })
 
-  it('désactive le bouton pendant l’écriture', () => {
+  it('désactive le bouton pendant l’écriture', async () => {
+    const user = userEvent.setup()
+    const onClick = vi.fn()
     render(
       <TripStatusBar
         status={{ kind: 'mine' }}
@@ -61,13 +63,15 @@ describe('TripStatusBar avec action', () => {
           kind: 'cancel',
           accessibleLabel: 'Annuler — trajet',
           pending: true,
-          onClick: () => {},
+          onClick,
         }}
       />,
     )
     const button = screen.getByRole('button', { name: 'Annuler — trajet' })
-    expect(button).toBeDisabled()
+    expect(button).toHaveAttribute('aria-disabled', 'true')
     expect(button).toHaveAttribute('aria-busy', 'true')
+    await user.click(button)
+    expect(onClick).not.toHaveBeenCalled()
   })
 
   it("n'affiche aucun bouton sans action", () => {

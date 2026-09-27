@@ -21,7 +21,7 @@ type StatusAction = {
 const BUTTON: Record<TripAction, { variant: 'default' | 'outline' | 'link'; className: string }> = {
   take: { variant: 'default', className: 'rounded-full font-heading' },
   takeOver: { variant: 'outline', className: 'rounded-full font-heading bg-transparent' },
-  cancel: { variant: 'link', className: 'px-1 text-primary' },
+  cancel: { variant: 'link', className: 'px-1 text-foreground underline underline-offset-4' },
 }
 
 /** The trip's status in words, on the background of its kind, with the action offered if any. */
@@ -43,11 +43,14 @@ export function TripStatusBar({
           type="button"
           size="sm"
           variant={BUTTON[action.kind].variant}
-          className={cn('shrink-0', BUTTON[action.kind].className)}
+          className={cn(
+            'shrink-0 aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+            BUTTON[action.kind].className,
+          )}
           aria-label={action.accessibleLabel}
           aria-busy={action.pending}
-          disabled={action.pending}
-          onClick={action.onClick}
+          aria-disabled={action.pending}
+          onClick={action.pending ? undefined : action.onClick}
         >
           {actionLabel(action.kind)}
         </Button>
