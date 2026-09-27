@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
-import { weekRangeLabel, writeFailureMessage } from '../../lib/planningLabels'
+import { weekRangeLabel, writeFailureMessage, writeSuccessMessage } from '../../lib/planningLabels'
 import { addDays, displayedMonday, initialDay, parisToday } from '../../planning/dates'
 import { ZONE_A_2026_2027 } from '../../planning/holidays'
 import type { DayPlan, PlannedTrip } from '../../planning/types'
@@ -73,9 +73,13 @@ export function PlanningPage() {
   const { load, retry } = usePlanning(range)
 
   const [pendingKey, setPendingKey] = useState<string | null>(null)
-  const [alert, setAlert] = useState<string | null>(null)
+  const [alert, setAlert] = useState<{ id: number; message: string } | null>(null)
+  const [confirmation, setConfirmation] = useState('')
+  const nextAlertId = useRef(1)
 
-  /** An alert goes away by itself after eight seconds, or at once with « Fermer ». */
+  /** An alert goes away by itself after eight seconds, or at once with « Fermer »; a repeated
+   * alert gets a fresh id, so it is re-announced and its timer restarts even if the text is
+   * identical to the one just dismissed. */
   useEffect(() => {
     if (alert === null) {
       return
@@ -91,17 +95,24 @@ export function PlanningPage() {
       }
       const driver = { uid: state.uid, firstName: state.member.firstName }
       setPendingKey(trip.key)
-      const outcome =
-        trip.action === 'take'
-          ? await repository.take(trip, driver)
-          : trip.action === 'cancel'
-            ? await repository.cancel(trip, driver)
-            : trip.status.kind === 'covered'
-              ? await repository.takeOver(trip, driver, trip.status.driverUid)
-              : await repository.take(trip, driver)
-      setPendingKey(null)
-      if (outcome.status !== 'done') {
-        setAlert(writeFailureMessage(outcome))
+      try {
+        const outcome =
+          trip.action === 'take'
+            ? await repository.take(trip, driver)
+            : trip.action === 'cancel'
+              ? await repository.cancel(trip, driver)
+              : trip.status.kind === 'covered'
+                ? await repository.takeOver(trip, driver, trip.status.driverUid)
+                : await repository.take(trip, driver)
+        if (outcome.status === 'done') {
+          setConfirmation(writeSuccessMessage(trip.action, trip.time, trip.label))
+        } else {
+          setAlert({ id: nextAlertId.current++, message: writeFailureMessage(outcome) })
+        }
+      } catch {
+        setAlert({ id: nextAlertId.current++, message: writeFailureMessage({ status: 'failed' }) })
+      } finally {
+        setPendingKey(null)
       }
     },
     [repository, state],
@@ -191,7 +202,12 @@ export function PlanningPage() {
           />
         }
       />
-      {alert === null ? null : <ActionAlert message={alert} onDismiss={() => setAlert(null)} />}
+      <p aria-live="polite" className="sr-only">
+        {confirmation}
+      </p>
+      {alert === null ? null : (
+        <ActionAlert key={alert.id} message={alert.message} onDismiss={() => setAlert(null)} />
+      )}
     </>
   )
 }

@@ -375,13 +375,18 @@ Jour passé : tout en affichage seul, mention « Journée passée ». Jour de va
 
 ### Réactivité
 
-Les écritures simples (`childDays`, Annuler) profitent de la compensation de latence de
-Firestore : `onSnapshot` renvoie l'état local sans attendre le serveur. « Je prends » et
-« Je le prends » passent par une transaction : le bouton est désactivé, avec un état
-« en cours », jusqu'à la réponse.
+Les écritures simples (`childDays`) profitent de la compensation de latence de
+Firestore : `onSnapshot` renvoie l'état local sans attendre le serveur. « Je prends »,
+« Je le prends » et « Annuler » passent tous par une transaction : le bouton est
+désactivé, avec un état « en cours », jusqu'à la réponse ; hors ligne ou en cas de
+promesse rejetée, l'échec est annoncé comme les autres.
 
 Une erreur d'abonnement affiche un message avec « Réessayer », sur le modèle de
 `ErrorScreen`. Aucun écran ne reste vide.
+
+Un refus par les règles Firestore (jour verrouillé, trajet déjà modifié) se distingue
+d'un problème de connexion : « Ce trajet ne peut plus être modifié. Rechargez la page
+pour voir son état actuel. »
 
 ## Script d'import
 
