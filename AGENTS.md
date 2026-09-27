@@ -6,8 +6,8 @@ Consignes pour les agents de code (Claude Code, Codex, Cursor…) travaillant su
 
 Covoiturage collège — application d'entraide entre parents pour organiser les trajets
 domicile ↔ collège. Le dépôt contient le socle technique, la porte d'authentification et
-le planning de la semaine en lecture seule. La prise de trajets et les options des
-enfants arrivent aux lots suivants.
+le planning de la semaine. Les parents peuvent désormais prendre, reprendre et annuler un
+trajet. Les options des enfants arrivent au lot suivant.
 
 ## Commandes
 
@@ -43,7 +43,9 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
 - **Autorisation** — l'accès est réservé aux membres inscrits : la fiche
   `members/{email}` fait foi. `firestore.rules` n'accorde que le `get` de sa propre
   fiche et la lecture de `timetables`, `carpools` et `childDays` aux membres, sans
-  aucune écriture cliente. Les autres collections naissent fermées.
+  aucune écriture cliente. Les autres collections naissent fermées. `carpools` s'écrit
+  par son seul conducteur (création, reprise en nommant le conducteur remplacé,
+  annulation), sur un jour non verrouillé (D 22:00 UTC) et à 14 jours au plus.
 - **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
   Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.
