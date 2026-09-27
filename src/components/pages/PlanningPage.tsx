@@ -102,6 +102,7 @@ export function PlanningPage() {
     today,
     ...load.snapshot,
     viewerUid: state.status === 'member' ? state.uid : '',
+    viewerCanDrive: state.status === 'member',
     holidays: ZONE_A_2026_2027,
   })
   const day = week.days.find((candidate) => candidate.date === selected) ?? week.days[0]

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  actionAccessibleLabel,
+  actionLabel,
   dayButtonLabel,
   dayLongLabel,
   dayNumber,
@@ -10,6 +12,7 @@ import {
   skipNote,
   statusLabel,
   weekRangeLabel,
+  writeFailureMessage,
 } from './planningLabels'
 
 describe('weekRangeLabel', () => {
@@ -77,10 +80,22 @@ describe('statusLabel', () => {
   it('reprend les textes du prototype', () => {
     expect(statusLabel({ kind: 'open' })).toBe("Personne pour l'instant")
     expect(statusLabel({ kind: 'mine' })).toBe('Vous')
-    expect(statusLabel({ kind: 'covered', driverName: 'Paul', replacedYou: false })).toBe('Paul')
-    expect(statusLabel({ kind: 'covered', driverName: 'Paul', replacedYou: true })).toBe(
-      'Paul a pris votre place',
-    )
+    expect(
+      statusLabel({
+        kind: 'covered',
+        driverName: 'Paul',
+        driverUid: 'uid-paul',
+        replacedYou: false,
+      }),
+    ).toBe('Paul')
+    expect(
+      statusLabel({
+        kind: 'covered',
+        driverName: 'Paul',
+        driverUid: 'uid-paul',
+        replacedYou: true,
+      }),
+    ).toBe('Paul a pris votre place')
     expect(statusLabel({ kind: 'void', driverName: null, mine: false })).toBe(
       'Personne à transporter',
     )
@@ -112,5 +127,28 @@ describe('récapitulatif', () => {
   it("arrondit le pourcentage, et vaut 100 quand il n'y a rien à couvrir", () => {
     expect(recapPercent({ covered: 4, total: 15 })).toBe(27)
     expect(recapPercent({ covered: 0, total: 0 })).toBe(100)
+  })
+})
+
+describe('actions', () => {
+  it('reprend les libelles du prototype', () => {
+    expect(actionLabel('take')).toBe('Je prends')
+    expect(actionLabel('takeOver')).toBe('Je le prends')
+    expect(actionLabel('cancel')).toBe('Annuler')
+  })
+
+  it('nomme le trajet dans le nom accessible, apres le libelle visible', () => {
+    expect(actionAccessibleLabel('take', '07:40', 'Maison → Centre-bourg')).toBe(
+      'Je prends — trajet de 07:40, Maison → Centre-bourg',
+    )
+  })
+
+  it('explique un conflit ou un echec en vouvoyant', () => {
+    expect(writeFailureMessage({ status: 'alreadyTaken', driverName: 'Maud' })).toBe(
+      'Maud a pris ce trajet juste avant vous.',
+    )
+    expect(writeFailureMessage({ status: 'failed' })).toBe(
+      'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.',
+    )
   })
 })

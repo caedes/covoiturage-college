@@ -1,4 +1,13 @@
-import type { Gender, IsoDate, Presence, TripStatus, Weekday, WeekRecap } from '../planning/types'
+import type { WriteOutcome } from '../planning/ports'
+import type {
+  Gender,
+  IsoDate,
+  Presence,
+  TripAction,
+  TripStatus,
+  Weekday,
+  WeekRecap,
+} from '../planning/types'
 
 const SHORT: Record<Weekday, string> = {
   mon: 'Lun',
@@ -94,4 +103,25 @@ export function recapLabel(recap: WeekRecap, period: string): string {
 
 export function recapPercent(recap: WeekRecap): number {
   return recap.total === 0 ? 100 : Math.round((recap.covered / recap.total) * 100)
+}
+
+const ACTION: Record<TripAction, string> = {
+  take: 'Je prends',
+  takeOver: 'Je le prends',
+  cancel: 'Annuler',
+}
+
+export function actionLabel(action: TripAction): string {
+  return ACTION[action]
+}
+
+/** Starts with the visible label, so that voice control users can say what they see. */
+export function actionAccessibleLabel(action: TripAction, time: string, label: string): string {
+  return `${ACTION[action]} — trajet de ${time}, ${label}`
+}
+
+export function writeFailureMessage(outcome: Exclude<WriteOutcome, { status: 'done' }>): string {
+  return outcome.status === 'alreadyTaken'
+    ? `${outcome.driverName} a pris ce trajet juste avant vous.`
+    : 'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.'
 }

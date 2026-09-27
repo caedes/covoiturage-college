@@ -1,6 +1,17 @@
-import type { Carpool, ChildDay, IsoDate, Timetable } from './types'
+import type { Carpool, ChildDay, Direction, IsoDate, Place, Time, Timetable } from './types'
 
 export type DateRange = { from: IsoDate; to: IsoDate }
+
+/** Identifies a carpool the way its document id does. */
+export type CarpoolRef = { date: IsoDate; direction: Direction; place: Place; time: Time }
+
+/** Who writes: the session's uid and the first name of their `members` document. */
+export type Driver = { uid: string; firstName: string }
+
+export type WriteOutcome =
+  | { status: 'done' }
+  | { status: 'alreadyTaken'; driverName: string }
+  | { status: 'failed' }
 
 export type PlanningSnapshot = {
   timetables: Timetable[]
