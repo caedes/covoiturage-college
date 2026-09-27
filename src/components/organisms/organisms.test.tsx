@@ -35,7 +35,7 @@ const BUS: PlannedTrip = {
       active: true,
     },
   ],
-  action: null,
+  action: 'take',
 }
 
 describe('WeekTabs', () => {
@@ -127,6 +127,23 @@ describe('TripCard', () => {
       />,
     )
     expect(container.firstElementChild).toHaveClass('border-dashed')
+  })
+
+  it("transmet l'action du trajet et signale celle en cours", async () => {
+    const user = userEvent.setup()
+    const onAction = vi.fn()
+    const { rerender } = render(
+      <TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKey={null} />,
+    )
+    await user.click(screen.getByRole('button', { name: /^Je prends — trajet de 17:45/ }))
+    expect(onAction).toHaveBeenCalledWith(BUS)
+    rerender(<TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKey={BUS.key} />)
+    expect(screen.getByRole('button', { name: /^Je prends/ })).toBeDisabled()
+  })
+
+  it("n'affiche aucun bouton sans gestionnaire d'action", () => {
+    render(<TripCard trip={BUS} roster={ROSTER} />)
+    expect(screen.queryByRole('button')).toBeNull()
   })
 })
 

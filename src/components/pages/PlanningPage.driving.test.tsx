@@ -1,0 +1,98 @@
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it } from 'vitest'
+import { defaultUid, member } from '../../test/fakeAuth'
+import { planning } from '../../test/fakePlanning'
+import { carpool } from '../../test/planningFixtures'
+import { renderRoute } from '../../test/renderRoute'
+
+const WEDNESDAY = '2026-09-30'
+const ALLER = { date: WEDNESDAY, direction: 'aller', place: 'centre-bourg', time: '07:40' } as const
+const TAKE_ALLER = /^Je prends — trajet de 07:40/
+
+function aller() {
+  return screen.getByRole('region', { name: 'Aller' })
+}
+
+describe('actions de conducteur', () => {
+  it('prend un trajet libre et affiche « Vous »', async () => {
+    const user = userEvent.setup()
+    const store = planning()
+    await renderRoute('/', { planning: store })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(await within(aller()).findByText('Vous')).toBeInTheDocument()
+    expect(store.writes()).toEqual([{ kind: 'take', key: '2026-09-30_aller_centre-bourg_0740' }])
+  })
+
+  it('annule un trajet que je conduis', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', {
+      planning: planning({
+        carpools: [carpool({ ...ALLER, driverUid: defaultUid, driverName: 'Sophie' })],
+      }),
+    })
+    await user.click(within(aller()).getByRole('button', { name: /^Annuler — trajet de 07:40/ }))
+    expect(await within(aller()).findByText("Personne pour l'instant")).toBeInTheDocument()
+  })
+
+  it("reprend le trajet d'un autre parent en le nommant", async () => {
+    const user = userEvent.setup()
+    const store = planning({ carpools: [carpool(ALLER)] })
+    await renderRoute('/', { planning: store })
+    await user.click(
+      within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ }),
+    )
+    expect(await within(aller()).findByText('Vous')).toBeInTheDocument()
+    expect(store.writes()[0]).toMatchObject({ kind: 'takeOver', currentDriverUid: 'uid-paul' })
+  })
+
+  it("ne propose rien au conducteur qu'on vient de remplacer", async () => {
+    await renderRoute('/', {
+      planning: planning({ carpools: [carpool({ ...ALLER, replacedDriverUid: defaultUid })] }),
+    })
+    expect(within(aller()).getByText('Paul a pris votre place')).toBeInTheDocument()
+    expect(within(aller()).queryByRole('button')).toBeNull()
+  })
+
+  it('annonce le parent qui a pris le trajet juste avant, puis ferme l’alerte', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', {
+      planning: planning({}, { writeOutcome: { status: 'alreadyTaken', driverName: 'Maud' } }),
+    })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Maud a pris ce trajet juste avant vous.',
+    )
+    await user.click(screen.getByRole('button', { name: 'Fermer' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it("annonce un échec d'enregistrement et réactive le bouton", async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({}, { writeOutcome: { status: 'failed' } }) })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/enregistrement impossible/i)
+    await waitFor(() =>
+      expect(within(aller()).getByRole('button', { name: TAKE_ALLER })).toBeEnabled(),
+    )
+  })
+
+  it('désactive le bouton tant que l’écriture est en cours', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({}, { writeOutcome: 'pending' }) })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(within(aller()).getByRole('button', { name: TAKE_ALLER })).toBeDisabled()
+  })
+
+  it("n'offre aucune action sur un jour passé", async () => {
+    const user = userEvent.setup()
+    await renderRoute('/')
+    await user.click(screen.getByRole('button', { name: /^lundi 28/ }))
+    expect(within(aller()).queryByRole('button')).toBeNull()
+  })
+
+  it("n'offre aucune action à un compte enfant", async () => {
+    await renderRoute('/', { auth: member({ role: 'child', childId: 'basile', childIds: [] }) })
+    expect(within(aller()).queryByRole('button')).toBeNull()
+  })
+})

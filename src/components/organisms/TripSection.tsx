@@ -3,7 +3,13 @@ import type { DayChild, PermanenceOffer, PlannedTrip } from '../../planning/type
 import { PermanenceRow } from './PermanenceRow'
 import { TripCard } from './TripCard'
 
-type TripSectionProps = { title: string; trips: PlannedTrip[]; roster: DayChild[] }
+type TripSectionProps = {
+  title: string
+  trips: PlannedTrip[]
+  roster: DayChild[]
+  onAction?: (trip: PlannedTrip) => void
+  pendingKey?: string | null
+}
 
 function byExitTime(offers: PermanenceOffer[]): [string, PermanenceOffer[]][] {
   const groups = new Map<string, PermanenceOffer[]>()
@@ -13,7 +19,7 @@ function byExitTime(offers: PermanenceOffer[]): [string, PermanenceOffer[]][] {
   return [...groups.entries()]
 }
 
-export function TripSection({ title, trips, roster }: TripSectionProps) {
+export function TripSection({ title, trips, roster, onAction, pendingKey }: TripSectionProps) {
   const titleId = useId()
   return (
     <section aria-labelledby={titleId} className="flex flex-col gap-2.5">
@@ -32,7 +38,7 @@ export function TripSection({ title, trips, roster }: TripSectionProps) {
               {byExitTime(trip.offers).map(([exitTime, offers]) => (
                 <PermanenceRow key={exitTime} exitTime={exitTime} offers={offers} roster={roster} />
               ))}
-              <TripCard trip={trip} roster={roster} />
+              <TripCard trip={trip} roster={roster} onAction={onAction} pendingKey={pendingKey} />
             </li>
           ))}
         </ul>

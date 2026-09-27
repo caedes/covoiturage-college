@@ -1,7 +1,8 @@
-import { statusLabel } from '../../lib/planningLabels'
+import { actionLabel, statusLabel } from '../../lib/planningLabels'
 import { cn } from '../../lib/utils'
-import type { TripStatus } from '../../planning/types'
+import type { TripAction, TripStatus } from '../../planning/types'
 import { StatusIcon } from '../atoms/StatusIcon'
+import { Button } from '../atoms/ui/button'
 
 const STYLES: Record<TripStatus['kind'], string> = {
   void: 'bg-muted text-secondary-foreground',
@@ -10,14 +11,47 @@ const STYLES: Record<TripStatus['kind'], string> = {
   covered: 'bg-success font-heading text-base font-semibold text-success-foreground',
 }
 
-/** The trip's status in words, on the background of its kind. */
-export function TripStatusBar({ status }: { status: TripStatus }) {
+type StatusAction = {
+  kind: TripAction
+  accessibleLabel: string
+  pending: boolean
+  onClick: () => void
+}
+
+const BUTTON: Record<TripAction, { variant: 'default' | 'outline' | 'link'; className: string }> = {
+  take: { variant: 'default', className: 'rounded-full font-heading' },
+  takeOver: { variant: 'outline', className: 'rounded-full font-heading bg-transparent' },
+  cancel: { variant: 'link', className: 'px-1 text-primary' },
+}
+
+/** The trip's status in words, on the background of its kind, with the action offered if any. */
+export function TripStatusBar({
+  status,
+  action = null,
+}: {
+  status: TripStatus
+  action?: StatusAction | null
+}) {
   return (
     <div
       className={cn('flex items-center gap-2 rounded-xl px-3 py-2 text-sm', STYLES[status.kind])}
     >
       <StatusIcon kind={status.kind} />
-      <span>{statusLabel(status)}</span>
+      <span className="min-w-0 flex-1">{statusLabel(status)}</span>
+      {action === null ? null : (
+        <Button
+          type="button"
+          size="sm"
+          variant={BUTTON[action.kind].variant}
+          className={cn('shrink-0', BUTTON[action.kind].className)}
+          aria-label={action.accessibleLabel}
+          aria-busy={action.pending}
+          disabled={action.pending}
+          onClick={action.onClick}
+        >
+          {actionLabel(action.kind)}
+        </Button>
+      )}
     </div>
   )
 }

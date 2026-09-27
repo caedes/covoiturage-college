@@ -1,4 +1,4 @@
-import { skipNote } from '../../lib/planningLabels'
+import { actionAccessibleLabel, skipNote } from '../../lib/planningLabels'
 import { cn } from '../../lib/utils'
 import type { DayChild, PlannedTrip, TripStatus } from '../../planning/types'
 import { ChildAvatar } from '../atoms/ChildAvatar'
@@ -11,9 +11,14 @@ const CARD: Record<TripStatus['kind'], string> = {
   mine: 'border-primary bg-card shadow-sm',
 }
 
-type TripCardProps = { trip: PlannedTrip; roster: DayChild[] }
+type TripCardProps = {
+  trip: PlannedTrip
+  roster: DayChild[]
+  onAction?: (trip: PlannedTrip) => void
+  pendingKey?: string | null
+}
 
-export function TripCard({ trip, roster }: TripCardProps) {
+export function TripCard({ trip, roster, onAction, pendingKey }: TripCardProps) {
   const nameOf = (childId: string) =>
     roster.find((child) => child.childId === childId)?.firstName ?? childId
   const skipped = trip.excluded
@@ -39,7 +44,19 @@ export function TripCard({ trip, roster }: TripCardProps) {
         </span>
       </div>
       {note === '' ? null : <p className="text-sm text-secondary-foreground">{note}</p>}
-      <TripStatusBar status={trip.status} />
+      <TripStatusBar
+        status={trip.status}
+        action={
+          trip.action === null || onAction === undefined
+            ? null
+            : {
+                kind: trip.action,
+                accessibleLabel: actionAccessibleLabel(trip.action, trip.time, trip.label),
+                pending: pendingKey === trip.key,
+                onClick: () => onAction(trip),
+              }
+        }
+      />
     </div>
   )
 }
