@@ -16,6 +16,48 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/members/$(request.auth.token.email.lower()));
     }
 
+    function member() {
+      return get(/databases/$(database)/documents/members/$(request.auth.token.email.lower())).data;
+    }
+
+    function isParent() {
+      return isMember() && member().role == 'parent';
+    }
+
+    // Minuit UTC du jour D, a partir de 'AAAA-MM-JJ'.
+    function dayStart(date) {
+      let parts = date.split('-');
+      return timestamp.date(int(parts[0]), int(parts[1]), int(parts[2]));
+    }
+
+    // Un jour reste modifiable jusqu'au lendemain 00:00 heure de Paris, soit D 22:00 UTC
+    // (minuit l'ete, 23:00 l'hiver), et au plus 14 jours devant.
+    function isEditableDay(date) {
+      return request.time < dayStart(date) + duration.value(22, 'h')
+        && dayStart(date) <= request.time + duration.value(14, 'd');
+    }
+
+    function isCarpoolShape(carpoolId, data) {
+      return data.keys().hasOnly(['date', 'direction', 'place', 'time', 'driverUid',
+                                  'driverName', 'replacedDriverUid', 'updatedAt'])
+        && data.keys().hasAll(['date', 'direction', 'place', 'time', 'driverUid',
+                               'driverName', 'updatedAt'])
+        && data.date is string
+        && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.direction in ['aller', 'retour']
+        && data.place in ['centre-bourg', 'college']
+        && data.time is string
+        && data.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && carpoolId == data.date + '_' + data.direction + '_' + data.place + '_'
+                        + data.time.replace(':', '')
+        && data.updatedAt == request.time;
+    }
+
+    // Le conducteur ecrit a son propre nom : uid de la session, prenom de sa fiche.
+    function isOwnDrive(data) {
+      return data.driverUid == request.auth.uid && data.driverName == member().firstName;
+    }
+
     match /members/{memberEmail} {
       // Chacun ne lit que sa propre fiche, et seulement par identifiant.
       allow get: if isVerifiedUser()
@@ -35,10 +77,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Covoiturages et options des enfants : lus par les membres. Les ecritures
-    // arrivent aux lots suivants ; d'ici la, le refus par defaut s'applique.
+    // Covoiturages : lus par les membres, ecrits par leur conducteur. Options des enfants :
+    // lues par les membres, ecrites au lot suivant.
     match /carpools/{carpoolId} {
       allow read: if isMember();
+      allow create: if isParent()
+        && isCarpoolShape(carpoolId, request.resource.data)
+        && isOwnDrive(request.resource.data)
+        && !('replacedDriverUid' in request.resource.data)
+        && isEditableDay(request.resource.data.date);
+      // Je le prends : le nouveau conducteur nomme celui qu'il remplace.
+      allow update: if isParent()
+        && isCarpoolShape(carpoolId, request.resource.data)
+        && isOwnDrive(request.resource.data)
+        && request.resource.data.replacedDriverUid == resource.data.driverUid
+        && isEditableDay(request.resource.data.date);
+      allow delete: if isParent()
+        && resource.data.driverUid == request.auth.uid
+        && isEditableDay(resource.data.date);
     }
 
     match /childDays/{childDayId} {
