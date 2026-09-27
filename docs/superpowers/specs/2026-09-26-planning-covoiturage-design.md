@@ -298,7 +298,7 @@ export type PlanningRepository = {
   take(key: CarpoolKey): Promise<WriteOutcome>
   takeOver(key: CarpoolKey, currentDriverUid: string): Promise<WriteOutcome>
   cancel(key: CarpoolKey): Promise<WriteOutcome>
-  saveChildDay(childDay: ChildDayDraft): Promise<WriteOutcome>
+  saveChildDay(childDay: ChildDay, authorUid: string): Promise<WriteOutcome>
 }
 ```
 
