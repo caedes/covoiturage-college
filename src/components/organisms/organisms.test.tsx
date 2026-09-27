@@ -138,7 +138,10 @@ describe('TripCard', () => {
     await user.click(screen.getByRole('button', { name: /^Je prends — trajet de 17:45/ }))
     expect(onAction).toHaveBeenCalledWith(BUS)
     rerender(<TripCard trip={BUS} roster={ROSTER} onAction={onAction} pendingKey={BUS.key} />)
-    expect(screen.getByRole('button', { name: /^Je prends/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Je prends/ })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
   })
 
   it("n'affiche aucun bouton sans gestionnaire d'action", () => {
