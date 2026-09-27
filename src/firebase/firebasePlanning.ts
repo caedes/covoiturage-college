@@ -8,9 +8,11 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  setDoc,
   where,
 } from 'firebase/firestore'
 import { decideCancel, decideTake } from '../planning/actions'
+import { childDayKey } from '../planning/childOptions'
 import { toCarpool, toChildDay, toTimetable } from '../planning/documents'
 import type {
   CarpoolRef,
@@ -165,6 +167,29 @@ export const firebasePlanningRepository: PlanningRepository = {
       })
     } catch (error) {
       console.error('Annulation du trajet impossible', error)
+      return writeOutcomeForError(error)
+    }
+  },
+
+  /**
+   * A plain `setDoc`, without a transaction: nobody else competes for a child's day but their
+   * parents, and the local snapshot shows the change at once. The promise settles when the server
+   * answers — later offline — so the page never waits on it to update the screen.
+   */
+  async saveChildDay(childDay, authorUid) {
+    try {
+      await setDoc(doc(database, 'childDays', childDayKey(childDay.date, childDay.childId)), {
+        date: childDay.date,
+        childId: childDay.childId,
+        presence: childDay.presence,
+        skipped: childDay.skipped,
+        ...(childDay.permanence === undefined ? {} : { permanence: childDay.permanence }),
+        updatedByUid: authorUid,
+        updatedAt: serverTimestamp(),
+      })
+      return { status: 'done' }
+    } catch (error) {
+      console.error('Enregistrement de la journée impossible', error)
       return writeOutcomeForError(error)
     }
   },
