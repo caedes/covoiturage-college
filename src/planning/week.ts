@@ -1,3 +1,4 @@
+import { tripAction } from './actions'
 import { schoolDays, weekdayOf, weekType } from './dates'
 import { isHoliday } from './holidays'
 import { applyChildDay, defaultLegs, retourPlacement, timetableFor } from './legs'
@@ -27,6 +28,7 @@ export type BuildWeekInput = {
   carpools: Carpool[]
   childDays: ChildDay[]
   viewerUid: string
+  viewerCanDrive: boolean
   holidays: HolidayCalendar
 }
 
@@ -113,11 +115,15 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
   }
 
   const planned = trips
-    .map((trip) => ({
-      ...trip,
-      status: resolveStatus(trip, carpools.get(trip.key), input.viewerUid),
-      offers: offers.filter((offer) => offer.tripKey === trip.key),
-    }))
+    .map((trip) => {
+      const status = resolveStatus(trip, carpools.get(trip.key), input.viewerUid)
+      return {
+        ...trip,
+        status,
+        offers: offers.filter((offer) => offer.tripKey === trip.key),
+        action: tripAction(status, input.viewerCanDrive && date >= input.today),
+      }
+    })
     .sort(
       (left, right) => left.time.localeCompare(right.time) || left.place.localeCompare(right.place),
     )

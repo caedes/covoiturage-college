@@ -10,7 +10,7 @@ const TRIP: Trip = {
   place: 'college',
   mode: 'car',
   time: '16:00',
-  label: 'Collège → Maison',
+  label: 'College -> Maison',
   riders: ['alice'],
   excluded: [],
 }
@@ -18,7 +18,7 @@ const EMPTY: Trip = { ...TRIP, riders: [], excluded: [{ childId: 'alice', reason
 const COVER = carpool({ date: '2026-09-28', direction: 'retour', place: 'college', time: '16:00' })
 
 describe('resolveStatus', () => {
-  it('rend « Personne à transporter » sans passager', () => {
+  it('rend Personne a transporter sans passager', () => {
     expect(resolveStatus(EMPTY, undefined, VIEWER)).toEqual({
       kind: 'void',
       driverName: null,
@@ -26,7 +26,7 @@ describe('resolveStatus', () => {
     })
   })
 
-  it('garde le conducteur d’un trajet vidé de ses passagers', () => {
+  it('garde le conducteur d un trajet vide de ses passagers', () => {
     expect(resolveStatus(EMPTY, COVER, VIEWER)).toEqual({
       kind: 'void',
       driverName: 'Paul',
@@ -34,33 +34,35 @@ describe('resolveStatus', () => {
     })
   })
 
-  it('reconnaît le conducteur d’un trajet vidé, pour qu’il puisse l’annuler', () => {
+  it('reconnait le conducteur d un trajet vide, pour qu il puisse l annuler', () => {
     expect(resolveStatus(EMPTY, { ...COVER, driverUid: VIEWER }, VIEWER)).toMatchObject({
       kind: 'void',
       mine: true,
     })
   })
 
-  it('rend « Personne pour l’instant » sans covoiturage', () => {
+  it('rend Personne pour l instant sans covoiturage', () => {
     expect(resolveStatus(TRIP, undefined, VIEWER)).toEqual({ kind: 'open' })
   })
 
-  it('rend « Vous » quand je conduis', () => {
+  it('rend Vous quand je conduis', () => {
     expect(resolveStatus(TRIP, { ...COVER, driverUid: VIEWER }, VIEWER)).toEqual({ kind: 'mine' })
   })
 
-  it('rend le prénom du conducteur', () => {
+  it('rend le prenom du conducteur', () => {
     expect(resolveStatus(TRIP, COVER, VIEWER)).toEqual({
       kind: 'covered',
       driverName: 'Paul',
+      driverUid: 'uid-paul',
       replacedYou: false,
     })
   })
 
-  it('signale au conducteur remplacé qu’on a pris sa place', () => {
+  it('signale au conducteur remplace qu on a pris sa place', () => {
     expect(resolveStatus(TRIP, { ...COVER, replacedDriverUid: VIEWER }, VIEWER)).toEqual({
       kind: 'covered',
       driverName: 'Paul',
+      driverUid: 'uid-paul',
       replacedYou: true,
     })
   })

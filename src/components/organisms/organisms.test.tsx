@@ -35,6 +35,7 @@ const BUS: PlannedTrip = {
       active: true,
     },
   ],
+  action: null,
 }
 
 describe('WeekTabs', () => {

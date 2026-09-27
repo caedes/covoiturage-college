@@ -6,7 +6,11 @@ describe('TripStatusBar', () => {
   it.each([
     [{ kind: 'open' } as const, "Personne pour l'instant", 'bg-warning'],
     [{ kind: 'mine' } as const, 'Vous', 'bg-accent'],
-    [{ kind: 'covered', driverName: 'Paul', replacedYou: false } as const, 'Paul', 'bg-success'],
+    [
+      { kind: 'covered', driverName: 'Paul', driverUid: 'uid-paul', replacedYou: false } as const,
+      'Paul',
+      'bg-success',
+    ],
     [
       { kind: 'void', driverName: null, mine: false } as const,
       'Personne à transporter',

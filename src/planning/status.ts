@@ -21,6 +21,7 @@ export function resolveStatus(
   return {
     kind: 'covered',
     driverName: carpool.driverName,
+    driverUid: carpool.driverUid,
     replacedYou: carpool.replacedDriverUid === viewerUid,
   }
 }

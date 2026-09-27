@@ -14,6 +14,7 @@ function input(overrides: Partial<BuildWeekInput> = {}): BuildWeekInput {
     carpools: [],
     childDays: [],
     viewerUid: VIEWER,
+    viewerCanDrive: true,
     holidays: ZONE_A_2026_2027,
     ...overrides,
   }
@@ -210,5 +211,34 @@ describe('buildWeek', () => {
 
   it('ne liste aucun enfant un jour de vacances', () => {
     expect(buildWeek(input({ monday: '2026-10-19' })).days[0]?.children).toEqual([])
+  })
+
+  it("attache a chaque trajet l'action offerte au visiteur", () => {
+    const week = buildWeek(
+      input({
+        today: '2026-09-29',
+        carpools: [
+          carpool({
+            date: '2026-09-29',
+            direction: 'aller',
+            place: 'centre-bourg',
+            time: '07:40',
+            driverUid: VIEWER,
+          }),
+        ],
+      }),
+    )
+    expect(week.days[0]?.aller[0]?.action).toBeNull()
+    expect(week.days[1]?.aller[0]?.action).toBe('cancel')
+    expect(week.days[1]?.retour[0]?.action).toBe('take')
+  })
+
+  it("n'offre aucune action a qui ne peut pas conduire", () => {
+    const week = buildWeek(input({ viewerCanDrive: false }))
+    expect(
+      week.days
+        .flatMap((day) => [...day.aller, ...day.retour])
+        .every((trip) => trip.action === null),
+    ).toBe(true)
   })
 })

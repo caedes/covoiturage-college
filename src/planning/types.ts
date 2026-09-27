@@ -81,10 +81,17 @@ export type TripStatus =
   | { kind: 'void'; driverName: string | null; mine: boolean }
   | { kind: 'open' }
   | { kind: 'mine' }
-  | { kind: 'covered'; driverName: string; replacedYou: boolean }
+  | { kind: 'covered'; driverName: string; driverUid: string; replacedYou: boolean }
+
+/** What the viewer may do on a trip: « Je prends », « Je le prends », « Annuler ». */
+export type TripAction = 'take' | 'takeOver' | 'cancel'
 
 /** A trip as displayed: its status, and the "Permanence HH:MM" offers that would join it. */
-export type PlannedTrip = Trip & { status: TripStatus; offers: PermanenceOffer[] }
+export type PlannedTrip = Trip & {
+  status: TripStatus
+  offers: PermanenceOffer[]
+  action: TripAction | null
+}
 
 /** "Permanence HH:MM": the child could stay at school until `exitTime` and join `tripKey`. */
 export type PermanenceOffer = {
