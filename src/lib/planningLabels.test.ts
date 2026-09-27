@@ -2,15 +2,19 @@ import { describe, expect, it } from 'vitest'
 import {
   actionAccessibleLabel,
   actionLabel,
+  childDayFailureMessage,
   dayButtonLabel,
   dayLongLabel,
   dayNumber,
   dayShortLabel,
   presenceLabel,
+  presenceOptionLabel,
+  presencePanelLabel,
   recapLabel,
   recapPercent,
   skipNote,
   statusLabel,
+  tripDescription,
   weekRangeLabel,
   writeFailureMessage,
   writeSuccessMessage,
@@ -165,6 +169,37 @@ describe('actions', () => {
     )
     expect(writeSuccessMessage('cancel', '07:40', 'Maison → Centre-bourg')).toBe(
       'Vous avez annulé le trajet de 07:40, Maison → Centre-bourg.',
+    )
+  })
+})
+
+describe('options des enfants', () => {
+  it('accorde les choix de présence au genre de l’enfant', () => {
+    expect(presenceOptionLabel('female', 'present')).toBe('Présente · covoiturage normal')
+    expect(presenceOptionLabel('male', 'present')).toBe('Présent · covoiturage normal')
+    expect(presenceOptionLabel('female', 'absent')).toBe('Absente du collège')
+    expect(presenceOptionLabel('male', 'absent')).toBe('Absent du collège')
+    expect(presenceOptionLabel('male', 'sansCovoiturage')).toBe('Au collège, mais sans covoiturage')
+  })
+
+  it('nomme le panneau de présence, avec élision devant une voyelle', () => {
+    expect(presencePanelLabel('Basile')).toBe('Présence de Basile')
+    expect(presencePanelLabel('Alice')).toBe("Présence d'Alice")
+    expect(presencePanelLabel('Élise')).toBe("Présence d'Élise")
+  })
+
+  it('décrit un trajet par son heure et son libellé', () => {
+    expect(tripDescription('07:40', 'Maison → Centre-bourg')).toBe(
+      'trajet de 07:40, Maison → Centre-bourg',
+    )
+  })
+
+  it("explique qu'une journée ne peut plus être modifiée, ou l'échec réseau", () => {
+    expect(childDayFailureMessage({ status: 'refused' })).toBe(
+      'Cette journée ne peut plus être modifiée. Rechargez la page pour voir son état actuel.',
+    )
+    expect(childDayFailureMessage({ status: 'failed' })).toBe(
+      'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.',
     )
   })
 })

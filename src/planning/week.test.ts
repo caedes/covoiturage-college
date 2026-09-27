@@ -15,6 +15,7 @@ function input(overrides: Partial<BuildWeekInput> = {}): BuildWeekInput {
     childDays: [],
     viewerUid: VIEWER,
     viewerCanDrive: true,
+    viewerChildIds: [],
     holidays: ZONE_A_2026_2027,
     ...overrides,
   }
@@ -197,15 +198,40 @@ describe('buildWeek', () => {
       }),
     )
     expect(week.days[0]?.children).toEqual([
-      { childId: 'alice', firstName: 'Alice', gender: 'female', colorSlot: 1, presence: 'present' },
+      {
+        childId: 'alice',
+        firstName: 'Alice',
+        gender: 'female',
+        colorSlot: 1,
+        presence: 'present',
+        editable: false,
+      },
       {
         childId: 'basile',
         firstName: 'Basile',
         gender: 'male',
         colorSlot: 2,
         presence: 'sansCovoiturage',
+        editable: false,
       },
-      { childId: 'chloe', firstName: 'Chloé', gender: 'female', colorSlot: 3, presence: 'present' },
+      {
+        childId: 'chloe',
+        firstName: 'Chloé',
+        gender: 'female',
+        colorSlot: 3,
+        presence: 'present',
+        editable: false,
+      },
+    ])
+  })
+
+  it('rend modifiables les seuls enfants du visiteur, jamais un jour passé', () => {
+    const week = buildWeek(input({ today: '2026-09-29', viewerChildIds: ['basile'] }))
+    expect(week.days[0]?.children.map((child) => child.editable)).toEqual([false, false, false])
+    expect(week.days[1]?.children.map((child) => [child.childId, child.editable])).toEqual([
+      ['alice', false],
+      ['basile', true],
+      ['chloe', false],
     ])
   })
 
