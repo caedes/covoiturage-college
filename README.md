@@ -18,6 +18,9 @@ trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs p
 | `npm run lint` | Formatage et qualité (Biome) |
 | `npm run format` | Applique le formatage |
 | `npm run test:rules` | Tests des règles Firestore contre l'émulateur (Java requis) |
+| `npm run test:e2e` | Tests de non-régression Playwright, contre les émulateurs (Java requis) |
+| `npm run test:e2e:ui` | Les mêmes, en mode interactif pour déboguer |
+| `npm run check:bundle` | Vérifie que `dist/` ne contient aucune trace des émulateurs |
 | `npm run rules:deploy` | Déploie `firestore.rules` sur le projet Firebase |
 | `npm run import -- <fichier>` | Simule l'import des familles et des emplois du temps (`--apply` pour écrire) |
 
@@ -132,6 +135,25 @@ Authentication → Paramètres → Domaines autorisés*, sinon la connexion Goog
 échoue. `localhost` et `covoiturage-college.netlify.app` y sont déjà. Les
 *deploy previews* Netlify, si elles sont activées un jour, sortent sur d'autres
 sous-domaines et ne sont pas couvertes.
+
+## Tests de non-régression
+
+Les TNR (`e2e/`) pilotent la vraie application dans Chromium, sur un écran de téléphone.
+L'application est construite en mode `e2e` (`dist-e2e/`) et parle aux émulateurs Firebase :
+la connexion Google passe par la fausse page de l'émulateur Auth, les données sont un jeu
+fictif importé avant chaque fichier de test. Ils protègent le comportement de
+l'application, pas les données de production.
+
+1. Une fois : `npx playwright install chromium`. Java est requis, comme pour `test:rules`,
+   ainsi qu'un accès à internet (la page de l'émulateur charge ses scripts en ligne).
+2. `npm run test:e2e` démarre les émulateurs, lance les tests et les éteint.
+3. En cas d'échec : `npx playwright show-report` ouvre le rapport et la trace de chaque test.
+   En CI, ce rapport est publié en artefact `playwright-report`, conservé 7 jours.
+
+Le build de production ne contient jamais ce branchement : `npm run check:bundle` le
+vérifie en CI, juste avant la publication de `dist/`.
+
+Écrire un TNR : voir `docs/rules/tests-non-regression.md`.
 
 ## Règle de contribution
 

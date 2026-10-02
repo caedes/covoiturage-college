@@ -6,8 +6,6 @@
       "prenom": "Alice",
       "genre": "female",
       "couleur": 1,
-      "regime": "DPS",
-      "autorisation_sortie": "En fonction des cours assurés",
       "horaires": {
         "semaine_A": {
           "lundi": { "debut": "08:25", "fin": "16:00" },
@@ -17,11 +15,11 @@
           "vendredi": { "debut": "08:25", "fin": "14:55" }
         },
         "semaine_B": {
-          "lundi": { "debut": "08:25", "fin": "17:00" },
-          "mardi": { "debut": "08:25", "fin": "16:00" },
-          "mercredi": { "debut": "08:25", "fin": "11:30" },
-          "jeudi": { "debut": "08:25", "fin": "17:00" },
-          "vendredi": { "debut": "08:25", "fin": "16:00" }
+          "lundi": { "debut": "08:25", "fin": "16:00" },
+          "mardi": { "debut": "08:25", "fin": "17:00" },
+          "mercredi": { "debut": "09:25", "fin": "11:30" },
+          "jeudi": { "debut": "08:25", "fin": "16:00" },
+          "vendredi": { "debut": "08:25", "fin": "14:55" }
         }
       }
     },
@@ -29,9 +27,6 @@
       "prenom": "Basile",
       "genre": "male",
       "couleur": 2,
-      "email": "basile@exemple.fr",
-      "regime": "DP4",
-      "autorisation_sortie": "Aux horaires de l'établissement",
       "horaires": {
         "semaine_A": {
           "lundi": { "debut": "08:25", "fin": "17:00" },
@@ -41,11 +36,11 @@
           "vendredi": { "debut": "08:25", "fin": "17:00" }
         },
         "semaine_B": {
-          "lundi": { "debut": "08:25", "fin": "16:00" },
-          "mardi": { "debut": "09:25", "fin": "17:00" },
+          "lundi": { "debut": "08:25", "fin": "17:00" },
+          "mardi": { "debut": "09:25", "fin": "16:00" },
           "mercredi": { "debut": "08:25", "fin": "12:30" },
-          "jeudi": { "debut": "08:25", "fin": "16:00" },
-          "vendredi": { "debut": "08:25", "fin": "14:55" }
+          "jeudi": { "debut": "08:25", "fin": "14:55" },
+          "vendredi": { "debut": "08:25", "fin": "17:00" }
         }
       }
     },
@@ -62,11 +57,11 @@
           "vendredi": { "debut": "08:25", "fin": "16:00" }
         },
         "semaine_B": {
-          "lundi": { "debut": "08:25", "fin": "16:00" },
-          "mardi": { "debut": "08:25", "fin": "17:00" },
-          "mercredi": { "debut": "09:25", "fin": "12:30" },
-          "jeudi": { "debut": "08:25", "fin": "16:00" },
-          "vendredi": { "debut": "08:25", "fin": "17:00" }
+          "lundi": { "debut": "09:25", "fin": "16:00" },
+          "mardi": { "debut": "08:25", "fin": "14:55" },
+          "mercredi": { "debut": "08:25", "fin": "12:30" },
+          "jeudi": { "debut": "08:25", "fin": "17:00" },
+          "vendredi": { "debut": "08:25", "fin": "16:00" }
         }
       }
     }
@@ -74,24 +69,15 @@
   "familles": [
     {
       "enfants": ["alice"],
-      "parents": [
-        { "email": "camille@exemple.fr", "prenom": "Camille" },
-        { "email": "hugo@exemple.fr", "prenom": "Hugo" }
-      ]
+      "parents": [{ "email": "camille@exemple.fr", "prenom": "Camille" }]
     },
     {
       "enfants": ["basile"],
-      "parents": [
-        { "email": "paul@exemple.fr", "prenom": "Paul" },
-        { "email": "lea@exemple.fr", "prenom": "Léa" }
-      ]
+      "parents": [{ "email": "paul@exemple.fr", "prenom": "Paul" }]
     },
     {
       "enfants": ["chloe"],
-      "parents": [
-        { "email": "nora@exemple.fr", "prenom": "Nora" },
-        { "email": "sami@exemple.fr", "prenom": "Sami" }
-      ]
+      "parents": [{ "email": "nora@exemple.fr", "prenom": "Nora" }]
     }
   ]
 }

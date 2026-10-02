@@ -12,8 +12,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:rules": "npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only firestore \"vitest run -c vitest.rules.config.ts\"",
+    "test:e2e": "npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only auth,firestore \"playwright test\"",
+    "test:e2e:ui": "npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only auth,firestore \"playwright test --ui\"",
     "rules:deploy": "npx --yes firebase-tools@15 deploy --only firestore:rules",
     "import": "tsx scripts/import.ts",
+    "check:bundle": "tsx scripts/check-bundle.ts",
     "lint": "biome check .",
     "format": "biome format --write .",
     "prepare": "husky"
@@ -35,6 +38,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
     "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
