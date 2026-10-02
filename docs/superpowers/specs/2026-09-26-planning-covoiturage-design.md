@@ -133,12 +133,11 @@ Calculés pour chaque enfant et chaque jour de classe à partir de son emploi du
 Les enfants qui partagent le même jour, le même sens, le même lieu et la même heure
 forment **un seul trajet**, donc un seul conducteur.
 
-Les bus du soir sont une donnée d'import (`eveningBuses`). Valeurs provisoires, à
-confirmer par le propriétaire du projet :
+Les bus du soir sont une donnée d'import (`eveningBuses`). Il n'y en a qu'un, confirmé
+par le propriétaire du projet le 2026-10-02 :
 
 | Sortie des cours | Arrivée au Centre-bourg |
 | --- | --- |
-| 16:00 | 16:55 |
 | 17:00 | 17:30 |
 
 Le trajet collège ↔ Centre-bourg dure une demi-heure. Les jours sans bus relèvent d'une
@@ -153,7 +152,7 @@ members/{email}                              écrit par le script d'import
 
 timetables/{validFrom}                       écrit par le script d'import
   validFrom: "2026-09-01"
-  eveningBuses: [{ classEnd: "16:00", arrival: "16:55" }, …]
+  eveningBuses: [{ classEnd: "17:00", arrival: "17:30" }]
   children: {
     basile: {
       firstName: "Basile", gender: "male", colorSlot: 2,
@@ -416,10 +415,7 @@ Le format d'extraction des emplois du temps est conservé tel quel, complété d
 ```json
 {
   "valableDu": "2026-09-01",
-  "busDuSoir": [
-    { "sortie": "16:00", "arriveeCentreBourg": "16:55" },
-    { "sortie": "17:00", "arriveeCentreBourg": "17:30" }
-  ],
+  "busDuSoir": [{ "sortie": "17:00", "arriveeCentreBourg": "17:30" }],
   "enfants": {
     "basile": {
       "prenom": "Basile",
@@ -541,7 +537,9 @@ sans décision.
    sa clé hors du dépôt et pointer `GOOGLE_APPLICATION_CREDENTIALS` dessus.
 2. Rédiger `data/import.json` à partir de `data/import.example.json`, avec les vrais
    emplois du temps, familles et adresses en minuscules.
-3. Confirmer les horaires des bus du soir et les reporter dans `busDuSoir`.
+3. Reporter le bus du soir dans `busDuSoir` : sortie 17:00, arrivée au Centre-bourg 17:30.
+   Un changement d'horaire en cours d'année s'importe comme une nouvelle version, avec un
+   `valableDu` postérieur au jour de l'import.
 4. Lancer l'import en simulation, relire, puis relancer avec `--apply`.
 5. Déployer les règles après chaque lot qui les modifie : `npm run rules:deploy`,
    **avant** le déploiement de l'application qui en dépend.
