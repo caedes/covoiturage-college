@@ -58,6 +58,21 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: npm run test:rules
+      # TNR : Chromium seul, sur les emulateurs Auth et Firestore (meme JVM que
+      # test:rules). Le build e2e sort dans dist-e2e/ et ne touche pas dist/.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+      # Dernier controle avant publication : le dist/ deploye ne doit contenir
+      # aucune trace des emulateurs (127.0.0.1, projet demo-covoiturage).
+      - run: npm run check:bundle
       # Ce qui part en prod est ce bundle, pas un rebuild : le job deploy le
       # recupere tel quel.
       - uses: actions/upload-artifact@v7
