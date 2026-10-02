@@ -1,0 +1,83 @@
+{
+  "valableDu": "2026-09-01",
+  "busDuSoir": [{ "sortie": "17:00", "arriveeCentreBourg": "17:30" }],
+  "enfants": {
+    "alice": {
+      "prenom": "Alice",
+      "genre": "female",
+      "couleur": 1,
+      "horaires": {
+        "semaine_A": {
+          "lundi": { "debut": "08:25", "fin": "16:00" },
+          "mardi": { "debut": "08:25", "fin": "17:00" },
+          "mercredi": { "debut": "09:25", "fin": "11:30" },
+          "jeudi": { "debut": "08:25", "fin": "16:00" },
+          "vendredi": { "debut": "08:25", "fin": "14:55" }
+        },
+        "semaine_B": {
+          "lundi": { "debut": "08:25", "fin": "16:00" },
+          "mardi": { "debut": "08:25", "fin": "17:00" },
+          "mercredi": { "debut": "09:25", "fin": "11:30" },
+          "jeudi": { "debut": "08:25", "fin": "16:00" },
+          "vendredi": { "debut": "08:25", "fin": "14:55" }
+        }
+      }
+    },
+    "basile": {
+      "prenom": "Basile",
+      "genre": "male",
+      "couleur": 2,
+      "horaires": {
+        "semaine_A": {
+          "lundi": { "debut": "08:25", "fin": "17:00" },
+          "mardi": { "debut": "09:25", "fin": "16:00" },
+          "mercredi": { "debut": "08:25", "fin": "12:30" },
+          "jeudi": { "debut": "08:25", "fin": "14:55" },
+          "vendredi": { "debut": "08:25", "fin": "17:00" }
+        },
+        "semaine_B": {
+          "lundi": { "debut": "08:25", "fin": "17:00" },
+          "mardi": { "debut": "09:25", "fin": "16:00" },
+          "mercredi": { "debut": "08:25", "fin": "12:30" },
+          "jeudi": { "debut": "08:25", "fin": "14:55" },
+          "vendredi": { "debut": "08:25", "fin": "17:00" }
+        }
+      }
+    },
+    "chloe": {
+      "prenom": "Chloé",
+      "genre": "female",
+      "couleur": 3,
+      "horaires": {
+        "semaine_A": {
+          "lundi": { "debut": "09:25", "fin": "16:00" },
+          "mardi": { "debut": "08:25", "fin": "14:55" },
+          "mercredi": { "debut": "08:25", "fin": "12:30" },
+          "jeudi": { "debut": "08:25", "fin": "17:00" },
+          "vendredi": { "debut": "08:25", "fin": "16:00" }
+        },
+        "semaine_B": {
+          "lundi": { "debut": "09:25", "fin": "16:00" },
+          "mardi": { "debut": "08:25", "fin": "14:55" },
+          "mercredi": { "debut": "08:25", "fin": "12:30" },
+          "jeudi": { "debut": "08:25", "fin": "17:00" },
+          "vendredi": { "debut": "08:25", "fin": "16:00" }
+        }
+      }
+    }
+  },
+  "familles": [
+    {
+      "enfants": ["alice"],
+      "parents": [{ "email": "camille@exemple.fr", "prenom": "Camille" }]
+    },
+    {
+      "enfants": ["basile"],
+      "parents": [{ "email": "paul@exemple.fr", "prenom": "Paul" }]
+    },
+    {
+      "enfants": ["chloe"],
+      "parents": [{ "email": "nora@exemple.fr", "prenom": "Nora" }]
+    }
+  ]
+}
