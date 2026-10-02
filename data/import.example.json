@@ -1,9 +1,6 @@
 {
   "valableDu": "2026-09-01",
-  "busDuSoir": [
-    { "sortie": "16:00", "arriveeCentreBourg": "16:55" },
-    { "sortie": "17:00", "arriveeCentreBourg": "17:30" }
-  ],
+  "busDuSoir": [{ "sortie": "17:00", "arriveeCentreBourg": "17:30" }],
   "enfants": {
     "alice": {
       "prenom": "Alice",
