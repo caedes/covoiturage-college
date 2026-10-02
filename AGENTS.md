@@ -19,6 +19,7 @@ npm run lint         # Biome, lint et formatage
 npm run build        # typecheck puis build de production
 npm test             # suite de tests, une passe
 npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
+npm run test:e2e     # tests de non-régression Playwright (Java requis)
 ```
 
 ## Architecture
@@ -65,11 +66,16 @@ npm run test:rules   # règles Firestore contre l'émulateur (Java requis)
   Les tests passent par `renderRoute(path, { planning, now })` et les faux de
   `src/test/fakePlanning.ts`.
 - **Environnement** — les variables sont validées par Zod dans `src/env.ts` ; toute
-  nouvelle variable passe par ce schéma plutôt que par un accès direct à `import.meta.env`.
+  nouvelle variable passe par ce schéma plutôt que par un accès direct à `import.meta.env`. Seule
+  exception : `src/firebase/app.ts` lit `import.meta.env.MODE`, que Vite remplace par une
+  constante au build, pour que le branchement sur les émulateurs (mode `e2e`) disparaisse du
+  bundle de production.
 - **Tests** — Vitest et Testing Library sur jsdom. `src/test/renderRoute.tsx` monte la
   vraie table de routes, `src/test/renderWithAuth.tsx` et `src/test/fakeAuth.ts`
   fournissent des doubles : les tests ne touchent jamais Firebase. Les règles Firestore
   ont leur propre suite, jouée contre l'émulateur (`tests/firestore.rules.test.ts`).
+  Les tests de non-régression (`e2e/`, Playwright) pilotent le build `e2e`, branché sur
+  les émulateurs Auth et Firestore (`npm run test:e2e`).
 - **Qualité** — Biome pour le lint et le format, appliqué aux fichiers stagés par le
   hook `pre-commit` (Husky). La suite de tests n'est pas lancée au commit.
 - **Déploiement** — Netlify, via le job `deploy` du workflow CI sur merge vers `main`.
@@ -92,3 +98,4 @@ ce fichier — pas seulement référencées.
 - @docs/rules/compte-github.md — sous quel compte tournent les commandes `gh`
 - @docs/rules/langue.md — français pour ce qui se lit, anglais pour le code
 - @docs/rules/commits.md — format des messages de commit
+- @docs/rules/tests-non-regression.md — comment écrire un test de non-régression
