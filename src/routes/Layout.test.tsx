@@ -5,30 +5,19 @@ import { member } from '../test/fakeAuth'
 import { renderRoute } from '../test/renderRoute'
 
 describe('Layout', () => {
-  it('expose les landmarks banner, navigation, main et contentinfo', async () => {
+  it('expose les landmarks navigation et main, sans en-tête ni pied de page', async () => {
     await renderRoute('/')
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('navigation')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-  })
-
-  it('donne un libellé accessible à la landmark de navigation', async () => {
-    await renderRoute('/')
-    expect(screen.getByRole('navigation', { name: /navigation principale/i })).toBeInTheDocument()
+    expect(screen.queryByRole('banner')).toBeNull()
+    expect(screen.queryByRole('contentinfo')).toBeNull()
+    expect(screen.queryByText(/licence/i)).toBeNull()
   })
 
   it("fait pointer le lien d'évitement vers l'identifiant du contenu principal", async () => {
     await renderRoute('/')
     expect(screen.getByRole('link', { name: /aller au contenu/i })).toHaveAttribute('href', '#main')
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main')
-  })
-
-  it("place le lien d'évitement en premier dans l'ordre de tabulation", async () => {
-    const user = userEvent.setup()
-    await renderRoute('/')
-    await user.tab()
-    expect(screen.getByRole('link', { name: /aller au contenu/i })).toHaveFocus()
   })
 
   it("donne le focus au contenu principal quand on active le lien d'évitement", async () => {
@@ -38,47 +27,36 @@ describe('Layout', () => {
     expect(screen.getByRole('main')).toHaveFocus()
   })
 
-  it("permet d'atteindre le menu au clavier et de changer de route", async () => {
+  it("parcourt au clavier le lien d'évitement, « Aujourd'hui », puis le compte", async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { auth: member({ firstName: 'Karim' }) })
+    await user.tab()
+    expect(screen.getByRole('link', { name: /aller au contenu/i })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('link', { name: "Aujourd'hui" })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Compte de Karim' })).toHaveFocus()
+  })
+
+  it("ouvre le planning par « Aujourd'hui » depuis une adresse inconnue", async () => {
     const user = userEvent.setup()
     await renderRoute('/adresse-inexistante')
-    await user.tab()
-    await user.tab()
-    expect(screen.getByRole('link', { name: 'Accueil' })).toHaveFocus()
-    await user.keyboard('{Enter}')
-    expect(
-      await screen.findByRole('heading', { level: 1, name: /trajets collège/i }),
-    ).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
+    expect(await screen.findByRole('tab', { name: 'Cette semaine' })).toBeInTheDocument()
   })
 
-  it('affiche le prénom du membre connecté', async () => {
-    await renderRoute('/', { auth: member({ firstName: 'Karim' }) })
-    expect(screen.getByText(/connecté en tant que karim/i)).toBeInTheDocument()
-  })
-
-  it('propose un bouton de déconnexion', async () => {
-    await renderRoute('/')
-    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument()
-  })
-
-  it('donne au bouton de déconnexion le type button', async () => {
-    await renderRoute('/')
-    expect(screen.getByRole('button', { name: /se déconnecter/i })).toHaveAttribute(
-      'type',
-      'button',
-    )
+  it('déconnecte le membre par le menu du compte', async () => {
+    const user = userEvent.setup()
+    const scenario = member({ firstName: 'Karim' })
+    await renderRoute('/', { auth: scenario })
+    await user.click(screen.getByRole('button', { name: 'Compte de Karim' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Se déconnecter' }))
+    expect(scenario.signOutCalls()).toBe(1)
   })
 
   it('pose le titre de la page dans la police des titres', async () => {
     await renderRoute('/')
     expect(screen.getByRole('heading', { level: 1 })).toHaveClass('font-heading')
-  })
-
-  it('déconnecte le membre au clic', async () => {
-    const user = userEvent.setup()
-    const scenario = member()
-    await renderRoute('/', { auth: scenario })
-    await user.click(screen.getByRole('button', { name: /se déconnecter/i }))
-    expect(scenario.signOutCalls()).toBe(1)
   })
 })
 
