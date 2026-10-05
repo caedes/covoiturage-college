@@ -34,7 +34,7 @@ describe('AuthGate', () => {
   it("laisse passer un membre vers l'application", async () => {
     await renderRoute('/', { auth: member() })
     expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: /trajets collège/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Covoiturage' })).toBeInTheDocument()
   })
 
   it('protège aussi les adresses inconnues, sans révéler la page 404', async () => {

@@ -7,7 +7,7 @@ import { routes } from './routes'
 describe('table de routes', () => {
   it('rend le planning sur /', async () => {
     await renderRoute('/')
-    expect(screen.getByRole('heading', { level: 1, name: 'Trajets collège' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Covoiturage' })).toBeInTheDocument()
   })
 
   it('rend la page 404 sur une adresse inconnue', async () => {
