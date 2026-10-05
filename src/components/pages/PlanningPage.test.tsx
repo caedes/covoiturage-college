@@ -1,6 +1,6 @@
 import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defaultUid } from '../../test/fakeAuth'
 import {
   failingPlanning,
@@ -210,6 +210,63 @@ describe('PlanningPage', () => {
     screen.getByRole('button', { name: /^mercredi 30/ }).focus()
     await user.tab()
     await user.keyboard('{Enter}')
+    expect(screen.getByRole('button', { name: /^jeudi 1/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
+describe("« Aujourd'hui »", () => {
+  beforeEach(() => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('ramène sur « Cette semaine » et le jour courant, en haut de la page, à chaque clic', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/')
+    await user.click(screen.getByRole('tab', { name: 'Semaine prochaine' }))
+    await user.click(screen.getByRole('button', { name: /^jeudi 8/ }))
+    await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
+    expect(screen.getByRole('tab', { name: 'Cette semaine' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /^mercredi 30/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 })
+
+    await user.click(screen.getByRole('button', { name: /^lundi 28/ }))
+    await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
+    expect(screen.getByRole('button', { name: /^mercredi 30/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    await user.click(screen.getByRole('button', { name: /^vendredi 2/ }))
+    expect(screen.getByRole('button', { name: /^vendredi 2/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('ramène au lundi qui vient le week-end', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { now: new Date('2026-10-03T08:00:00Z') })
+    await user.click(screen.getByRole('button', { name: /^mercredi 7/ }))
+    await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
+    expect(screen.getByRole('button', { name: /^lundi 5/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it("relit l'horloge : un nouveau jour est sélectionné si la date a changé", async () => {
+    const user = userEvent.setup()
+    let current = new Date('2026-09-30T08:00:00Z')
+    await renderRoute('/', { now: () => current })
+    current = new Date('2026-10-01T08:00:00Z')
+    await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
     expect(screen.getByRole('button', { name: /^jeudi 1/ })).toHaveAttribute('aria-pressed', 'true')
   })
 })
