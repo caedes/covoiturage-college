@@ -7,7 +7,7 @@ describe('initialOf', () => {
   it.each([
     ['Sophie', 'S'],
     ['  élodie', 'É'],
-    ['Émilie', 'É'],
+    ['E\u0301milie', 'É'],
   ])("donne pour « %s » l'initiale %s", (firstName, initial) => {
     expect(initialOf(firstName)).toBe(initial)
   })
