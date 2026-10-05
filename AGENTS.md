@@ -32,6 +32,12 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   `src/components/atoms/ui/` ; ils sont exclus de la couverture et ne se modifient pas à
   la main sans raison. Vérifier après génération que `cn` est importé de `@/lib/utils` :
   la CLI l'a déjà résolu vers un paquet npm homonyme.
+  La navigation est une barre fixée en bas (`organisms/BottomNav`) : « Aujourd'hui », un
+  simple lien vers `/` sans état actif, et le menu du compte. Les éléments fixés en bas (la
+  barre, le bandeau du récapitulatif, la marge basse de `main`, l'alerte d'échec) s'alignent
+  sur `--bottom-nav-height` et sur les zones sûres (`viewport-fit=cover`). « Aujourd'hui »
+  remet le planning sur le jour courant parce que `PlanningPage` réagit à chaque nouvelle
+  clé de navigation (`location.key`).
 - **Atomic Design** — `src/components/` est rangé en `atoms`, `molecules`, `organisms`,
   `templates`, `pages`. Un fichier importe son niveau ou un niveau inférieur, jamais un
   niveau supérieur ; sous les pages, aucun import de valeur depuis `src/auth/` ou
