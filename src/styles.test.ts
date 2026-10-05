@@ -92,6 +92,13 @@ describe('feuille de style globale', () => {
     expect(css).toMatch(/--bottom-nav-height:\s*4rem;/)
   })
 
+  it('réserve le bas de l’écran au défilement du focus, sous la barre et le bandeau fixes', () => {
+    expect(css).toMatch(/--recap-band-height:\s*[\d.]+rem;/)
+    expect(css).toMatch(
+      /\nhtml\s*\{[^}]*scroll-padding-bottom:[^;}]*var\(--bottom-nav-height\)[^;}]*var\(--recap-band-height\)/,
+    )
+  })
+
   it('étend la page sous les zones sûres de l’écran, que la mise en page respecte', () => {
     expect(html).toMatch(/<meta name="viewport" content="[^"]*viewport-fit=cover/)
   })

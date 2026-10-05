@@ -56,3 +56,53 @@ test('laisse lire le dernier trajet du Retour au-dessus du récapitulatif et de 
   expect(trip.y + trip.height).toBeLessThanOrEqual(recapBox.y)
   expect(recapBox.y + recapBox.height).toBeLessThanOrEqual(navBox.y)
 })
+
+test('garde visible au-dessus des bandeaux le bouton atteint au clavier', async ({ page }) => {
+  const lastButton = page
+    .getByRole('region', { name: 'Retour' })
+    .getByRole('listitem')
+    .last()
+    .getByRole('button')
+    .last()
+  await expect(lastButton).toBeAttached()
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await lastButton.focus()
+
+  const recap = page
+    .getByRole('progressbar', { name: 'Part des trajets couverts' })
+    .locator('xpath=..')
+  const [buttonBox, recapBox] = await Promise.all([lastButton.boundingBox(), recap.boundingBox()])
+  if (buttonBox === null || recapBox === null) {
+    throw new Error('Un des éléments mesurés est absent de la page.')
+  }
+  expect(buttonBox.y + buttonBox.height).toBeLessThanOrEqual(recapBox.y)
+})
+
+test.describe('sur un petit écran', () => {
+  test.use({ viewport: { width: 375, height: 667 } })
+
+  test('laisse lire le dernier trajet de la semaine prochaine sur un petit écran', async ({
+    page,
+  }) => {
+    await page.getByRole('tab', { name: 'Semaine prochaine' }).click()
+    await page.getByRole('button', { name: /^mercredi 14/ }).click()
+    const lastTrip = page.getByRole('region', { name: 'Retour' }).getByRole('listitem').last()
+    await expect(lastTrip).toBeVisible()
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+
+    const recap = page
+      .getByRole('progressbar', { name: 'Part des trajets couverts' })
+      .locator('xpath=..')
+    const nav = page.getByRole('navigation', { name: 'Navigation principale' })
+    const [trip, recapBox, navBox] = await Promise.all([
+      lastTrip.boundingBox(),
+      recap.boundingBox(),
+      nav.boundingBox(),
+    ])
+    if (trip === null || recapBox === null || navBox === null) {
+      throw new Error('Un des éléments mesurés est absent de la page.')
+    }
+    expect(trip.y + trip.height).toBeLessThanOrEqual(recapBox.y)
+    expect(recapBox.y + recapBox.height).toBeLessThanOrEqual(navBox.y)
+  })
+})

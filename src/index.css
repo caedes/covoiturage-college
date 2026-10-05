@@ -80,6 +80,9 @@
   /* Hauteur de la barre du bas, hors zone sûre : la barre, le bandeau du récapitulatif, la
      marge basse du contenu et l'alerte s'y alignent. */
   --bottom-nav-height: 4rem;
+
+  /* Hauteur réservée au bandeau qu'une page fixe au-dessus de la barre du bas. */
+  --recap-band-height: 4rem;
 }
 
 /* Mapping standard shadcn : expose les jetons aux utilitaires Tailwind (bg-primary, border-border…). */
@@ -167,6 +170,16 @@
   border-radius: var(--radius-md);
   background: var(--card);
   color: var(--foreground);
+}
+
+/* Le focus clavier défile hors de la barre du bas et du bandeau fixés, comme la marge basse de `main`. */
+html {
+  scroll-padding-top: env(safe-area-inset-top);
+  scroll-padding-bottom: calc(
+    var(--bottom-nav-height) +
+    var(--recap-band-height) +
+    env(safe-area-inset-bottom)
+  );
 }
 
 /* Bleu ardoise sur fond clair : contraste supérieur à 3:1, visible aussi autour d'un bouton primaire. */
