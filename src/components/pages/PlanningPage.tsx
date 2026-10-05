@@ -170,7 +170,7 @@ export function PlanningPage() {
   if (load.status === 'loading') {
     return (
       <>
-        <h1 className={TITLE_CLASS}>Trajets collège</h1>
+        <h1 className={TITLE_CLASS}>Covoiturage</h1>
         <p role="status" className="mt-3 text-muted-foreground">
           Chargement du planning…
         </p>
@@ -181,7 +181,7 @@ export function PlanningPage() {
   if (load.status === 'error') {
     return (
       <>
-        <h1 className={TITLE_CLASS}>Trajets collège</h1>
+        <h1 className={TITLE_CLASS}>Covoiturage</h1>
         <p role="alert" className="mt-3 text-destructive">
           Impossible de charger le planning. Vérifiez votre connexion internet, puis réessayez.
         </p>

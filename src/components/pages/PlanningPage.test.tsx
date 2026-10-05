@@ -18,12 +18,29 @@ describe('PlanningPage', () => {
   it('expose un unique h1, les onglets de semaine et la période affichée', async () => {
     await renderRoute('/')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(screen.getByRole('heading', { level: 1, name: 'Trajets collège' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Covoiturage' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Cette semaine' })).toHaveAttribute(
       'aria-selected',
       'true',
     )
     expect(screen.getByText('28 septembre – 2 octobre')).toBeInTheDocument()
+  })
+
+  it('titre aussi « Covoiturage » le chargement et l’erreur', async () => {
+    const loading = await renderRoute('/', { planning: pendingPlanning(), waitForSettled: false })
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Covoiturage' }),
+    ).toBeInTheDocument()
+    loading.unmount()
+    await renderRoute('/', { planning: failingPlanning() })
+    expect(await screen.findByRole('button', { name: 'Réessayer' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Covoiturage' })).toBeInTheDocument()
+  })
+
+  it('sort le récapitulatif du panneau de la semaine, pour le fixer au-dessus de la barre du bas', async () => {
+    await renderRoute('/')
+    const recap = screen.getByRole('progressbar', { name: 'Part des trajets couverts' })
+    expect(screen.getByRole('tabpanel')).not.toContainElement(recap)
   })
 
   it("sélectionne aujourd'hui et affiche ses trajets Aller et Retour", async () => {
