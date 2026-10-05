@@ -13,4 +13,13 @@ describe('ActionAlert', () => {
     await user.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
+
+  it('se place au-dessus de la barre du bas et de son bandeau', () => {
+    render(<ActionAlert message="Échec" onDismiss={() => {}} />)
+    const alert = screen.getByRole('alert')
+    expect(alert.className).toContain(
+      'bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom)+0.5rem)]',
+    )
+    expect(alert).toHaveClass('z-50')
+  })
 })
