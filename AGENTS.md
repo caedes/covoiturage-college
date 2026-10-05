@@ -35,7 +35,9 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   La navigation est une barre fixée en bas (`organisms/BottomNav`) : « Aujourd'hui », un
   simple lien vers `/` sans état actif, et le menu du compte. Les éléments fixés en bas (la
   barre, le bandeau du récapitulatif, la marge basse de `main`, l'alerte d'échec) s'alignent
-  sur `--bottom-nav-height` et sur les zones sûres (`viewport-fit=cover`). « Aujourd'hui »
+  sur `--bottom-nav-height` et `--recap-band-height` (hauteur réservée au bandeau) et sur les
+  zones sûres (`viewport-fit=cover`) ; la règle `scroll-padding` de `html` empêche le focus
+  clavier de passer sous la barre et le bandeau. « Aujourd'hui »
   remet le planning sur le jour courant parce que `PlanningPage` réagit à chaque nouvelle
   clé de navigation (`location.key`).
 - **Atomic Design** — `src/components/` est rangé en `atoms`, `molecules`, `organisms`,

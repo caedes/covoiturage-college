@@ -34,7 +34,7 @@ export function Layout() {
       <main
         id={MAIN_ID}
         tabIndex={-1}
-        className="flex-1 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(var(--bottom-nav-height)+4rem+env(safe-area-inset-bottom))]"
+        className="flex-1 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(var(--bottom-nav-height)+var(--recap-band-height)+env(safe-area-inset-bottom))]"
       >
         <Outlet />
       </main>
