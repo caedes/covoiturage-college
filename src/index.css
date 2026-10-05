@@ -76,6 +76,10 @@
 
   --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+
+  /* Hauteur de la barre du bas, hors zone sûre : la barre, le bandeau du récapitulatif, la
+     marge basse du contenu et l'alerte s'y alignent. */
+  --bottom-nav-height: 4rem;
 }
 
 /* Mapping standard shadcn : expose les jetons aux utilitaires Tailwind (bg-primary, border-border…). */
