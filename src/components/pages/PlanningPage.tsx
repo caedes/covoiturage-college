@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
 import { useAuth } from '../../auth/useAuth'
 import {
   childDayFailureMessage,
@@ -57,6 +58,26 @@ export function PlanningPage() {
   )
   const [tab, setTab] = useState<WeekTab>('current')
   const [selected, setSelected] = useState(() => initialDay(today))
+  const location = useLocation()
+  const handledKey = useRef(location.key)
+
+  /**
+   * « Aujourd'hui » links to `/`. Following it, even from `/`, gives the location a new key: the
+   * page then goes back to "Cette semaine" and today's date, read afresh from the clock, and
+   * scrolls to the top. Each key is handled once, so a later render never resets a day the parent
+   * has chosen since.
+   */
+  useEffect(() => {
+    if (location.key === handledKey.current) {
+      return
+    }
+    handledKey.current = location.key
+    const next = parisToday(now())
+    setToday(next)
+    setTab('current')
+    setSelected(initialDay(next))
+    window.scrollTo({ top: 0 })
+  }, [location.key, now])
 
   /** Keeps "today" true while the page stays open: on tab focus, on return from another app, and every minute. */
   useEffect(() => {
