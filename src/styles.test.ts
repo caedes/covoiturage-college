@@ -87,4 +87,12 @@ describe('feuille de style globale', () => {
       expect(source).not.toContain('fonts.gstatic.com')
     }
   })
+
+  it('expose la hauteur de la barre du bas, sur laquelle s’alignent les éléments fixes', () => {
+    expect(css).toMatch(/--bottom-nav-height:\s*4rem;/)
+  })
+
+  it('étend la page sous les zones sûres de l’écran, que la mise en page respecte', () => {
+    expect(html).toMatch(/<meta name="viewport" content="[^"]*viewport-fit=cover/)
+  })
 })
