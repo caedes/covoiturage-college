@@ -47,7 +47,7 @@ export function PlanningTemplate({
           {retour}
         </TabsContent>
       </Tabs>
-      <div className="fixed inset-x-0 bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] z-30 bg-background">
+      <div className="fixed inset-x-0 bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] z-30 border-t border-foreground/15 bg-card">
         <div className="mx-auto max-w-md px-4 pb-1.5">{recap}</div>
       </div>
     </>
