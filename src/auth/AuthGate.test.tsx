@@ -8,13 +8,13 @@ describe('AuthGate', () => {
   it("affiche l'écran de chargement tant que l'accès n'est pas tranché", async () => {
     await renderRoute('/', { auth: loading(), waitForSettled: false })
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.queryByRole('banner')).toBeNull()
+    expect(screen.queryByRole('navigation')).toBeNull()
   })
 
   it("affiche l'écran de connexion quand personne n'est connecté", async () => {
     await renderRoute('/', { auth: signedOut() })
     expect(screen.getByRole('button', { name: /se connecter avec google/i })).toBeInTheDocument()
-    expect(screen.queryByRole('banner')).toBeNull()
+    expect(screen.queryByRole('navigation')).toBeNull()
   })
 
   it("affiche l'accès refusé pour un compte hors liste", async () => {
@@ -33,7 +33,7 @@ describe('AuthGate', () => {
 
   it("laisse passer un membre vers l'application", async () => {
     await renderRoute('/', { auth: member() })
-    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: /trajets collège/i })).toBeInTheDocument()
   })
 
