@@ -11,7 +11,7 @@ trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs p
 | --- | --- |
 | `npm run dev` | Serveur de développement |
 | `npm run build` | Typecheck puis build de production |
-| `npm run preview` | Sert le build de production |
+| `npm run preview` | Sert le build de production (la connexion Google ne fonctionne qu'avec `npm run dev`) |
 | `npm test` | Suite de tests, une passe |
 | `npm run test:watch` | Suite de tests en watch |
 | `npm run test:coverage` | Tests avec rapport et seuil de couverture |
@@ -122,7 +122,7 @@ perdraient.
 En local, `npm run dev` sert donc l'application en **https** sur `https://localhost:5173`
 (certificat auto-signé à accepter une fois dans le navigateur), et sur ce port seulement.
 
-Elles sont requises **au build** : sans elles dans le job `verify`, le `dist/`
+Ces variables sont requises **au build** : sans elles dans le job `verify`, le `dist/`
 publié en production contiendrait des `undefined`.
 
 ### Règles de sécurité
@@ -157,6 +157,12 @@ redirection autorisés* :
 
 - `https://covoiturage-college.netlify.app/__/auth/handler`
 - `https://localhost:5173/__/auth/handler`
+
+**Ordre de mise en production.** Avant la fusion, ajouter l'URI de production au client
+OAuth, puis passer la variable GitHub `VITE_FIREBASE_AUTH_DOMAIN` à
+`covoiturage-college.netlify.app` juste avant de fusionner (le job `verify` refuse de
+déployer sinon). En cas de retour arrière de cette fonctionnalité, annuler la PR **et**
+remettre la variable à `<projet>.firebaseapp.com` ensemble, sans quoi la connexion casse.
 
 ## Application installable
 
