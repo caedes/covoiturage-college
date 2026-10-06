@@ -45,10 +45,14 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   niveau supérieur ; sous les pages, aucun import de valeur depuis `src/auth/` ou
   `src/planning/` — les composants ne reçoivent que des props. Aucun composant n'importe
   Firebase. `src/components/architecture.test.ts` vérifie ces trois règles.
-- **Authentification** — connexion Google via Firebase Auth. Le domaine ne connaît que
-  les ports déclarés dans `src/auth/ports.ts` (`AuthPort`, `MemberRepository`) ; les
-  adaptateurs Firebase vivent dans `src/firebase/`. Une fonctionnalité qui a besoin de
-  l'identité passe par un port, jamais par le SDK Firebase directement.
+- **Authentification** — connexion Google via Firebase Auth, par redirection
+  (`signInWithRedirect`, résultat lu une fois par `completeSignIn`). `authDomain` est le
+  domaine de l'application : `/__/auth` et `/__/firebase` sont relayés vers
+  `firebaseapp.com` par `public/_redirects` et par le proxy Vite, et le serveur de
+  développement tourne en https sur le port 5173. Le domaine ne connaît que les ports
+  déclarés dans `src/auth/ports.ts` (`AuthPort`, `MemberRepository`) ; les adaptateurs
+  Firebase vivent dans `src/firebase/`. Une fonctionnalité qui a besoin de l'identité
+  passe par un port, jamais par le SDK Firebase directement.
 - **Autorisation** — l'accès est réservé aux membres inscrits : la fiche
   `members/{email}` fait foi. Membres lisent `timetables`, `carpools` et `childDays`.
   `carpools` s'écrit par son seul conducteur (création, reprise en nommant le
@@ -78,6 +82,11 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   exception : `src/firebase/app.ts` lit `import.meta.env.MODE`, que Vite remplace par une
   constante au build, pour que le branchement sur les émulateurs (mode `e2e`) disparaisse du
   bundle de production.
+- **Installable** — manifeste `public/manifest.webmanifest`, icônes générées par
+  `npm run icons` à partir de `public/icons/car.svg` (Noto Emoji, Apache 2.0). L'écran de
+  démarrage est en HTML dans `index.html` (classe `splash`), repris par `SplashScreen`.
+  **Aucun service worker**, volontairement : l'application ne doit jamais servir une
+  information périmée (`src/installable.test.ts` le vérifie).
 - **Tests** — Vitest et Testing Library sur jsdom. `src/test/renderRoute.tsx` monte la
   vraie table de routes, `src/test/renderWithAuth.tsx` et `src/test/fakeAuth.ts`
   fournissent des doubles : les tests ne touchent jamais Firebase. Les règles Firestore
