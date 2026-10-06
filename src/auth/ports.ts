@@ -17,11 +17,17 @@ export type Member = {
  *
  * `started` means Google accepted: the identity will arrive through `subscribe`.
  */
-export type SignInOutcome = 'started' | 'cancelled' | 'popupBlocked' | 'unavailable'
+export type SignInOutcome = 'started' | 'unavailable'
 
 export type AuthPort = {
   subscribe(listener: (identity: Identity | null) => void): () => void
+  /** Leaves for Google. On success the page navigates away and the promise never settles. */
   signIn(): Promise<SignInOutcome>
+  /**
+   * Reads the outcome of the redirect back from Google, once per page load. `null` when there was
+   * no redirect, or when the person came back without signing in.
+   */
+  completeSignIn(): Promise<SignInOutcome | null>
   signOut(): Promise<void>
 }
 

@@ -1,5 +1,5 @@
 import { act, render, renderHook, screen, waitFor } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import { type ReactNode, StrictMode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   type AuthScenario,
@@ -10,6 +10,7 @@ import {
   failingLookup,
   loading,
   member,
+  redirectReturning,
   signedOut,
   signInFailing,
 } from '../test/fakeAuth'
@@ -76,26 +77,63 @@ describe('AuthProvider', () => {
     expect(result.current.state).toEqual({ status: 'error' })
   })
 
-  it("signale un popup bloqué sans quitter l'écran de connexion", async () => {
+  it("signale une connexion impossible sans quitter l'écran de connexion", async () => {
     const { result } = renderHook(() => useAuth(), {
-      wrapper: wrapperFor(signInFailing('popupBlocked')),
+      wrapper: wrapperFor(signInFailing('unavailable')),
     })
     await waitFor(() => expect(result.current.state.status).toBe('signedOut'))
     await act(async () => {
       await result.current.signIn()
     })
-    expect(result.current.state).toEqual({ status: 'signedOut', failure: 'popupBlocked' })
+    expect(result.current.state).toEqual({ status: 'signedOut', failure: 'unavailable' })
   })
 
-  it("n'affiche rien quand la personne ferme la fenêtre Google", async () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: wrapperFor(signInFailing('cancelled')),
-    })
-    await waitFor(() => expect(result.current.state.status).toBe('signedOut'))
+  it("n'affiche rien quand la personne revient de Google sans s'être connectée", async () => {
+    const current = redirectReturning(null)
+    const { result } = renderHook(() => useAuth(), { wrapper: wrapperFor(current) })
+    await waitFor(() => expect(current.completeSignInCalls()).toBe(1))
+    await waitFor(() => expect(result.current.state).toEqual({ status: 'signedOut' }))
+  })
+
+  it("affiche l'échec du retour de Google, rendu avant l'identité nulle", async () => {
+    const current = controllable()
+    const { result } = renderHook(() => useAuth(), { wrapper: wrapperFor(current) })
     await act(async () => {
-      await result.current.signIn()
+      await current.finishRedirect('unavailable')
     })
-    expect(result.current.state).toEqual({ status: 'signedOut' })
+    act(() => {
+      current.emit(null)
+    })
+    expect(result.current.state).toEqual({ status: 'signedOut', failure: 'unavailable' })
+  })
+
+  it("affiche l'échec du retour de Google, rendu après l'identité nulle", async () => {
+    const current = controllable()
+    const { result } = renderHook(() => useAuth(), { wrapper: wrapperFor(current) })
+    act(() => {
+      current.emit(null)
+    })
+    await act(async () => {
+      await current.finishRedirect('unavailable')
+    })
+    expect(result.current.state).toEqual({ status: 'signedOut', failure: 'unavailable' })
+  })
+
+  it('ne lit le retour de Google qu’une fois, même sous StrictMode', async () => {
+    const current = redirectReturning('unavailable')
+    const Inner = wrapperFor(current)
+    function Strict({ children }: { children: ReactNode }) {
+      return (
+        <StrictMode>
+          <Inner>{children}</Inner>
+        </StrictMode>
+      )
+    }
+    const { result } = renderHook(() => useAuth(), { wrapper: Strict })
+    await waitFor(() =>
+      expect(result.current.state).toEqual({ status: 'signedOut', failure: 'unavailable' }),
+    )
+    expect(current.completeSignInCalls()).toBe(1)
   })
 
   it("suit une connexion réussie jusqu'à l'état membre", async () => {
@@ -139,6 +177,7 @@ describe('AuthProvider', () => {
 
     // The provider was already in error, so asserting on status would pass even if retry did not.
     await waitFor(() => expect(current.subscribeCalls()).toBe(2))
+    expect(current.completeSignInCalls()).toBe(1)
   })
 })
 

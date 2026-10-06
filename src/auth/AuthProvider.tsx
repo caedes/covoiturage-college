@@ -1,4 +1,12 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 import { AuthContext, type AuthContextValue } from './AuthContext'
 import { initialAuthState, reduce } from './authState'
 import type { AuthPort, MemberRepository } from './ports'
@@ -61,13 +69,27 @@ export function AuthProvider({ auth, members, children }: AuthProviderProps) {
     return () => clearTimeout(timer)
   }, [state.status])
 
-  const signIn = useCallback(async () => {
-    const outcome = await auth.signIn()
-    if (outcome === 'cancelled') {
-      dispatch({ type: 'signInCancelled' })
+  /**
+   * Survives StrictMode's double effect run, which keeps refs: Firebase hands the redirect outcome
+   * out once, so a second call would come back empty and lose a failure.
+   */
+  const redirectRead = useRef(false)
+
+  useEffect(() => {
+    if (redirectRead.current) {
       return
     }
-    if (outcome === 'popupBlocked' || outcome === 'unavailable') {
+    redirectRead.current = true
+    void auth.completeSignIn().then((outcome) => {
+      if (outcome === 'unavailable') {
+        dispatch({ type: 'signInFailed', failure: outcome })
+      }
+    })
+  }, [auth])
+
+  const signIn = useCallback(async () => {
+    const outcome = await auth.signIn()
+    if (outcome === 'unavailable') {
       dispatch({ type: 'signInFailed', failure: outcome })
     }
   }, [auth])

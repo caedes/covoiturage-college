@@ -51,11 +51,6 @@ describe('SignInScreen', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
-  it('annonce un popup bloqué et oriente vers un autre navigateur', () => {
-    renderWithAuth(<SignInScreen failure="popupBlocked" />)
-    expect(screen.getByRole('alert')).toHaveTextContent(/safari ou chrome/i)
-  })
-
   it('annonce une connexion indisponible', () => {
     renderWithAuth(<SignInScreen failure="unavailable" />)
     expect(screen.getByRole('alert')).toHaveTextContent(/connexion internet/i)

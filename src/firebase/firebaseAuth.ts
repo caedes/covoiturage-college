@@ -29,8 +29,12 @@ export const firebaseAuthPort: AuthPort = {
       await signInWithPopup(auth, provider)
       return 'started'
     } catch (error) {
-      return toSignInOutcome(readErrorCode(error))
+      return toSignInOutcome(readErrorCode(error)) ?? 'unavailable'
     }
+  },
+
+  async completeSignIn() {
+    return null
   },
 
   async signOut() {

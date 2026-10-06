@@ -4,8 +4,6 @@ import type { SignInFailure } from './authState'
 import { useAuth } from './useAuth'
 
 const FAILURE_MESSAGES: Record<SignInFailure, string> = {
-  popupBlocked:
-    'Votre navigateur a bloqué la fenêtre de connexion. Ouvrez cette page dans Safari ou Chrome, puis réessayez.',
   unavailable: 'La connexion a échoué. Vérifiez votre connexion internet, puis réessayez.',
 }
 

@@ -62,16 +62,49 @@ describe('reduce', () => {
     expect(reduce(initialAuthState, { type: 'lookupFailed' })).toEqual({ status: 'error' })
   })
 
-  it("retient l'échec d'un popup bloqué sur l'écran de connexion", () => {
+  it("retient l'échec de connexion sur l'écran de connexion", () => {
     expect(
-      reduce({ status: 'signedOut' }, { type: 'signInFailed', failure: 'popupBlocked' }),
-    ).toEqual({ status: 'signedOut', failure: 'popupBlocked' })
+      reduce({ status: 'signedOut' }, { type: 'signInFailed', failure: 'unavailable' }),
+    ).toEqual({ status: 'signedOut', failure: 'unavailable' })
   })
 
-  it("n'affiche aucune erreur quand la connexion est annulée", () => {
+  it("garde le message d'échec quand l'identité nulle arrive après le retour de Google", () => {
+    const failed = reduce(initialAuthState, { type: 'signInFailed', failure: 'unavailable' })
+    expect(failed).toEqual({ status: 'signedOut', failure: 'unavailable' })
+    expect(reduce(failed, { type: 'identityChanged', identity: null })).toEqual({
+      status: 'signedOut',
+      failure: 'unavailable',
+    })
+  })
+
+  it("garde le message d'échec quand l'identité nulle arrive avant le retour de Google", () => {
+    const signedOut = reduce(initialAuthState, { type: 'identityChanged', identity: null })
+    expect(reduce(signedOut, { type: 'signInFailed', failure: 'unavailable' })).toEqual({
+      status: 'signedOut',
+      failure: 'unavailable',
+    })
+  })
+
+  it("ignore un échec de connexion qui arrive alors qu'un membre est déjà connecté", () => {
+    const settled: AuthState = {
+      status: 'member',
+      member: sophie,
+      uid: 'uid-sophie',
+      displayName: null,
+    }
+    expect(reduce(settled, { type: 'signInFailed', failure: 'unavailable' })).toBe(settled)
+  })
+
+  it("efface le message d'échec quand une identité arrive", () => {
     expect(
-      reduce({ status: 'signedOut', failure: 'popupBlocked' }, { type: 'signInCancelled' }),
-    ).toEqual({ status: 'signedOut' })
+      reduce(
+        { status: 'signedOut', failure: 'unavailable' },
+        {
+          type: 'identityChanged',
+          identity: { uid: 'uid-sophie', email: 'sophie@exemple.fr', displayName: null },
+        },
+      ),
+    ).toEqual({ status: 'loading' })
   })
 
   it('bascule en erreur quand le chargement expire', () => {
