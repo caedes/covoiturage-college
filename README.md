@@ -21,6 +21,7 @@ trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs p
 | `npm run test:e2e` | Tests de non-régression Playwright, contre les émulateurs (Java requis) |
 | `npm run test:e2e:ui` | Les mêmes, en mode interactif pour déboguer |
 | `npm run check:bundle` | Vérifie que `dist/` ne contient aucune trace des émulateurs |
+| `npm run icons` | Régénère les icônes PNG et le favicon à partir de `public/icons/car.svg` |
 | `npm run rules:deploy` | Déploie `firestore.rules` sur le projet Firebase |
 | `npm run import -- <fichier>` | Simule l'import des familles et des emplois du temps (`--apply` pour écrire) |
 
@@ -109,6 +110,18 @@ Ces valeurs ne sont pas des secrets : elles partent dans le bundle que n'importe
 qui télécharge. Partir de `.env.example` et les copier depuis *Console Firebase →
 Paramètres du projet → Vos applications → Configuration SDK*.
 
+`VITE_FIREBASE_AUTH_DOMAIN` est le domaine de l'application elle-même :
+`covoiturage-college.netlify.app` en production, `localhost:5173` en local. La connexion
+passe par une redirection vers Google, et Firebase sert sa page de retour sur
+`https://<authDomain>/__/auth/handler`. Cette page est relayée vers
+`<projet>.firebaseapp.com` par `public/_redirects` sur Netlify et par le proxy de
+`vite.config.ts` en local : le retour de Google reste ainsi sur le domaine de
+l'application, sans quoi Safari et Chrome, qui isolent le stockage des sites tiers, le
+perdraient.
+
+En local, `npm run dev` sert donc l'application en **https** sur `https://localhost:5173`
+(certificat auto-signé à accepter une fois dans le navigateur), et sur ce port seulement.
+
 Elles sont requises **au build** : sans elles dans le job `verify`, le `dist/`
 publié en production contiendrait des `undefined`.
 
@@ -135,6 +148,36 @@ Authentication → Paramètres → Domaines autorisés*, sinon la connexion Goog
 échoue. `localhost` et `covoiturage-college.netlify.app` y sont déjà. Les
 *deploy previews* Netlify, si elles sont activées un jour, sortent sur d'autres
 sous-domaines et ne sont pas couvertes.
+
+### Client OAuth
+
+La page de retour de Google doit être déclarée dans *Google Cloud → API et services →
+Identifiants → client OAuth « Web client (auto created by Google Service) » → URI de
+redirection autorisés* :
+
+- `https://covoiturage-college.netlify.app/__/auth/handler`
+- `https://localhost:5173/__/auth/handler`
+
+## Application installable
+
+L'application s'ajoute à l'écran d'accueil d'un téléphone et s'ouvre en plein écran
+(`public/manifest.webmanifest`, balises du `<head>` de `index.html`). Elle n'a **aucun
+service worker** et ne fonctionne pas hors ligne, volontairement : les parents doivent
+toujours voir une information à jour.
+
+L'écran de démarrage est la voiture de `public/icons/car.svg`, sur fond blanc. Il est écrit
+en HTML dans `index.html`, styles compris, pour s'afficher avant le JavaScript ; le composant
+`SplashScreen` le reprend à l'identique pendant la vérification d'accès.
+
+Les icônes PNG et `public/favicon.ico` sont générées à partir du SVG puis commitées :
+
+```bash
+npm run icons
+```
+
+La voiture vient de [Noto Emoji](https://github.com/googlefonts/noto-emoji)
+(`2D/svg/emoji_u1f697.svg`), © Google, sous licence Apache 2.0
+(`public/icons/LICENSE-noto-emoji.txt`).
 
 ## Tests de non-régression
 
