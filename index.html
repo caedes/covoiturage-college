@@ -23,6 +23,8 @@
       }
       .splash img {
         display: block;
+        width: 100vw;
+        /* biome-ignore lint/suspicious/noDuplicateProperties: 100vw is the fallback for browsers without dvh. */
         width: min(100vw, 100dvh);
         height: auto;
         /* The Noto car sits low in its box: lift it by 15 % to centre it. */
