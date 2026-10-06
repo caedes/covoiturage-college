@@ -17,6 +17,7 @@
     "rules:deploy": "npx --yes firebase-tools@15 deploy --only firestore:rules",
     "import": "tsx scripts/import.ts",
     "check:bundle": "tsx scripts/check-bundle.ts",
+    "icons": "tsx scripts/icons.ts",
     "lint": "biome check .",
     "format": "biome format --write .",
     "prepare": "husky"
