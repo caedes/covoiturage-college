@@ -8,6 +8,7 @@
     "types": ["node"],
     "composite": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "strict": true,
     "verbatimModuleSyntax": true,
