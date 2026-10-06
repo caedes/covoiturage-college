@@ -5,6 +5,7 @@ export type AuthScenario = {
   members: MemberRepository
   subscribeCalls(): number
   signInCalls(): number
+  completeSignInCalls(): number
   signOutCalls(): number
 }
 
@@ -23,6 +24,7 @@ type ScenarioOptions = {
   member?: Member | null
   lookupFails?: boolean
   signInOutcome?: SignInOutcome
+  redirectOutcome?: SignInOutcome | null
   neverEmits?: boolean
 }
 
@@ -31,6 +33,7 @@ function scenario(options: ScenarioOptions): AuthScenario {
   let subscriptions = 0
   let signIns = 0
   let signOuts = 0
+  let completions = 0
 
   return {
     auth: {
@@ -44,6 +47,10 @@ function scenario(options: ScenarioOptions): AuthScenario {
       async signIn() {
         signIns += 1
         return options.signInOutcome ?? 'started'
+      },
+      async completeSignIn() {
+        completions += 1
+        return options.redirectOutcome ?? null
       },
       async signOut() {
         signOuts += 1
@@ -68,6 +75,9 @@ function scenario(options: ScenarioOptions): AuthScenario {
     },
     signOutCalls() {
       return signOuts
+    },
+    completeSignInCalls() {
+      return completions
     },
   }
 }
@@ -104,8 +114,14 @@ export function signInFailing(outcome: SignInOutcome): AuthScenario {
   return scenario({ identity: null, signInOutcome: outcome })
 }
 
+/** Back from Google with the given outcome; the port then reports no identity. */
+export function redirectReturning(outcome: SignInOutcome | null): AuthScenario {
+  return scenario({ identity: null, redirectOutcome: outcome })
+}
+
 export type ControllableScenario = AuthScenario & {
   emit(identity: Identity | null): void
+  finishRedirect(outcome: SignInOutcome | null): Promise<void>
 }
 
 /** Scenario driven from the test: useful to observe a transition. */
@@ -116,6 +132,8 @@ export function controllable(
   let subscriptions = 0
   let signIns = 0
   let signOuts = 0
+  let completions = 0
+  let settleRedirect: (outcome: SignInOutcome | null) => void = () => {}
 
   return {
     auth: {
@@ -129,6 +147,12 @@ export function controllable(
       async signIn() {
         signIns += 1
         return options.signInOutcome ?? 'started'
+      },
+      completeSignIn() {
+        completions += 1
+        return new Promise<SignInOutcome | null>((resolve) => {
+          settleRedirect = resolve
+        })
       },
       async signOut() {
         signOuts += 1
@@ -146,6 +170,13 @@ export function controllable(
       for (const listener of listeners) {
         listener(identity)
       }
+    },
+    async finishRedirect(outcome) {
+      settleRedirect(outcome)
+      await Promise.resolve()
+    },
+    completeSignInCalls() {
+      return completions
     },
     subscribeCalls() {
       return subscriptions

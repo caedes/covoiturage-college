@@ -1,6 +1,6 @@
 import type { Identity, Member } from './ports'
 
-export type SignInFailure = 'popupBlocked' | 'unavailable'
+export type SignInFailure = 'unavailable'
 
 /**
  * Five states, and nothing else. `error` covers both a failed Firestore read and the watchdog
@@ -25,7 +25,6 @@ export type AuthEvent =
     }
   | { type: 'lookupFailed' }
   | { type: 'signInFailed'; failure: SignInFailure }
-  | { type: 'signInCancelled' }
   | { type: 'timedOut' }
   | { type: 'retryRequested' }
 
@@ -34,7 +33,11 @@ export const initialAuthState: AuthState = { status: 'loading' }
 export function reduce(state: AuthState, event: AuthEvent): AuthState {
   switch (event.type) {
     case 'identityChanged':
-      return event.identity === null ? { status: 'signedOut' } : { status: 'loading' }
+      if (event.identity !== null) {
+        return { status: 'loading' }
+      }
+      // A redirect failure may be reported before the port emits `null`: keep its message.
+      return state.status === 'signedOut' ? state : { status: 'signedOut' }
     case 'memberResolved':
       return event.member === null
         ? { status: 'denied', email: event.email }
@@ -42,9 +45,9 @@ export function reduce(state: AuthState, event: AuthEvent): AuthState {
     case 'lookupFailed':
       return { status: 'error' }
     case 'signInFailed':
-      return { status: 'signedOut', failure: event.failure }
-    case 'signInCancelled':
-      return { status: 'signedOut' }
+      return state.status === 'loading' || state.status === 'signedOut'
+        ? { status: 'signedOut', failure: event.failure }
+        : state
     case 'timedOut':
       return state.status === 'loading' ? { status: 'error' } : state
     case 'retryRequested':

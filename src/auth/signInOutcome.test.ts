@@ -2,26 +2,21 @@ import { describe, expect, it } from 'vitest'
 import { readErrorCode, toSignInOutcome } from './signInOutcome'
 
 describe('toSignInOutcome', () => {
-  it('traite la fermeture du popup comme une annulation', () => {
-    expect(toSignInOutcome('auth/popup-closed-by-user')).toBe('cancelled')
-  })
-
-  it('traite une demande de popup annulée comme une annulation', () => {
-    expect(toSignInOutcome('auth/cancelled-popup-request')).toBe('cancelled')
-  })
-
-  it('reconnaît un popup bloqué par le navigateur', () => {
-    expect(toSignInOutcome('auth/popup-blocked')).toBe('popupBlocked')
+  it('traite un retour de Google interrompu par la personne comme un renoncement, sans message', () => {
+    expect(toSignInOutcome('auth/redirect-cancelled-by-user')).toBeNull()
   })
 
   it('range tout autre code en indisponibilité', () => {
     expect(toSignInOutcome('auth/network-request-failed')).toBe('unavailable')
+    expect(toSignInOutcome('unknown')).toBe('unavailable')
   })
 })
 
 describe('readErrorCode', () => {
   it("extrait le code d'une erreur Firebase", () => {
-    expect(readErrorCode({ code: 'auth/popup-blocked' })).toBe('auth/popup-blocked')
+    expect(readErrorCode({ code: 'auth/network-request-failed' })).toBe(
+      'auth/network-request-failed',
+    )
   })
 
   it('retourne un code inconnu pour une valeur sans code', () => {
