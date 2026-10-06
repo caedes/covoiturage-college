@@ -42,6 +42,20 @@ jobs:
               exit 1
             fi
           done
+      # La connexion Google par redirection ne marche que si authDomain est le
+      # domaine de l'application, dont _redirects relaie /__/auth et /__/firebase.
+      # Une autre valeur (ex. <projet>.firebaseapp.com) casserait toute nouvelle
+      # connexion en production. Echouer ici bloque le deploy : la production
+      # precedente reste en ligne.
+      - name: Verifier le domaine de connexion de production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+        run: |
+          if [ "$VITE_FIREBASE_AUTH_DOMAIN" != "covoiturage-college.netlify.app" ]; then
+            echo "VITE_FIREBASE_AUTH_DOMAIN doit valoir covoiturage-college.netlify.app (valeur actuelle : $VITE_FIREBASE_AUTH_DOMAIN)" >&2
+            exit 1
+          fi
       # Vite fige les VITE_* dans le bundle au moment du build. Sans ces
       # variables ici, le dist/ publie par le job deploy partirait avec des
       # undefined et l'application ne demarrerait pas.
