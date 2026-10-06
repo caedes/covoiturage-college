@@ -64,6 +64,14 @@ describe('index.html', () => {
       '<meta name="apple-mobile-web-app-status-bar-style" content="default" />',
     )
   })
+
+  it('affiche la voiture avant le chargement du JavaScript, sans dépendre de la feuille de style', () => {
+    expect(html).toMatch(
+      /<div id="root">\s*<div class="splash"><img src="\/icons\/car\.svg" alt="" \/><\/div>\s*<\/div>/,
+    )
+    expect(html).toMatch(/<style>[\s\S]*\.splash\s*\{[\s\S]*<\/style>[\s\S]*<\/head>/)
+    expect(html).toContain('width: min(100vw, 100dvh);')
+  })
 })
 
 describe('application strictement en ligne', () => {

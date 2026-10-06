@@ -14,6 +14,15 @@ describe('LoadingScreen', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('status')).toBeInTheDocument()
   })
+
+  it('affiche la voiture de l’écran de démarrage pendant la vérification', () => {
+    renderWithAuth(<LoadingScreen />)
+    expect(screen.getByRole('main')).toHaveClass('splash')
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Vérification de votre accès' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Un instant, nous vérifions votre compte…')
+  })
 })
 
 describe('SignInScreen', () => {

@@ -12,9 +12,28 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Covoiturage" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <style>
+      /* Shared by the static splash below and by the SplashScreen component. */
+      .splash {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #ffffff;
+      }
+      .splash img {
+        display: block;
+        width: min(100vw, 100dvh);
+        height: auto;
+        /* The Noto car sits low in its box: lift it by 15 % to centre it. */
+        translate: 0 -15%;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="splash"><img src="/icons/car.svg" alt="" /></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
