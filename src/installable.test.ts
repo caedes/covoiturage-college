@@ -84,3 +84,21 @@ describe('application strictement en ligne', () => {
     }
   })
 })
+
+describe('relais de connexion sur Netlify', () => {
+  const rules = readFileSync('public/_redirects', 'utf8').split('\n')
+  const lineOf = (pattern: RegExp) => rules.findIndex((line) => pattern.test(line))
+
+  it('relaie les pages de connexion vers Firebase avant de tout renvoyer à index.html', () => {
+    const auth = lineOf(
+      /^\/__\/auth\/\*\s+https:\/\/covoiturage-college-915d5\.firebaseapp\.com\/__\/auth\/:splat\s+200$/,
+    )
+    const firebase = lineOf(
+      /^\/__\/firebase\/\*\s+https:\/\/covoiturage-college-915d5\.firebaseapp\.com\/__\/firebase\/:splat\s+200$/,
+    )
+    const fallback = lineOf(/^\/\*\s+\/index\.html\s+200$/)
+    expect(auth).toBeGreaterThanOrEqual(0)
+    expect(firebase).toBeGreaterThanOrEqual(0)
+    expect(fallback).toBeGreaterThan(Math.max(auth, firebase))
+  })
+})

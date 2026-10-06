@@ -2,8 +2,9 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth'
 import { normalizeEmail } from '../auth/email'
 import type { AuthPort } from '../auth/ports'
@@ -26,15 +27,20 @@ export const firebaseAuthPort: AuthPort = {
 
   async signIn() {
     try {
-      await signInWithPopup(auth, provider)
+      await signInWithRedirect(auth, provider)
       return 'started'
-    } catch (error) {
-      return toSignInOutcome(readErrorCode(error)) ?? 'unavailable'
+    } catch {
+      return 'unavailable'
     }
   },
 
   async completeSignIn() {
-    return null
+    try {
+      const result = await getRedirectResult(auth)
+      return result === null ? null : 'started'
+    } catch (error) {
+      return toSignInOutcome(readErrorCode(error))
+    }
   },
 
   async signOut() {

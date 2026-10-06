@@ -1,1 +1,3 @@
-/*  /index.html  200
+/__/auth/*      https://covoiturage-college-915d5.firebaseapp.com/__/auth/:splat      200
+/__/firebase/*  https://covoiturage-college-915d5.firebaseapp.com/__/firebase/:splat  200
+/*              /index.html                                                          200
