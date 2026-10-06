@@ -48,7 +48,7 @@ Toutes les icônes PNG ont un **fond blanc opaque** : iOS remplit la transparenc
 
 Les PNG et le `.ico` sont produits une fois à partir du SVG, puis commités. La commande
 (`npx @resvg/resvg-js-cli`, plus l'assemblage du `.ico`) est notée dans le README pour
-pouvoir les refaire. Le projet ne gagne aucune dépendance.
+pouvoir les refaire. Les icônes n'ajoutent aucune dépendance au projet.
 
 ### Manifeste — `public/manifest.webmanifest`
 
@@ -131,12 +131,13 @@ méthode « relais » que Firebase recommande.
 ### Adaptateur et domaine
 
 - `firebaseAuthPort.signIn()` appelle `signInWithRedirect`. La page part chez Google et
-  `signIn` renvoie `'started'`. Une erreur levée avant le départ passe par
-  `toSignInOutcome`, comme aujourd'hui.
+  `signIn` renvoie `'started'`. Une erreur levée avant le départ donne `'unavailable'`.
 - Nouvelle méthode du port `AuthPort` : `completeSignIn(): Promise<SignInOutcome | null>`.
   L'adaptateur appelle `getRedirectResult`. Elle renvoie `null` quand il n'y avait pas de
   redirection en cours ou que le parent est revenu sans se connecter, `'started'` quand la
-  connexion a abouti, et l'issue d'échec convertie sinon.
+  connexion a abouti. Une erreur passe par `toSignInOutcome(code): 'unavailable' | null` :
+  `auth/redirect-cancelled-by-user` donne `null` (le parent a renoncé), tout autre code
+  donne `'unavailable'`.
 - `AuthProvider` appelle `completeSignIn` une fois, au montage (pas à chaque « Réessayer »).
   Une issue d'échec déclenche `signInFailed`.
 - **Ordre des événements.** Au retour d'une redirection ratée, `getRedirectResult` et
@@ -165,16 +166,22 @@ un parent qui renonce revient sur l'écran de connexion sans message, ce que
 
   `<projet>` est l'identifiant du projet Firebase de production. La seconde ligne est
   vérifiée pendant le POC et retirée si la connexion marche sans elle.
-- En local, `vite.config.ts` fait le même relais (`server.proxy` sur `/__`). La cible est
-  calculée à partir de `VITE_FIREBASE_PROJECT_ID` lu par `loadEnv`. En mode `e2e`, aucun
-  relais : l'émulateur Auth sert sa propre page.
+- En local, `vite.config.ts` fait le même relais (`server.proxy` sur `/__/auth` et
+  `/__/firebase`). La cible est calculée à partir de `VITE_FIREBASE_PROJECT_ID` lu par
+  `loadEnv`. En mode `e2e`, aucun relais : l'émulateur Auth sert sa propre page.
+- **Le serveur de développement passe en https.** Hors émulateur, le SDK Firebase construit
+  toujours la page de retour en `https://<authDomain>/__/auth/handler` : en http, la
+  connexion locale échouerait. `@vitejs/plugin-basic-ssl` (devDependency) fournit un
+  certificat auto-signé ; Chrome demande de l'accepter une fois. Le plugin est actif en
+  `dev` et en `preview`, jamais en mode `e2e`, dont les TNR restent en http sur le port
+  4173. Décision du propriétaire, 2026-10-06.
 
 ### Configuration du domaine
 
 | Contexte | `VITE_FIREBASE_AUTH_DOMAIN` |
 | --- | --- |
 | Production (variable GitHub) | `covoiturage-college.netlify.app` |
-| Développement (`.env.local`) | `localhost:5173` |
+| Développement (`.env.local`) | `localhost:5173` (servi en https) |
 | TNR (`.env.e2e`) | `localhost`, inchangé |
 
 `.env.example` documente ces valeurs.
@@ -185,7 +192,7 @@ Notées dans la PR et dans le README :
 
 1. Google Cloud, client OAuth de Firebase, URI de redirection autorisées : ajouter
    `https://covoiturage-college.netlify.app/__/auth/handler` et
-   `http://localhost:5173/__/auth/handler`.
+   `https://localhost:5173/__/auth/handler`.
 2. Firebase Auth, domaines autorisés : vérifier que `covoiturage-college.netlify.app` y est.
 3. `.env.local` : `VITE_FIREBASE_AUTH_DOMAIN=localhost:5173`.
 4. **Juste avant la fusion**, pas plus tôt : passer la variable GitHub
@@ -198,7 +205,10 @@ Notées dans la PR et dans le README :
 - **Unitaires** (Vitest)
   - `SplashScreen` et `LoadingScreen` : `h1`, texte de statut, image décorative ;
     `screens.test.tsx` mis à jour.
-  - `toSignInOutcome` : seuls restent les codes utiles ; tout autre code donne `unavailable`.
+  - `toSignInOutcome` : `auth/redirect-cancelled-by-user` donne `null`, tout autre code
+    `unavailable`.
+  - Relais Vite : cible `https://<projet>.firebaseapp.com` pour `/__/auth` et
+    `/__/firebase`, aucun relais en mode `e2e` ni sans identifiant de projet.
   - `authState` et `AuthProvider` : échec au retour de redirection, affiché quel que soit
     l'ordre avec `identityChanged(null)` ; retour sans connexion, sans message ;
     `completeSignIn` appelé une seule fois, même après « Réessayer ».
@@ -213,7 +223,7 @@ Notées dans la PR et dans le README :
 
 ## Validation
 
-- **POC** dans la vraie application (`npm run dev`), montré au propriétaire avant de valider
+- **POC** dans la vraie application (`npm run dev`, sur `https://localhost:5173`), montré au propriétaire avant de valider
   l'interface : écran de démarrage, favicon, connexion par redirection en local.
 - **Chrome** : installation proposée par le navigateur, ouverture en plein écran, icône
   Android découpée, connexion.
