@@ -2,24 +2,20 @@
 
 import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
-import basicSsl from '@vitejs/plugin-basic-ssl'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { firebaseAuthProxy } from './scripts/vite/firebaseAuthProxy.ts'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
-  // Firebase builds its sign-in page as https://<authDomain>/__/auth/handler: outside the
-  // emulators, the dev server must speak https. The e2e build stays on plain http.
-  const https = mode === 'e2e' ? [] : [basicSsl()]
 
   return {
-    plugins: [react(), tailwindcss(), ...https],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },
     server: {
-      // authDomain names this exact port: on another one, sign-in would fail without a word.
+      // A fixed port: the docs point at http://localhost:5173, and a second dev server must fail loudly.
       port: 5173,
       strictPort: true,
       proxy: firebaseAuthProxy(env.VITE_FIREBASE_PROJECT_ID, mode),

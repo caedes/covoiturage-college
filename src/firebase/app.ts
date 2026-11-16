@@ -11,7 +11,7 @@ export const firebaseApp = initializeApp({
 })
 
 /**
- * Points Auth and Firestore at the local emulators, for the `e2e` build only. It runs before any
+ * Points Auth and Firestore at the local emulators, for the dev server and the `e2e` build only. It runs before any
  * other module uses them: `getAuth` and `getFirestore` return the same instances afterwards.
  */
 function connectEmulators() {
@@ -20,10 +20,11 @@ function connectEmulators() {
 }
 
 /**
- * Whether this build talks to the emulators. `import.meta.env.MODE` is a build-time constant: in
- * production the branch below, and the emulator addresses with it, are removed from the bundle.
+ * Whether this build talks to the emulators: `development` (`npm run dev`) and `e2e` (regression
+ * tests). `import.meta.env.MODE` is a build-time constant: in production the branch below, and the
+ * emulator addresses with it, are removed from the bundle.
  */
-const USES_EMULATORS = import.meta.env.MODE === 'e2e'
+const USES_EMULATORS = import.meta.env.MODE === 'development' || import.meta.env.MODE === 'e2e'
 
 if (USES_EMULATORS) {
   connectEmulators()

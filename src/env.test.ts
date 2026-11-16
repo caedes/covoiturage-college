@@ -29,4 +29,29 @@ describe('parseEnv', () => {
   it('rejette une configuration Firebase vide', () => {
     expect(() => parseEnv({ ...validEnv, VITE_FIREBASE_PROJECT_ID: '' })).toThrow(/invalides/)
   })
+
+  it('accepte un projet demo-* en développement', () => {
+    const dev = { ...validEnv, MODE: 'development', VITE_FIREBASE_PROJECT_ID: 'demo-covoiturage' }
+    expect(parseEnv(dev)).toEqual(dev)
+  })
+
+  it('refuse un projet réel en développement', () => {
+    const dev = {
+      ...validEnv,
+      MODE: 'development',
+      VITE_FIREBASE_PROJECT_ID: 'covoiturage-college-915d5',
+    }
+    expect(() => parseEnv(dev)).toThrow(/demo-.*\.env\.local/s)
+  })
+
+  it('accepte un projet réel hors développement', () => {
+    const prod = {
+      ...validEnv,
+      MODE: 'production',
+      DEV: false,
+      PROD: true,
+      VITE_FIREBASE_PROJECT_ID: 'covoiturage-college-915d5',
+    }
+    expect(parseEnv(prod)).toEqual(prod)
+  })
 })
