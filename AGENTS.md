@@ -116,3 +116,4 @@ ce fichier — pas seulement référencées.
 - @docs/rules/langue.md — français pour ce qui se lit, anglais pour le code
 - @docs/rules/commits.md — format des messages de commit
 - @docs/rules/tests-non-regression.md — comment écrire un test de non-régression
+- @docs/rules/production.md — l'agent ne touche jamais la production
