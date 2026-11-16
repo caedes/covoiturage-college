@@ -11,9 +11,13 @@ function shellQuote(value: string): string {
   return `'${value.replaceAll("'", `'\\''`)}'`
 }
 
-/** The command run inside `emulators:exec`: import the data, then start Vite. */
+/**
+ * The command run inside `emulators:exec`: import the data, then start Vite. `exec` and
+ * `node --import tsx` leave no shell nor wrapper in between, so the session is the direct child of
+ * the emulators process and sees it go away (see `scripts/dev/session.ts`).
+ */
 export function sessionCommand(dataPath: string): string {
-  return `tsx scripts/dev/session.ts ${shellQuote(dataPath)}`
+  return `exec node --import tsx scripts/dev/session.ts ${shellQuote(dataPath)}`
 }
 
 /** `npx` arguments that start the Auth and Firestore emulators around the dev session. */

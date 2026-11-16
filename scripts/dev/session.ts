@@ -31,9 +31,21 @@ if (!isEmulatorImport(output)) {
 console.log(output)
 
 const vite = spawn('npx', ['vite'], { stdio: 'inherit', env })
+vite.on('error', (error) => {
+  console.error(`Lancement de Vite impossible : ${error.message}`)
+  process.exit(1)
+})
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => vite.kill(signal))
 }
+// `emulators:exec` does not relay a SIGTERM to its script: when it stops, this process is
+// re-parented, and Vite must go down with the emulators instead of keeping port 5173.
+const emulatorsPid = process.ppid
+setInterval(() => {
+  if (process.ppid !== emulatorsPid) {
+    vite.kill('SIGTERM')
+  }
+}, 500).unref()
 vite.on('exit', (code) => {
   process.exit(code ?? 0)
 })

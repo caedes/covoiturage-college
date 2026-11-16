@@ -20,7 +20,7 @@ describe('resolveDataPath', () => {
 describe('sessionCommand', () => {
   it('cite le chemin pour le shell, espaces et apostrophes compris', () => {
     expect(sessionCommand("data/l'an 2027.json")).toBe(
-      `tsx scripts/dev/session.ts 'data/l'\\''an 2027.json'`,
+      `exec node --import tsx scripts/dev/session.ts 'data/l'\\''an 2027.json'`,
     )
   })
 })
@@ -35,7 +35,7 @@ describe('emulatorsExecArgs', () => {
       'demo-covoiturage',
       '--only',
       'auth,firestore',
-      "tsx scripts/dev/session.ts 'data/import.example.json'",
+      "exec node --import tsx scripts/dev/session.ts 'data/import.example.json'",
     ])
   })
 })
