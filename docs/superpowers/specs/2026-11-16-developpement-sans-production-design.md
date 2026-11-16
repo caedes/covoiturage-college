@@ -57,11 +57,12 @@ données du projet Firebase de production (`covoiturage-college-915d5`). Aujourd
 3. **Garde au démarrage.** Hors build de production (`import.meta.env.PROD`), un projet dont
    l'identifiant ne commence pas par `demo-` fait échouer le démarrage avec un message
    clair. Un projet `demo-*` ne peut joindre que des émulateurs.
-4. **`.env.local` de production supprimé.** Vite charge `.env.local` dans tous les modes et
-   il l'emporte sur `.env.development` : le garder ramènerait la prod. Le build de
-   production prend sa configuration des Variables GitHub en CI ; il n'en a pas besoin sur
-   le poste. Si un `.env.local` ou `.env.development.local` réapparaît avec un projet réel,
-   la garde du point 3 bloque le démarrage.
+4. **`.env.local` de production supprimé.** Il ne sert plus : le build de production prend
+   sa configuration des Variables GitHub en CI. *Correction pendant l'implémentation :*
+   `.env.development` passe avant `.env.local` (vérifié avec `loadEnv`), qui ne ramènerait
+   donc pas la prod. Ce qui l'emporte sur `.env.development`, ce sont
+   `.env.development.local` et les variables `VITE_*` exportées dans le shell : c'est
+   contre eux que joue la garde du point 3.
 5. **Blocages pour l'agent.** Un `.claude/settings.json` versionné refuse : les outils du
    serveur MCP Firebase (`mcp__plugin_firebase_firebase__*`), `npm run rules:deploy` et tout
    `firebase-tools … deploy`, toute commande qui mentionne `GOOGLE_APPLICATION_CREDENTIALS`,

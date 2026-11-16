@@ -9,9 +9,10 @@ trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs p
 
 | Commande | Effet |
 | --- | --- |
-| `npm run dev` | Serveur de développement |
+| `npm run dev` | Serveur de développement sur les émulateurs, avec les familles fictives de `data/import.example.json` (Java requis) |
+| `npm run dev -- <fichier>` | Idem avec un autre fichier de données, par exemple `data/import.json` |
 | `npm run build` | Typecheck puis build de production |
-| `npm run preview` | Sert le build de production (la connexion Google ne fonctionne qu'avec `npm run dev`) |
+| `npm run preview` | Sert le build de production |
 | `npm test` | Suite de tests, une passe |
 | `npm run test:watch` | Suite de tests en watch |
 | `npm run test:coverage` | Tests avec rapport et seuil de couverture |
@@ -101,26 +102,32 @@ Jamais dans le dépôt, jamais dans `.env*`, jamais en CI.
 
 | Nom | Où |
 | --- | --- |
-| `VITE_FIREBASE_API_KEY` | `.env.local` en local, *Variables* GitHub Actions en CI |
+| `VITE_FIREBASE_API_KEY` | *Variables* GitHub Actions (build de production) |
 | `VITE_FIREBASE_AUTH_DOMAIN` | idem |
 | `VITE_FIREBASE_PROJECT_ID` | idem |
 | `VITE_FIREBASE_APP_ID` | idem |
 
 Ces valeurs ne sont pas des secrets : elles partent dans le bundle que n'importe
-qui télécharge. Partir de `.env.example` et les copier depuis *Console Firebase →
+qui télécharge. `.env.example` les documente ; leurs valeurs viennent de *Console Firebase →
 Paramètres du projet → Vos applications → Configuration SDK*.
 
-`VITE_FIREBASE_AUTH_DOMAIN` est le domaine de l'application elle-même :
-`covoiturage-college.netlify.app` en production, `localhost:5173` en local. La connexion
-passe par une redirection vers Google, et Firebase sert sa page de retour sur
-`https://<authDomain>/__/auth/handler`. Cette page est relayée vers
-`<projet>.firebaseapp.com` par `public/_redirects` sur Netlify et par le proxy de
-`vite.config.ts` en local : le retour de Google reste ainsi sur le domaine de
-l'application, sans quoi Safari et Chrome, qui isolent le stockage des sites tiers, le
-perdraient.
+En local, `.env.development` (versionné) vise le projet `demo-covoiturage`, qui ne peut
+joindre que les émulateurs ; il passe avant un éventuel `.env.local`. Seuls un
+`.env.development.local` ou une variable `VITE_FIREBASE_*` exportée dans le shell
+l'emportent sur lui : l'application refuse alors de démarrer en développement si le projet
+ne commence pas par `demo-`.
 
-En local, `npm run dev` sert donc l'application en **https** sur `https://localhost:5173`
-(certificat auto-signé à accepter une fois dans le navigateur), et sur ce port seulement.
+`VITE_FIREBASE_AUTH_DOMAIN` est le domaine de l'application elle-même :
+`covoiturage-college.netlify.app`. La connexion passe par une redirection vers Google, et
+Firebase sert sa page de retour sur `https://<authDomain>/__/auth/handler`. Cette page est
+relayée vers `<projet>.firebaseapp.com` par `public/_redirects` : le retour de Google reste
+ainsi sur le domaine de l'application, sans quoi Safari et Chrome, qui isolent le stockage
+des sites tiers, le perdraient.
+
+En local, `npm run dev` sert l'application en http sur `http://localhost:5173`, devant les
+émulateurs remis à zéro à chaque lancement. « Se connecter avec Google » ouvre la page
+simulée de l'émulateur : on y saisit l'e-mail d'un parent du fichier importé, par exemple
+`camille@exemple.fr`.
 
 Ces variables sont requises **au build** : sans elles dans le job `verify`, le `dist/`
 publié en production contiendrait des `undefined`.
@@ -145,7 +152,8 @@ tombe sur l'écran « Problème technique » en boucle, jusqu'à leur publicatio
 
 Toute nouvelle origine servant l'application doit être déclarée dans *Firebase →
 Authentication → Paramètres → Domaines autorisés*, sinon la connexion Google y
-échoue. `localhost` et `covoiturage-college.netlify.app` y sont déjà. Les
+échoue. `covoiturage-college.netlify.app` y est déjà ; `localhost` ne sert plus depuis que le
+développement passe par les émulateurs. Les
 *deploy previews* Netlify, si elles sont activées un jour, sortent sur d'autres
 sous-domaines et ne sont pas couvertes.
 
@@ -156,7 +164,8 @@ Identifiants → client OAuth « Web client (auto created by Google Service) » 
 redirection autorisés* :
 
 - `https://covoiturage-college.netlify.app/__/auth/handler`
-- `https://localhost:5173/__/auth/handler`
+
+L'URI `https://localhost:5173/__/auth/handler` ne sert plus et peut être retirée.
 
 **Ordre de mise en production.** Avant la fusion, ajouter l'URI de production au client
 OAuth, puis passer la variable GitHub `VITE_FIREBASE_AUTH_DOMAIN` à

@@ -47,9 +47,10 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   Firebase. `src/components/architecture.test.ts` vérifie ces trois règles.
 - **Authentification** — connexion Google via Firebase Auth, par redirection
   (`signInWithRedirect`, résultat lu une fois par `completeSignIn`). `authDomain` est le
-  domaine de l'application : `/__/auth` et `/__/firebase` sont relayés vers
-  `firebaseapp.com` par `public/_redirects` et par le proxy Vite, et le serveur de
-  développement tourne en https sur le port 5173. Le domaine ne connaît que les ports
+  domaine de l'application en production : `/__/auth` et `/__/firebase` sont relayés vers
+  `firebaseapp.com` par `public/_redirects`. Le serveur de développement tourne sur les
+  émulateurs (mode `development`, http, port 5173) : l'émulateur Auth sert sa propre page
+  de connexion Google, sans relais. Le domaine ne connaît que les ports
   déclarés dans `src/auth/ports.ts` (`AuthPort`, `MemberRepository`) ; les adaptateurs
   Firebase vivent dans `src/firebase/`. Une fonctionnalité qui a besoin de l'identité
   passe par un port, jamais par le SDK Firebase directement.
@@ -80,8 +81,11 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
 - **Environnement** — les variables sont validées par Zod dans `src/env.ts` ; toute
   nouvelle variable passe par ce schéma plutôt que par un accès direct à `import.meta.env`. Seule
   exception : `src/firebase/app.ts` lit `import.meta.env.MODE`, que Vite remplace par une
-  constante au build, pour que le branchement sur les émulateurs (mode `e2e`) disparaisse du
-  bundle de production.
+  constante au build, pour que le branchement sur les émulateurs (modes `development` et
+  `e2e`) disparaisse du bundle de production. En mode `development`, `parseEnv` refuse tout
+  projet qui ne commence pas par `demo-` : un `.env.development.local` ou une variable
+  `VITE_FIREBASE_*` du shell, qui passent tous deux avant `.env.development` (versionné),
+  bloquent le démarrage s'ils visent la production.
 - **Installable** — manifeste `public/manifest.webmanifest`, icônes générées par
   `npm run icons` à partir de `public/icons/car.svg` (Noto Emoji, Apache 2.0). L'écran de
   démarrage est en HTML dans `index.html` (classe `splash`), repris par `SplashScreen`.
