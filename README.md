@@ -125,9 +125,10 @@ ainsi sur le domaine de l'application, sans quoi Safari et Chrome, qui isolent l
 des sites tiers, le perdraient.
 
 En local, `npm run dev` sert l'application en http sur `http://localhost:5173`, devant les
-émulateurs remis à zéro à chaque lancement. « Se connecter avec Google » ouvre la page
-simulée de l'émulateur : on y saisit l'e-mail d'un parent du fichier importé, par exemple
-`camille@exemple.fr`.
+émulateurs remis à zéro à chaque lancement. Chaque membre du fichier importé (parents et
+enfants qui ont un e-mail) y reçoit un compte Google simulé : « Se connecter avec Google »
+ouvre la page de l'émulateur, où il suffit de choisir un compte dans la liste, par exemple
+Camille (`camille@exemple.fr`).
 
 Ces variables sont requises **au build** : sans elles dans le job `verify`, le `dist/`
 publié en production contiendrait des `undefined`.
