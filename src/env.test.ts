@@ -41,7 +41,7 @@ describe('parseEnv', () => {
       MODE: 'development',
       VITE_FIREBASE_PROJECT_ID: 'covoiturage-college-915d5',
     }
-    expect(() => parseEnv(dev)).toThrow(/demo-.*\.env\.local/s)
+    expect(() => parseEnv(dev)).toThrow(/demo-.*\.env\.development\.local.*shell/s)
   })
 
   it('accepte un projet réel hors développement', () => {
