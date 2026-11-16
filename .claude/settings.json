@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": [
+      "mcp__plugin_firebase_firebase",
+      "Bash(npm run rules:deploy*)",
+      "Bash(npm run import*)",
+      "Bash(*scripts/import.ts*)",
+      "Bash(*firebase-tools*)",
+      "Bash(firebase *)",
+      "Bash(*GOOGLE_APPLICATION_CREDENTIALS*)",
+      "Read(**/*firebase-adminsdk*.json)",
+      "Read(**/*service-account*.json)",
+      "Read(~/.config/covoiturage-college/**)"
+    ]
+  }
+}
