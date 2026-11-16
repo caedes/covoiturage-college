@@ -13,9 +13,14 @@ export const firebaseApp = initializeApp({
 /**
  * Points Auth and Firestore at the local emulators, for the dev server and the `e2e` build only. It runs before any
  * other module uses them: `getAuth` and `getFirestore` return the same instances afterwards.
+ *
+ * Auth goes through `localhost`, like the app: the redirect result is read by an iframe served by
+ * the emulator, and from `127.0.0.1` that iframe is cross-site, so Chrome partitions its storage
+ * and the sign-in is lost. Playwright turns that partitioning off, which is why the e2e tests do
+ * not see it.
  */
 function connectEmulators() {
-  connectAuthEmulator(getAuth(firebaseApp), 'http://127.0.0.1:9099', { disableWarnings: true })
+  connectAuthEmulator(getAuth(firebaseApp), 'http://localhost:9099', { disableWarnings: true })
   connectFirestoreEmulator(getFirestore(firebaseApp), '127.0.0.1', 8080)
 }
 
