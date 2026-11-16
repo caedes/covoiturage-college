@@ -43,6 +43,8 @@ export default defineConfig(({ mode }) => {
           'src/firebase/**',
           'src/components/atoms/ui/**',
           'scripts/import.ts',
+          'scripts/dev.ts',
+          'scripts/dev/session.ts',
           'scripts/check-bundle.ts',
           'scripts/icons.ts',
         ],
