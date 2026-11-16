@@ -25,3 +25,6 @@ ui-debug.log
 # Clés de compte de service Firebase, si l'une atterrit par erreur dans le dossier
 *firebase-adminsdk*.json
 *service-account*.json
+
+# Rapports de revue de code (/qx:qx-code-review) : générés en local, jamais versionnés
+/.agents/qx/code-review/
