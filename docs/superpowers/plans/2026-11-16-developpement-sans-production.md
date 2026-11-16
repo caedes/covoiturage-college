@@ -295,6 +295,6 @@ git commit -m "docs: documenter le développement local sur les émulateurs"
 
 ## Après la fusion (propriétaire)
 
-- Supprimer `.env.local` du checkout principal : sinon `npm run dev` s'y arrête sur la garde.
+- Supprimer `.env.local` du checkout principal : il ne sert plus. Il ne gêne pas `npm run dev` (`.env.development` passe avant lui), mais il garde la config de prod sur le poste sans raison.
 - Facultatif : retirer `localhost` des domaines autorisés Firebase et `https://localhost:5173/__/auth/handler` du client OAuth.
 - Aucun `rules:deploy` nécessaire : aucune règle Firestore ne change.
