@@ -17,6 +17,15 @@ const child = spawn('npx', emulatorsExecArgs(dataPath), {
   stdio: 'inherit',
   env: withoutServiceAccount(process.env),
 })
+child.on('error', (error) => {
+  console.error(`Lancement des émulateurs impossible : ${error.message}`)
+  process.exit(1)
+})
+// Relayed rather than left to the default handler: a `kill` aimed at this process alone would
+// otherwise orphan the emulators and Vite, which keep their ports. Exit only once they are down.
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
+  process.on(signal, () => child.kill(signal))
+}
 child.on('exit', (code, signal) => {
   process.exit(code ?? (signal ? 1 : 0))
 })
