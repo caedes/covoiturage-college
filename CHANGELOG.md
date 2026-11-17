@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.6.0](https://github.com/caedes/covoiturage-college/compare/v1.5.0...v1.6.0) (2026-11-17)
+
+
+### Nouveautés
+
+* confirmer avant annuler et je le prends ([01ef255](https://github.com/caedes/covoiturage-college/commit/01ef255c67feb3dd2e2d836a778a8922b5de2152))
+* horaires modifiés du jour pour un enfant ([#25](https://github.com/caedes/covoiturage-college/issues/25)) ([88af7e4](https://github.com/caedes/covoiturage-college/commit/88af7e472caafb27db31ad225b6cbc35a4dd2524))
+* pop-in de confirmation ConfirmDialog sur l'alert-dialog shadcn ([1ff6c5d](https://github.com/caedes/covoiturage-college/commit/1ff6c5dbd3f605a7e4b3f7b288d8034b5aa392de))
+* renoncer par un clic sur le fond grisé de la pop-in ([d09e027](https://github.com/caedes/covoiturage-college/commit/d09e027b555bb13b0cc0e34c8359c976bcf1ba8e))
+* textes de confirmation avant annuler et je le prends ([a1dec30](https://github.com/caedes/covoiturage-college/commit/a1dec304b1a597e7cbb44a5cf196c29146662ad9))
+
+
+### Corrections
+
+* rendre le focus au bouton du trajet après la pop-in, même sur safari ([a52c5fd](https://github.com/caedes/covoiturage-college/commit/a52c5fd426bdc2360354b56e2918b8fbd2f9f73e))
+
 ## [1.5.0](https://github.com/caedes/covoiturage-college/compare/v1.4.0...v1.5.0) (2026-11-17)
 
 
