@@ -60,13 +60,16 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   conducteur remplacé, annulation) sur un jour non verrouillé (D 22:00 UTC) et à
   14 jours au plus. `childDays` s'écrit par un parent de l'enfant (`childId` dans ses
   `childIds`), à son nom (`updatedByUid`), dans les mêmes bornes, et ne se supprime
-  jamais. Aucune autre écriture cliente : `timetables` et `members` par
+  jamais ; il porte aussi les horaires modifiés du jour, choisis parmi les sonneries
+  (`bellTimes`) de l'emploi du temps. Aucune autre écriture cliente : `timetables` et `members` par
   `scripts/import.ts` (SDK Admin) uniquement. Les autres collections naissent fermées.
 - **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
   Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.
   Les données réelles (`data/*.json`) sont ignorées par Git : aucun exemple du dépôt ne
-  doit contenir de vrai prénom, de vraie adresse ni de vrai horaire.
+  doit contenir de vrai prénom, de vraie adresse ni de vrai horaire. Le fichier porte
+  `sonneries: { entrees, sorties }` ; en ajouter à l'emploi du temps en vigueur impose
+  d'importer une nouvelle version avec un `valableDu` postérieur.
 - **Planning** — `src/planning/` calcule la semaine en fonctions pures, sans React ni
   Firebase : `buildWeek` assemble les jours, les trajets Aller et Retour, les offres de
   permanence, les statuts et le récapitulatif. Le domaine ne manipule que des chaînes
