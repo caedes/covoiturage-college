@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   actionAccessibleLabel,
   actionLabel,
+  cancelConfirmation,
   childDayFailureMessage,
   dayButtonLabel,
   dayLongLabel,
@@ -14,6 +15,7 @@ import {
   recapPercent,
   skipNote,
   statusLabel,
+  takeOverConfirmation,
   tripDescription,
   weekRangeLabel,
   writeFailureMessage,
@@ -201,5 +203,25 @@ describe('options des enfants', () => {
     expect(childDayFailureMessage({ status: 'failed' })).toBe(
       'Enregistrement impossible. Vérifiez votre connexion internet, puis réessayez.',
     )
+  })
+})
+
+describe('confirmations', () => {
+  it("demande de confirmer l'annulation sans employer « Annuler »", () => {
+    expect(cancelConfirmation('07:40', 'Maison → Centre-bourg')).toEqual({
+      title: 'Ne plus conduire ce trajet ?',
+      description: 'Vous ne conduirez plus le trajet de 07:40, Maison → Centre-bourg.',
+      cancel: 'Garder le trajet',
+      confirm: 'Ne plus conduire',
+    })
+  })
+
+  it('nomme le conducteur remplacé', () => {
+    expect(takeOverConfirmation('07:40', 'Maison → Centre-bourg', 'Julie')).toEqual({
+      title: 'Prendre le trajet de Julie ?',
+      description: 'Vous prendrez le trajet de 07:40, Maison → Centre-bourg à la place de Julie.',
+      cancel: 'Retour',
+      confirm: 'Prendre le trajet',
+    })
   })
 })
