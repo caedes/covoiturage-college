@@ -1,5 +1,5 @@
 import { weekdayOf } from './dates'
-import { effectiveExit, retourPlacement } from './legs'
+import { effectiveExit, retourPlacement, scheduledSlot } from './legs'
 import type {
   ChildDay,
   ChildId,
@@ -88,7 +88,7 @@ export function permanenceOffers(
 
   for (const childId of childIds) {
     const own = childDays.get(childId)
-    const end = effectiveExit(timetable, childId, date, undefined)
+    const end = scheduledSlot(timetable, childId, date, own)?.end ?? null
     if (end === null || !ridesRetour(own)) {
       continue
     }
