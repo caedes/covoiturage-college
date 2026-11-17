@@ -62,8 +62,9 @@ release GitHub : un parent peut dire quelle version il a, et voir ce qui a chang
 - **Correctif urgent :** fusionner le `fix`, puis la PR de release, qui propose un patch.
 
 Le type de commit fait la version : voir `docs/rules/commits.md`. La PR de release est
-ouverte par le jeton du CI, donc le CI ne tourne pas dessus. Elle ne touche que la
-version et le changelog, et tout est vérifié au push sur `main`, avant tag et déploiement.
+ouverte par le jeton du CI, qui ne déclenche aucun workflow. Le job `release` relance donc
+le CI sur sa branche (`workflow_dispatch`) : le check `verify`, exigé par la règle
+« main protégée », tourne sur le commit exact de la release avant la fusion.
 Le réglage du dépôt « Allow GitHub Actions to create and approve pull requests » doit
 rester activé.
 
