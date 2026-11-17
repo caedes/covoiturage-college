@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertNoReleaseTags, type Delivery, planReleases } from './plan'
+import { assertNoReleaseTags, type Delivery, planReleases, tagsToPublish } from './plan'
 
 /** One delivery whose commits carry the given subjects, merged at noon UTC on `day`. */
 function delivery(pr: number | null, day: string, ...subjects: string[]): Delivery {
@@ -95,5 +95,28 @@ describe('assertNoReleaseTags', () => {
 
   it('laisse passer les autres tags', () => {
     expect(() => assertNoReleaseTags(['backup'])).not.toThrow()
+  })
+})
+
+describe('tagsToPublish', () => {
+  const releases = planReleases(HISTORY, 11)
+
+  it('pose tous les tags la première fois', () => {
+    expect(tagsToPublish([], releases, '1.4.0')).toHaveLength(12)
+  })
+
+  it('reprend une publication interrompue sans reposer les tags déjà là', () => {
+    const tags = tagsToPublish(['v0.1.0', 'v0.2.0', 'backup'], releases, '1.4.0')
+    expect(tags[0]).toBe('v0.3.0')
+    expect(tags).toHaveLength(10)
+  })
+
+  it('refuse si une PR fusionnée depuis a changé le plan commité', () => {
+    const later = planReleases([...HISTORY, delivery(20, '2026-11-20', 'feat: x')], 11)
+    expect(() => tagsToPublish([], later, '1.4.0')).toThrow(/1\.5\.0.*1\.4\.0/)
+  })
+
+  it('refuse un tag de version que le plan ne connaît pas', () => {
+    expect(() => tagsToPublish(['v9.0.0'], releases, '1.4.0')).toThrow(/v9\.0\.0/)
   })
 })

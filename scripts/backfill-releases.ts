@@ -4,12 +4,19 @@
  *
  * Without options it only writes local files: CHANGELOG.md, the version in package.json and its
  * lock, and .release-please-manifest.json. `--publish` then creates the tags and the GitHub
- * releases, which are public and permanent: only the owner decides to run it.
+ * releases, which are public and permanent: only the owner decides to run it. It checks the plan
+ * still ends on the committed manifest version, and resumes an interrupted run.
  */
 import { execFileSync } from 'node:child_process'
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { renderChangelog, renderRelease } from './releases/changelog'
-import { assertNoReleaseTags, type Commit, type Delivery, planReleases } from './releases/plan'
+import {
+  assertNoReleaseTags,
+  type Commit,
+  type Delivery,
+  planReleases,
+  tagsToPublish,
+} from './releases/plan'
 
 const REPO_URL = 'https://github.com/caedes/covoiturage-college'
 /** Last commit of the bootstrap, pushed to `main` before PR #1. */
@@ -70,15 +77,29 @@ function deliveries(): Delivery[] {
   return result
 }
 
-function existingTags(): string[] {
-  const remote = run('git', ['ls-remote', '--tags', 'origin'])
+function remoteTags(): string[] {
+  const tags = run('git', ['ls-remote', '--tags', 'origin'])
     .split('\n')
     .filter(Boolean)
     .map((row) => row.split('\t')[1].replace('refs/tags/', '').replace('^{}', ''))
-  return [...remote, ...run('git', ['tag', '--list']).split('\n').filter(Boolean)]
+  return [...new Set(tags)]
 }
 
-assertNoReleaseTags(existingTags())
+function localTags(): string[] {
+  return run('git', ['tag', '--list']).split('\n').filter(Boolean)
+}
+
+function releaseExists(tag: string): boolean {
+  try {
+    run('gh', ['release', 'view', tag, '--json', 'tagName'])
+    return true
+  } catch {
+    return false
+  }
+}
+
+const publish = process.argv.includes('--publish')
+if (!publish) assertNoReleaseTags([...new Set([...remoteTags(), ...localTags()])])
 
 const releases = planReleases(deliveries(), FIRST_PRODUCTION_PR)
 const latest = releases[releases.length - 1]
@@ -91,25 +112,37 @@ for (const release of releases) {
   )
 }
 
-if (process.argv.includes('--publish')) {
-  for (const release of releases) {
-    run('git', ['tag', '-a', `v${release.version}`, release.sha, '-m', `v${release.version}`])
+if (publish) {
+  const manifest = JSON.parse(readFileSync('.release-please-manifest.json', 'utf8'))['.']
+  const missing = tagsToPublish(remoteTags(), releases, manifest)
+  const local = localTags()
+  for (const tag of missing) {
+    const release = releases.find((candidate) => `v${candidate.version}` === tag)
+    if (release && !local.includes(tag)) run('git', ['tag', '-a', tag, release.sha, '-m', tag])
   }
-  run('git', ['push', 'origin', ...releases.map((release) => `refs/tags/v${release.version}`)])
+  // All or nothing: a failed push leaves no tag on origin, and the run can be started again.
+  if (missing.length > 0) {
+    run('git', ['push', '--atomic', 'origin', ...missing.map((tag) => `refs/tags/${tag}`)])
+  }
   for (const release of releases) {
+    const tag = `v${release.version}`
+    if (releaseExists(tag)) {
+      console.log(`Déjà publiée : ${tag}`)
+      continue
+    }
     const notes = renderRelease(release, REPO_URL).split('\n').slice(1).join('\n').trim()
     run('gh', [
       'release',
       'create',
-      `v${release.version}`,
+      tag,
       '--verify-tag',
       '--title',
-      `v${release.version}`,
+      tag,
       '--notes',
       notes,
       `--latest=${release === latest}`,
     ])
-    console.log(`Publiée : v${release.version}`)
+    console.log(`Publiée : ${tag}`)
   }
 } else {
   writeFileSync('CHANGELOG.md', renderChangelog(releases, REPO_URL))

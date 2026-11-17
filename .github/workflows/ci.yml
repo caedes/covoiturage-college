@@ -129,6 +129,7 @@ jobs:
       pull-requests: write
     outputs:
       release_created: ${{ steps.release-please.outputs.release_created }}
+      sha: ${{ steps.release-please.outputs.sha }}
     steps:
       - id: release-please
         uses: googleapis/release-please-action@v5
@@ -137,12 +138,15 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   # Livrer, c'est fusionner la PR de release : un push ordinaire ne deploie
-  # plus rien. Le dist/ de verify a ete construit depuis le commit de release,
-  # il porte donc la version qui vient d'etre publiee.
+  # plus rien. Le dist/ de verify vient du commit pousse ; on ne le deploie que
+  # s'il est le commit de release, qui porte la version publiee. Si verify a
+  # echoue sur ce commit, Release Please publie la release au push vert suivant,
+  # mais ce dist/ contient d'autres commits : on ne le deploie pas, la version
+  # suivante le fera.
   deploy:
     name: deploy
     needs: release
-    if: needs.release.outputs.release_created == 'true'
+    if: needs.release.outputs.release_created == 'true' && needs.release.outputs.sha == github.sha
     runs-on: ubuntu-latest
     steps:
       # En premier : checkout nettoie le workspace. Place apres le telechargement

@@ -87,3 +87,28 @@ export function assertNoReleaseTags(existingTags: string[]): void {
     )
   }
 }
+
+/**
+ * The tags `--publish` still has to create. It refuses when the plan no longer ends on the
+ * committed manifest version (a PR merged since the files were generated), or when a `v*` tag
+ * exists that the plan does not know. Tags already there are skipped, so an interrupted publish
+ * can be run again.
+ */
+export function tagsToPublish(
+  existingTags: string[],
+  releases: Release[],
+  manifestVersion: string,
+): string[] {
+  const latest = releases[releases.length - 1]?.version
+  if (latest !== manifestVersion) {
+    throw new Error(
+      `Le plan aboutit à ${latest} mais le manifeste commité vaut ${manifestVersion} : relancer le rattrapage sans --publish et relire.`,
+    )
+  }
+  const planned = releases.map((release) => `v${release.version}`)
+  const unknown = existingTags.filter((tag) => /^v\d/.test(tag) && !planned.includes(tag))
+  if (unknown.length > 0) {
+    throw new Error(`Tags de version inconnus du plan : ${unknown.join(', ')}. Rien n'est publié.`)
+  }
+  return planned.filter((tag) => !existingTags.includes(tag))
+}
