@@ -32,7 +32,8 @@ function slotOf(timetable: Timetable, childId: ChildId, date: IsoDate): DaySlot 
 
 /**
  * The day's start and end: the modified hours when they are bell times and form a valid range,
- * else the usual ones. A faulty combination is ignored as a whole, never trusted in part.
+ * else the usual ones. Only the modified hours are checked against the bells: the usual ones come
+ * from the timetable. A faulty combination is ignored as a whole, never trusted in part.
  */
 export function scheduledSlot(
   timetable: Timetable,
@@ -45,14 +46,15 @@ export function scheduledSlot(
     return null
   }
   const bells = timetable.bellTimes
-  const start = childDay?.start ?? usual.start
-  const end = childDay?.end ?? usual.end
+  const modifiedStart = childDay?.start
+  const modifiedEnd = childDay?.end
+  const start = modifiedStart ?? usual.start
+  const end = modifiedEnd ?? usual.end
   const valid =
     bells !== undefined &&
-    TIME.test(start) &&
-    TIME.test(end) &&
-    bells.starts.includes(start) &&
-    bells.ends.includes(end) &&
+    (modifiedStart === undefined ||
+      (TIME.test(modifiedStart) && bells.starts.includes(modifiedStart))) &&
+    (modifiedEnd === undefined || (TIME.test(modifiedEnd) && bells.ends.includes(modifiedEnd))) &&
     start < end
   return valid ? { usual, start, end } : { usual, start: usual.start, end: usual.end }
 }

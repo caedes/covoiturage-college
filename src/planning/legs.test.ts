@@ -203,6 +203,18 @@ describe('scheduledSlot', () => {
     })
   })
 
+  it("applique la sortie modifiée même quand l'entrée habituelle n'est pas une sonnerie", () => {
+    const bellTimes = {
+      ...BELL_TIMES,
+      starts: BELL_TIMES.starts.filter((time) => time !== '08:25'),
+    }
+    expect(slotWith({ end: '12:30' }, timetable({ bellTimes }))).toEqual({
+      usual,
+      start: '08:25',
+      end: '12:30',
+    })
+  })
+
   it('ignore les heures modifiées sans sonneries dans l’emploi du temps', () => {
     expect(slotWith({ end: '12:30' }, timetable())?.end).toBe('16:00')
   })
