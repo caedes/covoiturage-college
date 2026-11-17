@@ -174,3 +174,35 @@ const SUCCESS_VERB: Record<TripAction, string> = {
 export function writeSuccessMessage(action: TripAction, time: string, label: string): string {
   return `Vous ${SUCCESS_VERB[action]} le trajet de ${time}, ${label}.`
 }
+
+/** The question of a confirmation dialog, with the verb of each answer on its button. */
+export type ConfirmationText = {
+  title: string
+  description: string
+  cancel: string
+  confirm: string
+}
+
+/** Asked before « Annuler »: never uses the word, which would read as the opposite answer. */
+export function cancelConfirmation(time: string, label: string): ConfirmationText {
+  return {
+    title: 'Ne plus conduire ce trajet ?',
+    description: `Vous ne conduirez plus le ${tripDescription(time, label)}.`,
+    cancel: 'Garder le trajet',
+    confirm: 'Ne plus conduire',
+  }
+}
+
+/** Asked before « Je le prends »: names the driver about to be replaced. */
+export function takeOverConfirmation(
+  time: string,
+  label: string,
+  driverName: string,
+): ConfirmationText {
+  return {
+    title: `Prendre le trajet de ${driverName} ?`,
+    description: `Vous prendrez le ${tripDescription(time, label)} à la place de ${driverName}.`,
+    cancel: 'Retour',
+    confirm: 'Prendre le trajet',
+  }
+}
