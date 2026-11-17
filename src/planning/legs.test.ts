@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { childDay, timetable } from '../test/planningFixtures'
-import { applyChildDay, defaultLegs, effectiveExit, timetableFor } from './legs'
+import { BELL_TIMES, childDay, timetable } from '../test/planningFixtures'
+import {
+  applyChildDay,
+  defaultLegs,
+  effectiveExit,
+  retourPlacement,
+  scheduledSlot,
+  timetableFor,
+} from './legs'
 
 const MONDAY_A = '2026-09-28'
 const WEDNESDAY = '2026-09-30'
@@ -163,5 +170,93 @@ describe('effectiveExit', () => {
 
   it('ne rend rien le week-end', () => {
     expect(effectiveExit(table, 'alice', '2026-10-03', undefined)).toBeNull()
+  })
+})
+
+describe('scheduledSlot', () => {
+  const table = timetable({ bellTimes: BELL_TIMES })
+  const usual = { start: '08:25', end: '16:00' }
+  const slotWith = (fields: { start?: string; end?: string }, t = table) =>
+    scheduledSlot(t, 'alice', MONDAY_A, childDay({ date: MONDAY_A, childId: 'alice', ...fields }))
+
+  it("rend l'horaire habituel sans option", () => {
+    expect(scheduledSlot(table, 'alice', MONDAY_A, undefined)).toEqual({
+      usual,
+      start: '08:25',
+      end: '16:00',
+    })
+  })
+
+  it('applique une sortie modifiée tombant sur une sonnerie', () => {
+    expect(slotWith({ end: '12:30' })).toEqual({ usual, start: '08:25', end: '12:30' })
+  })
+
+  it('ignore une heure hors sonneries', () => {
+    expect(slotWith({ end: '12:31' })?.end).toBe('16:00')
+  })
+
+  it("ignore les deux heures quand l'entrée dépasse la sortie", () => {
+    expect(slotWith({ start: '14:00', end: '12:30' })).toEqual({
+      usual,
+      start: '08:25',
+      end: '16:00',
+    })
+  })
+
+  it('ignore les heures modifiées sans sonneries dans l’emploi du temps', () => {
+    expect(slotWith({ end: '12:30' }, timetable())?.end).toBe('16:00')
+  })
+
+  it('ne rend rien le week-end', () => {
+    expect(scheduledSlot(table, 'alice', '2026-10-03', undefined)).toBeNull()
+  })
+})
+
+describe('applyChildDay avec des horaires modifiés', () => {
+  const table = timetable({ bellTimes: BELL_TIMES })
+  const retourOf = (child: string, date: string, fields: Parameters<typeof childDay>[0]) =>
+    applyChildDay(table, date, defaultLegs(table, child, date), childDay(fields))
+
+  it("place l'aller au collège à l'entrée modifiée", () => {
+    const legs = retourOf('alice', MONDAY_A, { date: MONDAY_A, childId: 'alice', start: '10:35' })
+    expect(legs[0]).toMatchObject({ direction: 'aller', place: 'college', time: '10:35' })
+  })
+
+  it("laisse l'aller inchangé quand l'entrée n'est pas plus tardive que l'habituelle", () => {
+    const tuesday = '2026-09-29'
+    const legs = retourOf('basile', tuesday, { date: tuesday, childId: 'basile', start: '08:25' })
+    expect(legs[0]).toMatchObject({ place: 'centre-bourg', time: '07:40' })
+  })
+
+  it('place le retour au collège à la sortie modifiée', () => {
+    const legs = retourOf('alice', MONDAY_A, { date: MONDAY_A, childId: 'alice', end: '12:30' })
+    expect(legs[1]).toMatchObject({ direction: 'retour', place: 'college', time: '12:30' })
+  })
+
+  it('met le retour au bus quand la sortie modifiée est la fin du bus', () => {
+    const legs = retourOf('alice', THURSDAY, { date: THURSDAY, childId: 'alice', end: '17:00' })
+    expect(legs[1]).toMatchObject({ place: 'centre-bourg', time: '17:45' })
+  })
+
+  it('garde la permanence quand elle reste plus tardive', () => {
+    const legs = retourOf('alice', MONDAY_A, {
+      date: MONDAY_A,
+      childId: 'alice',
+      end: '16:00',
+      permanence: '17:00',
+    })
+    expect(legs[1]).toMatchObject({ place: 'centre-bourg', time: '17:45' })
+  })
+})
+
+describe('retourPlacement le mercredi', () => {
+  const table = timetable()
+
+  it('ramène au collège à la sortie quand elle précède 11:30', () => {
+    expect(retourPlacement(table, WEDNESDAY, '10:20')).toEqual({ place: 'college', time: '10:20' })
+  })
+
+  it.each(['11:30', '12:30'])('ramène à 13:15 pour une sortie à %s', (exit) => {
+    expect(retourPlacement(table, WEDNESDAY, exit)).toEqual({ place: 'college', time: '13:15' })
   })
 })
