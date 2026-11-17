@@ -37,6 +37,12 @@ describe('workflow CI', () => {
     expect(release).toContain('fromJSON(steps.release-please.outputs.pr).headBranchName')
   })
 
+  it('contrôle aussi les commits de la PR de release, check requis comme verify', () => {
+    const commits = job('commits')
+    expect(commits).toContain("github.event_name == 'workflow_dispatch'")
+    expect(commits).toContain('git merge-base origin/main HEAD')
+  })
+
   it('ne déploie que si une release vient d’être créée', () => {
     const deploy = job('deploy')
     expect(deploy).toContain('needs: release')
