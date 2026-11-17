@@ -1,7 +1,8 @@
 import type { Presence } from '../../planning/types'
 import { RadioGroupItem } from '../atoms/ui/radio-group'
 
-type PresenceOptionProps = { id: string; value: Presence; label: string }
+/** `'hours'`: present, with the day's hours modified. */
+type PresenceOptionProps = { id: string; value: Presence | 'hours'; label: string }
 
 /** One choice of the presence panel. The whole row answers to a click, through its label. */
 export function PresenceOption({ id, value, label }: PresenceOptionProps) {

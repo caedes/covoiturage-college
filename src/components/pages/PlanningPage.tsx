@@ -11,13 +11,19 @@ import {
   writeFailureMessage,
   writeSuccessMessage,
 } from '../../lib/planningLabels'
-import { togglePermanence, toggleSkipped, withPresence } from '../../planning/childOptions'
+import {
+  togglePermanence,
+  toggleSkipped,
+  withHours,
+  withPresence,
+} from '../../planning/childOptions'
 import { addDays, displayedMonday, initialDay, parisToday } from '../../planning/dates'
 import { ZONE_A_2026_2027 } from '../../planning/holidays'
 import type {
   ChildDay,
   ChildId,
   DayPlan,
+  HoursChange,
   PermanenceOffer,
   PlannedTrip,
   Presence,
@@ -306,6 +312,13 @@ export function PlanningPage() {
     )
   const changePresence = (childId: ChildId, presence: Presence) =>
     saveChildDay(withPresence(day.date, childId, presence))
+  /** The usual slot comes from the day's roster: the panel only offers hours to a child who has one. */
+  const changeHours = (childId: ChildId, change: HoursChange) => {
+    const usual = day.children.find((child) => child.childId === childId)?.hours?.usual
+    if (usual !== undefined) {
+      saveChildDay(withHours(optionsOf(childId), day.date, childId, change, usual))
+    }
+  }
   /**
    * Taken off the retour, a child on permanence goes back to their usual trip, chip and all: the
    * focus goes to the section rather than being lost.
@@ -341,7 +354,12 @@ export function PlanningPage() {
         notice={notice === null ? null : <p className="text-sm text-muted-foreground">{notice}</p>}
         presence={
           empty ? null : (
-            <PresenceBar key={day.date} roster={day.children} onPresenceChange={changePresence} />
+            <PresenceBar
+              key={day.date}
+              roster={day.children}
+              onPresenceChange={changePresence}
+              onHoursChange={changeHours}
+            />
           )
         }
         aller={

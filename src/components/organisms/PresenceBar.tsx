@@ -1,19 +1,22 @@
 import { useId, useRef, useState } from 'react'
 import { presenceLabel } from '../../lib/planningLabels'
-import type { ChildId, DayChild, Presence } from '../../planning/types'
+import type { ChildId, DayChild, HoursChange, Presence } from '../../planning/types'
 import { ChildChip } from '../molecules/ChildChip'
-import { PresencePanel } from './PresencePanel'
+import { hoursModified, PresencePanel } from './PresencePanel'
 
 type PresenceBarProps = {
   roster: DayChild[]
   onPresenceChange?: (childId: ChildId, presence: Presence) => void
+  /** Without it, the panel keeps its three presences and offers no hours. */
+  onHoursChange?: (childId: ChildId, change: HoursChange) => void
 }
 
 /**
- * The day's presence of each child. The viewer's own children open a panel with the three
- * choices; one panel at a time, and closing it hands the focus back to its chip.
+ * The day's presence of each child, with their hours when modified. The viewer's own children
+ * open a panel with their choices; one panel at a time, and closing it hands the focus back to
+ * its chip.
  */
-export function PresenceBar({ roster, onPresenceChange }: PresenceBarProps) {
+export function PresenceBar({ roster, onPresenceChange, onHoursChange }: PresenceBarProps) {
   const titleId = useId()
   const panelId = useId()
   const [openId, setOpenId] = useState<ChildId | null>(null)
@@ -52,7 +55,12 @@ export function PresenceBar({ roster, onPresenceChange }: PresenceBarProps) {
             return (
               <li key={child.childId}>
                 <ChildChip
-                  label={presenceLabel(child.firstName, child.gender, child.presence)}
+                  label={presenceLabel(
+                    child.firstName,
+                    child.gender,
+                    child.presence,
+                    hoursModified(child.hours) ? child.hours : undefined,
+                  )}
                   colorSlot={child.colorSlot}
                   active={child.presence === 'present'}
                   onClick={
@@ -72,12 +80,19 @@ export function PresenceBar({ roster, onPresenceChange }: PresenceBarProps) {
       </div>
       {open === undefined || onPresenceChange === undefined ? null : (
         <PresencePanel
+          key={open.childId}
           id={panelId}
-          child={open}
+          child={onHoursChange === undefined ? withoutHours(open) : open}
           onChange={(presence) => onPresenceChange(open.childId, presence)}
+          onHoursChange={(change) => onHoursChange?.(open.childId, change)}
           onClose={close}
         />
       )}
     </section>
   )
+}
+
+/** The child as a panel without hour pickers sees them. */
+function withoutHours({ hours: _hours, ...child }: DayChild): DayChild {
+  return child
 }

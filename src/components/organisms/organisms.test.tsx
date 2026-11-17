@@ -1,7 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import type { DayChild, PlannedTrip } from '../../planning/types'
+import type { DayChild, DayHours, PlannedTrip } from '../../planning/types'
+import { BELL_TIMES } from '../../test/planningFixtures'
 import { Tabs } from '../atoms/ui/tabs'
 import { DaySelector } from './DaySelector'
 import { PresenceBar } from './PresenceBar'
@@ -138,7 +139,8 @@ describe('PresenceBar', () => {
     await user.click(chip)
     expect(chip).toHaveAttribute('aria-expanded', 'true')
     const panel = screen.getByRole('radiogroup', { name: 'Présence de Basile' })
-    expect(chip).toHaveAttribute('aria-controls', panel.id)
+    const controlled = document.getElementById(chip.getAttribute('aria-controls') ?? '')
+    expect(controlled).toContainElement(panel)
     expect(within(panel).getByRole('radio', { name: 'Absent du collège' })).toBeChecked()
     await user.click(
       within(panel).getByRole('radio', { name: 'Au collège, mais sans covoiturage' }),
@@ -162,7 +164,143 @@ describe('PresenceBar', () => {
     render(<PresenceBar roster={ROSTER} onPresenceChange={vi.fn()} />)
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it('propose les horaires modifiés en deuxième choix, sans rien enregistrer avant une heure', async () => {
+    const user = userEvent.setup()
+    const onPresenceChange = vi.fn()
+    const onHoursChange = vi.fn()
+    render(
+      <PresenceBar
+        roster={withAliceHours({})}
+        onPresenceChange={onPresenceChange}
+        onHoursChange={onHoursChange}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice' }))
+    const panel = screen.getByRole('radiogroup', { name: "Présence d'Alice" })
+    expect(within(panel).getAllByRole('radio').map(labelOf)).toEqual([
+      'Présente · covoiturage normal',
+      'Présente · horaires modifiés',
+      'Absente du collège',
+      'Au collège, mais sans covoiturage',
+    ])
+    expect(screen.queryByRole('radiogroup', { name: "Heure d'entrée d'Alice" })).toBeNull()
+    await user.click(within(panel).getByRole('radio', { name: 'Présente · horaires modifiés' }))
+    expect(onPresenceChange).not.toHaveBeenCalled()
+    expect(onHoursChange).not.toHaveBeenCalled()
+    expect(screen.getByRole('radiogroup', { name: "Heure d'entrée d'Alice" })).toBeInTheDocument()
+    const exit = screen.getByRole('radiogroup', { name: "Heure de sortie d'Alice" })
+    expect(within(exit).getByRole('radio', { name: '16:00' })).toBeChecked()
+    await user.click(within(exit).getByRole('radio', { name: '12:30' }))
+    expect(onHoursChange).toHaveBeenCalledWith('alice', { end: '12:30' })
+    expect(onPresenceChange).not.toHaveBeenCalled()
+  })
+
+  it('revient au covoiturage normal sans rien écrire quand aucune heure n’a été touchée', async () => {
+    const user = userEvent.setup()
+    const onPresenceChange = vi.fn()
+    render(
+      <PresenceBar
+        roster={withAliceHours({})}
+        onPresenceChange={onPresenceChange}
+        onHoursChange={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice' }))
+    await user.click(screen.getByRole('radio', { name: 'Présente · horaires modifiés' }))
+    await user.click(screen.getByRole('radio', { name: 'Présente · covoiturage normal' }))
+    expect(onPresenceChange).not.toHaveBeenCalled()
+    expect(screen.queryByRole('radiogroup', { name: "Heure d'entrée d'Alice" })).toBeNull()
+    expect(screen.getByRole('radio', { name: 'Présente · covoiturage normal' })).toBeChecked()
+  })
+
+  it("affiche l'horaire modifié sur la pastille et ouvre le panneau sur les horaires modifiés", async () => {
+    const user = userEvent.setup()
+    const onPresenceChange = vi.fn()
+    render(
+      <PresenceBar
+        roster={withAliceHours({ end: '12:30', effect: { aller: null, retour: '12:30' } })}
+        onPresenceChange={onPresenceChange}
+        onHoursChange={vi.fn()}
+      />,
+    )
+    const chip = screen.getByRole('button', { name: 'Alice · 08:25 – 12:30' })
+    expect(chip).toHaveAttribute('data-active', 'true')
+    await user.click(chip)
+    expect(screen.getByRole('radio', { name: 'Présente · horaires modifiés' })).toBeChecked()
+    const exit = screen.getByRole('radiogroup', { name: "Heure de sortie d'Alice" })
+    expect(within(exit).getByRole('radio', { name: '12:30' })).toBeChecked()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Retour 12:30 au collège : il faudra un conducteur.',
+    )
+    await user.click(screen.getByRole('radio', { name: 'Présente · covoiturage normal' }))
+    expect(onPresenceChange).toHaveBeenCalledWith('alice', 'present')
+  })
+
+  it("n'affiche pas de message quand le changement ne crée aucun trajet", async () => {
+    const user = userEvent.setup()
+    render(
+      <PresenceBar
+        roster={withAliceHours({ end: '17:00' })}
+        onPresenceChange={vi.fn()}
+        onHoursChange={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice · 08:25 – 17:00' }))
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+  })
+
+  it('ferme le panneau avec Échap depuis une heure', async () => {
+    const user = userEvent.setup()
+    render(
+      <PresenceBar
+        roster={withAliceHours({ end: '12:30' })}
+        onPresenceChange={vi.fn()}
+        onHoursChange={vi.fn()}
+      />,
+    )
+    const chip = screen.getByRole('button', { name: 'Alice · 08:25 – 12:30' })
+    await user.click(chip)
+    await user.click(screen.getByRole('radio', { name: '12:30' }))
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('radiogroup')).toBeNull()
+    expect(chip).toHaveFocus()
+  })
+
+  it('garde ses trois choix pour un enfant sans horaires connus', async () => {
+    const user = userEvent.setup()
+    render(
+      <PresenceBar roster={rosterOf('alice')} onPresenceChange={vi.fn()} onHoursChange={vi.fn()} />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice' }))
+    expect(screen.getAllByRole('radio')).toHaveLength(3)
+    expect(screen.queryByRole('radio', { name: 'Présente · horaires modifiés' })).toBeNull()
+  })
 })
+
+/** The accessible name of a Radix radio, given by its `<label for>`. */
+function labelOf(radio: HTMLElement): string | null {
+  return document.querySelector(`label[for="${radio.id}"]`)?.textContent ?? null
+}
+
+/** Alice, editable, with a 08:25 – 16:00 day and the given effective hours. */
+function withAliceHours(hours: Partial<DayHours>): DayChild[] {
+  return rosterOf('alice').map((child) =>
+    child.childId === 'alice'
+      ? {
+          ...child,
+          hours: {
+            usual: { start: '08:25', end: '16:00' },
+            start: '08:25',
+            end: '16:00',
+            bellTimes: BELL_TIMES,
+            effect: { aller: null, retour: null },
+            ...hours,
+          },
+        }
+      : child,
+  )
+}
 
 describe('TripCard', () => {
   it("rend l'heure, le libellé, les passagers, les retraits et le statut", () => {
