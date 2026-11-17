@@ -16,6 +16,7 @@
     "test:e2e:ui": "npx --yes firebase-tools@15 emulators:exec --project demo-covoiturage --only auth,firestore \"playwright test --ui\"",
     "rules:deploy": "npx --yes firebase-tools@15 deploy --only firestore:rules",
     "import": "tsx scripts/import.ts",
+    "releases:backfill": "tsx scripts/backfill-releases.ts",
     "check:bundle": "tsx scripts/check-bundle.ts",
     "icons": "tsx scripts/icons.ts",
     "lint": "biome check .",
