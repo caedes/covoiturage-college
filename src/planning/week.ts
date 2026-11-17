@@ -1,13 +1,14 @@
 import { tripAction } from './actions'
 import { schoolDays, weekdayOf, weekType } from './dates'
 import { isHoliday } from './holidays'
-import { applyChildDay, defaultLegs, retourPlacement, timetableFor } from './legs'
+import { applyChildDay, defaultLegs, retourPlacement, scheduledSlot, timetableFor } from './legs'
 import { resolveStatus } from './status'
 import { carpoolKey, describeTrip, groupTrips, permanenceOffers } from './trips'
 import type {
   Carpool,
   ChildDay,
   ChildId,
+  DayHours,
   DayPlan,
   Direction,
   HolidayCalendar,
@@ -57,6 +58,39 @@ function emptyTrip(
     ...describeTrip(direction, place),
     riders: [],
     excluded: [],
+  }
+}
+
+/**
+ * A child's hours for the day with the car trips they call for, or `null` without bell times or
+ * lessons. A later start moves the aller; an earlier exit moves the retour only when it differs
+ * from where the usual exit already leads (bus, or Wednesday's 13:15).
+ */
+function dayHours(
+  timetable: Timetable,
+  childId: ChildId,
+  date: IsoDate,
+  childDay: ChildDay | undefined,
+): DayHours | null {
+  const bellTimes = timetable.bellTimes
+  const slot = scheduledSlot(timetable, childId, date, childDay)
+  if (bellTimes === undefined || slot === null) {
+    return null
+  }
+  const { usual, start, end } = slot
+  const retour = retourPlacement(timetable, date, end)
+  const usualRetour = retourPlacement(timetable, date, usual.end)
+  const retourCalled =
+    end !== usual.end && retour.place === 'college' && retour.time !== usualRetour.time
+  return {
+    usual,
+    start,
+    end,
+    bellTimes,
+    effect: {
+      aller: start > usual.start ? start : null,
+      retour: retourCalled ? retour.time : null,
+    },
   }
 }
 
@@ -134,6 +168,7 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
     ...empty,
     children: childIds.flatMap((childId) => {
       const child = timetable.children[childId]
+      const hours = dayHours(timetable, childId, date, days.get(childId))
       return child === undefined
         ? []
         : [
@@ -143,6 +178,7 @@ function planDay(date: IsoDate, input: BuildWeekInput, carpools: Map<string, Car
               gender: child.gender,
               colorSlot: child.colorSlot,
               presence: days.get(childId)?.presence ?? 'present',
+              ...(hours === null ? {} : { hours }),
               editable: !empty.locked && input.viewerChildIds.includes(childId),
             },
           ]
