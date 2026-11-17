@@ -267,6 +267,31 @@ describe('PresenceBar', () => {
     expect(chip).toHaveFocus()
   })
 
+  it('ouvre les horaires modifiés depuis un enfant absent', async () => {
+    const user = userEvent.setup()
+    const onPresenceChange = vi.fn()
+    const onHoursChange = vi.fn()
+    const roster = withAliceHours({}).map((child) =>
+      child.childId === 'alice' ? { ...child, presence: 'absent' as const } : child,
+    )
+    render(
+      <PresenceBar
+        roster={roster}
+        onPresenceChange={onPresenceChange}
+        onHoursChange={onHoursChange}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice · absente' }))
+    await user.click(screen.getByRole('radio', { name: 'Présente · horaires modifiés' }))
+    expect(screen.getByRole('radio', { name: 'Présente · horaires modifiés' })).toBeChecked()
+    expect(onPresenceChange).not.toHaveBeenCalled()
+    expect(onHoursChange).not.toHaveBeenCalled()
+    const exit = screen.getByRole('radiogroup', { name: "Heure de sortie d'Alice" })
+    await user.click(within(exit).getByRole('radio', { name: '12:30' }))
+    expect(onHoursChange).toHaveBeenCalledWith('alice', { end: '12:30' })
+    expect(onPresenceChange).not.toHaveBeenCalled()
+  })
+
   it('garde ses trois choix pour un enfant sans horaires connus', async () => {
     const user = userEvent.setup()
     render(

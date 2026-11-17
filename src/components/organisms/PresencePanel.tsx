@@ -45,9 +45,7 @@ export function PresencePanel({ id, child, onChange, onHoursChange, onClose }: P
   const { hours } = child
   const modified = child.presence === 'present' && hoursModified(hours)
   const checked: Choice =
-    hours !== undefined && child.presence === 'present' && (hoursPicked || modified)
-      ? 'hours'
-      : child.presence
+    hours !== undefined && (hoursPicked || modified) ? 'hours' : child.presence
   const choices: Choice[] =
     hours === undefined ? PRESENCES : ['present', 'hours', 'absent', 'sansCovoiturage']
   const message =
