@@ -6,9 +6,12 @@ on:
   push:
     branches: [main]
 
+# Sur une PR, un nouveau push rend le run precedent inutile. Sur main, jamais :
+# annuler le run de la fusion d'une PR de release couperait la release et le
+# deploiement en cours.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -113,12 +116,33 @@ jobs:
           path: dist
           retention-days: 7
 
+  # Apres les tests seulement : aucune version n'est publiee pour du code rouge.
+  # A la fusion de la PR de release, Release Please cree le tag et la release
+  # GitHub ; a tout autre push, il ouvre ou met a jour la PR de release.
+  release:
+    name: release
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release-please.outputs.release_created }}
+    steps:
+      - id: release-please
+        uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Livrer, c'est fusionner la PR de release : un push ordinaire ne deploie
+  # plus rien. Le dist/ de verify a ete construit depuis le commit de release,
+  # il porte donc la version qui vient d'etre publiee.
   deploy:
     name: deploy
-    needs: verify
-    # Jamais sur une pull request : la garde est fausse, le job apparait skipped
-    # et ne bloque rien.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     steps:
       # En premier : checkout nettoie le workspace. Place apres le telechargement
