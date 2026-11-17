@@ -17,6 +17,22 @@ describe('toTimetable', () => {
   it("écarte ce qui n'est pas un objet", () => {
     expect(toTimetable(undefined)).toBeNull()
   })
+
+  it('garde les sonneries', () => {
+    const bellTimes = { starts: ['08:25', '10:35'], ends: ['12:30', '16:00'] }
+    expect(toTimetable({ ...timetable(), bellTimes })?.bellTimes).toEqual(bellTimes)
+  })
+
+  it('accepte un emploi du temps sans sonneries', () => {
+    const result = toTimetable(timetable())
+    expect(result).not.toBeNull()
+    expect(result).not.toHaveProperty('bellTimes')
+  })
+
+  it('écarte des sonneries mal formées', () => {
+    const bellTimes = { starts: ['10h35'], ends: ['12:30'] }
+    expect(toTimetable({ ...timetable(), bellTimes })).toBeNull()
+  })
 })
 
 describe('toCarpool', () => {
@@ -51,6 +67,31 @@ describe('toChildDay', () => {
   it('écarte une présence hors liste', () => {
     expect(
       toChildDay({ date: '2026-09-28', childId: 'alice', presence: 'malade', skipped: [] }),
+    ).toBeNull()
+  })
+
+  it('garde les heures modifiées', () => {
+    const day = childDay({
+      date: '2026-09-28',
+      childId: 'alice',
+      presence: 'present',
+      start: '10:35',
+      end: '12:30',
+    })
+    const result = toChildDay(day)
+    expect(result?.start).toBe('10:35')
+    expect(result?.end).toBe('12:30')
+  })
+
+  it('écarte une heure de sortie invalide', () => {
+    expect(
+      toChildDay({
+        date: '2026-09-28',
+        childId: 'alice',
+        presence: 'present',
+        skipped: [],
+        end: '25:00',
+      }),
     ).toBeNull()
   })
 })

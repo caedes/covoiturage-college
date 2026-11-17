@@ -39,4 +39,21 @@ function RadioGroupItem({
   )
 }
 
-export { RadioGroup, RadioGroupItem }
+/** A radio drawn as a pill holding its own text, which is also its accessible name. */
+function RadioGroupChip({
+  className,
+  ...props
+}: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+  return (
+    <RadioGroupPrimitive.Item
+      data-slot="radio-group-chip"
+      className={cn(
+        'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-full border border-input px-3 text-sm tabular-nums transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+export { RadioGroup, RadioGroupChip, RadioGroupItem }

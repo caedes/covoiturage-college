@@ -184,6 +184,8 @@ export const firebasePlanningRepository: PlanningRepository = {
         presence: childDay.presence,
         skipped: childDay.skipped,
         ...(childDay.permanence === undefined ? {} : { permanence: childDay.permanence }),
+        ...(childDay.start === undefined ? {} : { start: childDay.start }),
+        ...(childDay.end === undefined ? {} : { end: childDay.end }),
         updatedByUid: authorUid,
         updatedAt: serverTimestamp(),
       })

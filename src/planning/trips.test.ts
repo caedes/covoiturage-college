@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { childDay, timetable } from '../test/planningFixtures'
+import { BELL_TIMES, childDay, timetable } from '../test/planningFixtures'
 import { applyChildDay, defaultLegs } from './legs'
 import { carpoolKey, groupTrips, permanenceOffers } from './trips'
 import type { ChildDay, Leg } from './types'
@@ -104,6 +104,20 @@ describe('permanenceOffers', () => {
         tripKey: '2026-09-28_retour_centre-bourg_1745',
         active: false,
       },
+    ])
+  })
+
+  it("propose les permanences à partir de la sortie modifiée de l'enfant", () => {
+    const table = timetable({ bellTimes: BELL_TIMES })
+    const offers = permanenceOffers(
+      table,
+      MONDAY_A,
+      ORDER,
+      daysMap([childDay({ childId: 'alice', date: MONDAY_A, end: '12:30' })]),
+    ).filter((offer) => offer.childId === 'alice')
+    expect(offers.map((offer) => [offer.exitTime, offer.active])).toEqual([
+      ['16:00', false],
+      ['17:00', false],
     ])
   })
 

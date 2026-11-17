@@ -4,6 +4,11 @@ import { describe, expect, it } from 'vitest'
 import { validImportFile } from './fixtures'
 import { parseImportFile } from './schema'
 
+const BELLS = () => ({
+  entrees: ['08:25', '09:25', '10:35', '11:35', '13:00', '14:00', '15:00', '16:05'],
+  sorties: ['09:20', '10:20', '11:30', '12:30', '13:55', '14:55', '16:00', '17:00'],
+})
+
 function errorsOf(raw: unknown): string[] {
   const result = parseImportFile(raw)
   return result.ok ? [] : result.errors
@@ -17,6 +22,41 @@ describe('parseImportFile', () => {
   it("accepte l'exemple fictif versionné dans data/", () => {
     const example: unknown = JSON.parse(readFileSync('data/import.example.json', 'utf8'))
     expect(errorsOf(example)).toEqual([])
+  })
+
+  it('accepte les sonneries du collège', () => {
+    const file = { ...validImportFile(), sonneries: BELLS() }
+    expect(errorsOf(file)).toEqual([])
+  })
+
+  it('accepte un fichier sans sonneries', () => {
+    expect('sonneries' in validImportFile()).toBe(false)
+    expect(errorsOf(validImportFile())).toEqual([])
+  })
+
+  it("refuse des entrées qui ne sont pas dans l'ordre", () => {
+    const file = { ...validImportFile(), sonneries: { ...BELLS(), entrees: ['09:25', '08:25'] } }
+    expect(errorsOf(file)).toEqual([
+      "sonneries.entrees : heures attendues dans l'ordre, sans doublon",
+    ])
+  })
+
+  it('refuse deux sorties identiques', () => {
+    const file = { ...validImportFile(), sonneries: { ...BELLS(), sorties: ['09:20', '09:20'] } }
+    expect(errorsOf(file)).toEqual([
+      "sonneries.sorties : heures attendues dans l'ordre, sans doublon",
+    ])
+  })
+
+  it('refuse une liste de sorties vide', () => {
+    const file = { ...validImportFile(), sonneries: { ...BELLS(), sorties: [] } }
+    expect(errorsOf(file)).toHaveLength(1)
+    expect(errorsOf(file)[0]).toMatch(/^sonneries\.sorties : /)
+  })
+
+  it("refuse une sonnerie au mauvais format, sans erreur d'ordre en plus", () => {
+    const file = { ...validImportFile(), sonneries: { ...BELLS(), entrees: ['08:25', '10h35'] } }
+    expect(errorsOf(file)).toEqual(['sonneries.entrees.1 : heure attendue au format HH:MM'])
   })
 
   it('passe les adresses en minuscules et sans espaces', () => {

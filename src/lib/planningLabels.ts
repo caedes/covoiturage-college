@@ -1,8 +1,10 @@
 import type { WriteOutcome } from '../planning/ports'
 import type {
+  DayHours,
   Gender,
   IsoDate,
   Presence,
+  Time,
   TripAction,
   TripStatus,
   Weekday,
@@ -23,7 +25,10 @@ const LONG: Record<Weekday, string> = {
   thu: 'jeudi',
   fri: 'vendredi',
 }
-const MONTH = new Intl.DateTimeFormat('fr-FR', { month: 'long', timeZone: 'UTC' })
+const MONTH = new Intl.DateTimeFormat('fr-FR', {
+  month: 'long',
+  timeZone: 'UTC',
+})
 
 function month(date: IsoDate): string {
   return MONTH.format(new Date(`${date}T00:00:00Z`))
@@ -58,15 +63,27 @@ export function dayButtonLabel(weekday: Weekday, date: IsoDate, covered: boolean
   return covered ? `${label}, tous les trajets sont couverts` : label
 }
 
-export function presenceLabel(firstName: string, gender: Gender, presence: Presence): string {
+/** The child's name, followed by the modified hours of the day when they ride with them. */
+export function presenceLabel(
+  firstName: string,
+  gender: Gender,
+  presence: Presence,
+  hours?: { start: Time; end: Time },
+): string {
   if (presence === 'absent') {
     return `${firstName} · ${gender === 'female' ? 'absente' : 'absent'}`
+  }
+  if (presence === 'present' && hours) {
+    return `${firstName} · ${hours.start} – ${hours.end}`
   }
   return presence === 'sansCovoiturage' ? `${firstName} · sans covoiturage` : firstName
 }
 
 const PRESENCE_OPTION: Record<Presence, Record<Gender, string>> = {
-  present: { female: 'Présente · covoiturage normal', male: 'Présent · covoiturage normal' },
+  present: {
+    female: 'Présente · covoiturage normal',
+    male: 'Présent · covoiturage normal',
+  },
   absent: { female: 'Absente du collège', male: 'Absent du collège' },
   sansCovoiturage: {
     female: 'Au collège, mais sans covoiturage',
@@ -79,11 +96,39 @@ export function presenceOptionLabel(gender: Gender, presence: Presence): string 
   return PRESENCE_OPTION[presence][gender]
 }
 
+/** "de Basile", "d'Alice": the preposition elided before a vowel. */
+function ofName(firstName: string): string {
+  return /^[aeiouyàâéèêëîïôœ]/i.test(firstName) ? `d'${firstName}` : `de ${firstName}`
+}
+
 /** "Présence de Basile", "Présence d'Alice": elided before a vowel. */
 export function presencePanelLabel(firstName: string): string {
-  return /^[aeiouyàâéèêëîïôœ]/i.test(firstName)
-    ? `Présence d'${firstName}`
-    : `Présence de ${firstName}`
+  return `Présence ${ofName(firstName)}`
+}
+
+/** The presence choice that opens the hour pickers. */
+export function hoursOptionLabel(gender: Gender): string {
+  return gender === 'female' ? 'Présente · horaires modifiés' : 'Présent · horaires modifiés'
+}
+
+/** Accessible name of an hour picker: "Heure d'entrée d'Alice", "Heure de sortie de Basile". */
+export function hourPickerLabel(kind: 'start' | 'end', firstName: string): string {
+  return `Heure ${kind === 'start' ? "d'entrée" : 'de sortie'} ${ofName(firstName)}`
+}
+
+/** Tells the parent which trips modified hours create, or `null` when they create none. */
+export function hoursEffectMessage(effect: DayHours['effect']): string | null {
+  const { aller, retour } = effect
+  if (aller && retour) {
+    return `Aller ${aller} et retour ${retour} au collège : il faudra des conducteurs.`
+  }
+  if (aller) {
+    return `Aller ${aller} au collège : il faudra un conducteur.`
+  }
+  if (retour) {
+    return `Retour ${retour} au collège : il faudra un conducteur.`
+  }
+  return null
 }
 
 /** "Sans Alice et Basile sur ce trajet", or an empty string when nobody was taken off. */

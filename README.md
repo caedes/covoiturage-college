@@ -3,7 +3,9 @@
 Application d'entraide entre parents pour organiser les trajets domicile ↔ collège.
 Ce dépôt contient le socle technique (routage, layout accessible et harnais de test)
 et le planning de la semaine. Les parents peuvent prendre, reprendre et annuler un
-trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs propres enfants.
+trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs propres
+enfants, ainsi que les horaires d'entrée et de sortie modifiés d'un jour donné,
+choisis parmi les sonneries du collège.
 
 ## Commandes
 
@@ -120,6 +122,12 @@ affiche l'adresse exacte que l'application a cherchée.
 **Changer d'emploi du temps** — nouveau trimestre, erreur découverte : importer une
 nouvelle version avec un `valableDu` postérieur à aujourd'hui. Une version déjà en vigueur
 n'est jamais réécrite, pour ne pas modifier les journées passées.
+
+**Sonneries** — le fichier d'import porte une clé `sonneries: { entrees, sorties }`, les
+heures de sonnerie du collège, stockées avec l'emploi du temps (`bellTimes`). Elles
+alimentent le choix d'horaires modifiés du jour. Ajouter des sonneries à l'emploi du temps
+en vigueur revient à importer une nouvelle version, avec un `valableDu` postérieur à
+aujourd'hui.
 
 **Essayer sans risque** contre un Firestore local jetable :
 

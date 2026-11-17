@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { defaultUid, member } from '../../test/fakeAuth'
 import { planning } from '../../test/fakePlanning'
-import { childDay } from '../../test/planningFixtures'
+import { BELL_TIMES, childDay, timetable } from '../../test/planningFixtures'
 import { renderRoute } from '../../test/renderRoute'
 
 const WEDNESDAY = '2026-09-30'
@@ -40,6 +40,35 @@ describe('options des enfants', () => {
         authorUid: defaultUid,
       },
     ])
+  })
+
+  it("avance la sortie de son enfant depuis le panneau, et l'affiche sur la pastille", async () => {
+    const user = userEvent.setup()
+    const store = planning({ timetables: [timetable({ bellTimes: BELL_TIMES })] })
+    await renderRoute('/', { auth: parentOf('alice'), planning: store })
+    await user.click(screen.getByRole('button', { name: /^jeudi 1/ }))
+    await user.click(within(region('Présence')).getByRole('button', { name: 'Alice' }))
+    await user.click(screen.getByRole('radio', { name: 'Présente · horaires modifiés' }))
+    expect(store.writes()).toEqual([])
+    const exit = screen.getByRole('radiogroup', { name: "Heure de sortie d'Alice" })
+    await user.click(within(exit).getByRole('radio', { name: '12:30' }))
+    expect(store.writes()).toEqual([
+      {
+        kind: 'saveChildDay',
+        key: '2026-10-01_alice',
+        childDay: {
+          date: THURSDAY,
+          childId: 'alice',
+          presence: 'present',
+          skipped: [],
+          end: '12:30',
+        },
+        authorUid: defaultUid,
+      },
+    ])
+    expect(
+      within(region('Présence')).getByRole('button', { name: 'Alice · 08:25 – 12:30' }),
+    ).toHaveAttribute('aria-expanded', 'true')
   })
 
   it("retire son enfant d'un seul trajet, puis l'y remet", async () => {

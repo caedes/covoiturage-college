@@ -1,4 +1,4 @@
-import type { Carpool, ChildDay, DaySlot, Timetable, Weekday } from '../planning/types'
+import type { BellTimes, Carpool, ChildDay, DaySlot, Timetable, Weekday } from '../planning/types'
 
 type WeekSpec = Record<Weekday, [string, string]>
 
@@ -30,6 +30,12 @@ const CHLOE: WeekSpec = {
   wed: ['09:25', '12:30'],
   thu: ['08:25', '16:00'],
   fri: ['08:25', '17:00'],
+}
+
+/** The school's bell times, for tests that set modified hours. */
+export const BELL_TIMES: BellTimes = {
+  starts: ['08:25', '09:25', '10:35', '11:35', '13:00', '14:00', '15:00', '16:05'],
+  ends: ['09:20', '10:20', '11:30', '12:30', '13:55', '14:55', '16:00', '17:00'],
 }
 
 /** A fictitious timetable: one evening bus (17:00 → 17:45); only Alice's Monday differs in B. */

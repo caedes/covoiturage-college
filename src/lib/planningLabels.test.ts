@@ -8,6 +8,9 @@ import {
   dayLongLabel,
   dayNumber,
   dayShortLabel,
+  hourPickerLabel,
+  hoursEffectMessage,
+  hoursOptionLabel,
   presenceLabel,
   presenceOptionLabel,
   presencePanelLabel,
@@ -223,5 +226,47 @@ describe('confirmations', () => {
       cancel: 'Retour',
       confirm: 'Prendre le trajet',
     })
+  })
+})
+
+describe('horaires modifiés', () => {
+  it("ajoute les horaires au prénom d'un enfant présent", () => {
+    expect(
+      presenceLabel('Alice', 'female', 'present', {
+        start: '10:35',
+        end: '12:30',
+      }),
+    ).toBe('Alice · 10:35 – 12:30')
+  })
+
+  it("ignore les horaires quand l'enfant n'est pas présent", () => {
+    const hours = { start: '10:35', end: '12:30' }
+    expect(presenceLabel('Alice', 'female', 'absent', hours)).toBe('Alice · absente')
+  })
+
+  it("accorde l'option au genre de l'enfant", () => {
+    expect(hoursOptionLabel('female')).toBe('Présente · horaires modifiés')
+    expect(hoursOptionLabel('male')).toBe('Présent · horaires modifiés')
+  })
+
+  it("élide devant une voyelle dans le nom du sélecteur d'heure", () => {
+    expect(hourPickerLabel('start', 'Alice')).toBe("Heure d'entrée d'Alice")
+    expect(hourPickerLabel('end', 'Basile')).toBe('Heure de sortie de Basile')
+  })
+
+  it("annonce les trajets que l'aller et le retour demandent", () => {
+    expect(hoursEffectMessage({ aller: '10:35', retour: '12:30' })).toBe(
+      'Aller 10:35 et retour 12:30 au collège : il faudra des conducteurs.',
+    )
+    expect(hoursEffectMessage({ aller: '10:35', retour: null })).toBe(
+      'Aller 10:35 au collège : il faudra un conducteur.',
+    )
+    expect(hoursEffectMessage({ aller: null, retour: '12:30' })).toBe(
+      'Retour 12:30 au collège : il faudra un conducteur.',
+    )
+  })
+
+  it("n'annonce rien quand aucun trajet n'est demandé", () => {
+    expect(hoursEffectMessage({ aller: null, retour: null })).toBeNull()
   })
 })

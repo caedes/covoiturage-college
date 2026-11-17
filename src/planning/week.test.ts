@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { carpool, childDay, timetable, VIEWER } from '../test/planningFixtures'
+import { BELL_TIMES, carpool, childDay, timetable, VIEWER } from '../test/planningFixtures'
 import { ZONE_A_2026_2027 } from './holidays'
 import type { BuildWeekInput } from './week'
 import { buildWeek } from './week'
@@ -266,5 +266,68 @@ describe('buildWeek', () => {
         .flatMap((day) => [...day.aller, ...day.retour])
         .every((trip) => trip.action === null),
     ).toBe(true)
+  })
+
+  describe('horaires du jour', () => {
+    const withBells = { timetables: [timetable({ bellTimes: BELL_TIMES })] }
+    const hoursOf = (date: string, childId: string, childDays: BuildWeekInput['childDays'] = []) =>
+      buildWeek(input({ ...withBells, childDays }))
+        .days.find((day) => day.date === date)
+        ?.children.find((child) => child.childId === childId)?.hours
+
+    it('expose les horaires habituels sans effet quand rien n’est modifié', () => {
+      expect(hoursOf(MONDAY_A, 'alice')).toEqual({
+        usual: { start: '08:25', end: '16:00' },
+        start: '08:25',
+        end: '16:00',
+        bellTimes: BELL_TIMES,
+        effect: { aller: null, retour: null },
+      })
+    })
+
+    it('donne les trajets d’une entrée tardive et d’une sortie avancée', () => {
+      const hours = hoursOf(MONDAY_A, 'alice', [
+        childDay({ date: MONDAY_A, childId: 'alice', start: '10:35', end: '12:30' }),
+      ])
+      expect(hours?.effect).toEqual({ aller: '10:35', retour: '12:30' })
+    })
+
+    it('ne crée pas de trajet retour quand la sortie reste celle du car', () => {
+      const hours = hoursOf('2026-10-01', 'alice', [
+        childDay({ date: '2026-10-01', childId: 'alice', end: '17:00' }),
+      ])
+      expect(hours?.effect.retour).toBeNull()
+    })
+
+    it('ne crée pas de trajet retour le mercredi quand la sortie tombe à 12:30', () => {
+      const hours = hoursOf('2026-09-30', 'alice', [
+        childDay({ date: '2026-09-30', childId: 'alice', end: '12:30' }),
+      ])
+      expect(hours?.end).toBe('12:30')
+      expect(hours?.effect.retour).toBeNull()
+    })
+
+    it('ne donne pas de trajet pour un sens retiré', () => {
+      const hours = hoursOf(MONDAY_A, 'alice', [
+        childDay({
+          date: MONDAY_A,
+          childId: 'alice',
+          start: '10:35',
+          end: '12:30',
+          skipped: ['aller', 'retour'],
+        }),
+      ])
+      expect(hours?.effect).toEqual({ aller: null, retour: null })
+      const retourOnly = hoursOf(MONDAY_A, 'alice', [
+        childDay({ date: MONDAY_A, childId: 'alice', start: '10:35', skipped: ['retour'] }),
+      ])
+      expect(retourOnly?.effect.aller).toBe('10:35')
+    })
+
+    it('n’expose pas d’horaires sans sonneries', () => {
+      const child = buildWeek(input()).days[0]?.children[0]
+      expect(child).toBeDefined()
+      expect(child).not.toHaveProperty('hours')
+    })
   })
 })

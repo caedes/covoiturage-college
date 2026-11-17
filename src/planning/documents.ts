@@ -8,6 +8,7 @@ const week = z.object({ mon: slot, tue: slot, wed: slot, thu: slot, fri: slot })
 
 const timetableSchema = z.object({
   validFrom: date,
+  bellTimes: z.object({ starts: z.array(time), ends: z.array(time) }).optional(),
   eveningBuses: z.array(z.object({ classEnd: time, arrival: time })),
   children: z.record(
     z.string(),
@@ -35,6 +36,8 @@ const childDaySchema = z.object({
   childId: z.string().min(1),
   presence: z.enum(['present', 'absent', 'sansCovoiturage']),
   permanence: time.optional(),
+  start: time.optional(),
+  end: time.optional(),
   skipped: z.array(z.enum(['aller', 'retour'])).default([]),
 })
 
