@@ -5,10 +5,6 @@ on:
     branches: [main]
   push:
     branches: [main]
-  # Lance par le job release sur la branche de la PR de release : une PR ouverte
-  # par GITHUB_TOKEN ne declenche aucun workflow, et la regle « main protegee »
-  # exige le check verify pour fusionner.
-  workflow_dispatch:
 
 # Sur une PR, un nouveau push rend le run precedent inutile. Sur main, jamais :
 # annuler le run de la fusion d'une PR de release couperait la release et le
@@ -26,9 +22,8 @@ jobs:
   # compte, donc on les controle tous, pas seulement le titre de la PR.
   commits:
     name: commits
-    # Check requis par la regle « main protegee » : il doit aussi tourner sur la
-    # PR de release, relancee en workflow_dispatch par le job release.
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    # Check requis par la regle « main protegee », comme verify.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -41,10 +36,7 @@ jobs:
       - run: npm ci
       # npx --no -- : sans le separateur, npm peut avaler --from et --to et
       # commitlint passerait a vide.
-      - if: github.event_name == 'pull_request'
-        run: npx --no -- commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-      - if: github.event_name == 'workflow_dispatch'
-        run: npx --no -- commitlint --from "$(git merge-base origin/main HEAD)" --to HEAD --verbose
+      - run: npx --no -- commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
   verify:
     name: verify
@@ -135,27 +127,31 @@ jobs:
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Les ecritures passent par RELEASE_PLEASE_TOKEN, pas par GITHUB_TOKEN.
     permissions:
-      actions: write
-      contents: write
-      pull-requests: write
+      contents: read
     outputs:
       release_created: ${{ steps.release-please.outputs.release_created }}
       sha: ${{ steps.release-please.outputs.sha }}
     steps:
+      # Une PR ouverte par GITHUB_TOKEN ne declenche aucun workflow : les checks
+      # requis (verify, commits) n'y tourneraient jamais et elle resterait
+      # bloquee. Ouverte avec le jeton du proprietaire, elle declenche le CI
+      # comme toute PR. Sans ce secret, echouer ici plutot que bloquer en silence.
+      - name: Verifier le jeton de Release Please
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "Secret RELEASE_PLEASE_TOKEN manquant : voir la section Versions et livraison du README" >&2
+            exit 1
+          fi
       - id: release-please
         uses: googleapis/release-please-action@v5
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-      # GITHUB_TOKEN a le droit de declencher un workflow_dispatch : verify tourne
-      # alors sur le commit exact de la PR de release, et le check requis est rendu.
-      - name: Lancer le CI sur la PR de release
-        if: steps.release-please.outputs.prs_created == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ fromJSON(steps.release-please.outputs.pr).headBranchName }}
-        run: gh workflow run ci.yml --ref "$BRANCH" --repo "$GITHUB_REPOSITORY"
 
   # Livrer, c'est fusionner la PR de release : un push ordinaire ne deploie
   # plus rien. Le dist/ de verify vient du commit pousse ; on ne le deploie que

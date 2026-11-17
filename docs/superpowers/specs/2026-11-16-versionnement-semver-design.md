@@ -116,9 +116,8 @@ puisque l'affichage du numéro est un `feat`.
   « Performances ». Les autres types sont masqués.
 - La PR de release met à jour `package.json`, `package-lock.json`, `CHANGELOG.md` et le
   manifeste. Son titre par défaut (`chore(main): release X.Y.Z`) respecte commitlint.
-- Le dépôt doit autoriser GitHub Actions à créer des PR (réglage
-  « Allow GitHub Actions to create and approve pull requests »). Le propriétaire l'a
-  activé le 2026-11-17.
+- Release Please agit avec le secret `RELEASE_PLEASE_TOKEN`, un jeton personnel du
+  propriétaire limité au dépôt (`Contents` et `Pull requests` en écriture). Voir plus bas.
 
 ### 3. CI et déploiement
 
@@ -145,6 +144,14 @@ du dépôt exige le check `verify` pour fusionner, ce qui bloquerait toute livra
 met à jour. `verify` tourne ainsi sur le commit exact de la release avant la fusion.
 Écartés : un jeton personnel (un secret à renouveler) et le contournement de la règle par
 l'administrateur (possible alors sur toutes les PR).
+
+**Révisé le 2026-11-17, après la première PR de release (#21).** La relance ne marche
+pas : GitHub ne rattache pas à une PR les checks d'un run `workflow_dispatch`, même
+verts sur son commit de tête, et la PR reste bloquée. GitHub crée bien le run
+`pull_request` de la PR, mais le met en attente d'approbation, l'auteur étant
+`github-actions[bot]`. Le propriétaire a choisi le jeton personnel plutôt qu'un clic
+d'approbation à chaque release : Release Please agit avec `RELEASE_PLEASE_TOKEN`, la PR
+de release déclenche le CI comme toute PR, et la relance est retirée.
 
 **Correctif urgent :** on fusionne le `fix`, puis la PR de release, qui propose un patch.
 
