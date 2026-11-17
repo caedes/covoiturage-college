@@ -15,5 +15,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["e2e", "playwright.config.ts"]
+  "include": [
+    "e2e",
+    "playwright.config.ts",
+    "src/planning/dates.ts",
+    "src/planning/holidays.ts",
+    "src/planning/types.ts"
+  ]
 }
