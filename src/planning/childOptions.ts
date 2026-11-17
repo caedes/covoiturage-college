@@ -93,7 +93,8 @@ export function togglePermanence(
 /**
  * « Horaires modifiés »: sets the child's start or end of day, present from then on. An hour equal
  * to the usual one is left out. A new end drops the permanence, which was chosen against the old
- * one. If start would no longer come before end, the other hour goes back to usual.
+ * one. If start would no longer come before end, the other hour goes back to usual; if even the
+ * usual one does not fit, the hour is not stored at all, as the planning would ignore it.
  */
 export function withHours(
   day: ChildDay | undefined,
@@ -110,6 +111,9 @@ export function withHours(
   if ((start ?? usual.start) >= (end ?? usual.end)) {
     if ('start' in change) end = undefined
     else start = undefined
+  }
+  if ((start ?? usual.start) >= (end ?? usual.end)) {
+    return { ...current, presence: 'present' }
   }
   const keepPermanence = 'start' in change && current.permanence !== undefined
   return {

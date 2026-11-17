@@ -9,6 +9,8 @@ type HourPickerProps = {
   /** The hour of the timetable, drawn dashed. */
   usual: Time
   value: Time
+  /** Whether an hour can be chosen; the others stay visible, greyed and skipped by arrow keys. */
+  available: (time: Time) => boolean
   onChange: (time: Time) => void
 }
 
@@ -16,7 +18,7 @@ type HourPickerProps = {
  * One hour among the school's bells, as a row of pills: the usual hour dashed, the chosen one
  * filled. Each choice is passed on as soon as it is made, arrow keys included.
  */
-export function HourPicker({ label, times, usual, value, onChange }: HourPickerProps) {
+export function HourPicker({ label, times, usual, value, available, onChange }: HourPickerProps) {
   const labelId = useId()
   return (
     <div className="flex flex-col gap-1.5">
@@ -39,6 +41,7 @@ export function HourPicker({ label, times, usual, value, onChange }: HourPickerP
           <RadioGroupChip
             key={time}
             value={time}
+            disabled={!available(time)}
             className={cn(time === usual && 'border-dashed border-foreground/40')}
           >
             {time}

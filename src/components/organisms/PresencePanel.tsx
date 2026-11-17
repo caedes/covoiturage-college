@@ -109,6 +109,7 @@ export function PresencePanel({ id, child, onChange, onHoursChange, onClose }: P
             times={hours.bellTimes.starts}
             usual={hours.usual.start}
             value={hours.start}
+            available={(start) => start < hours.end}
             onChange={(start) => changeHours({ start })}
           />
           <HourPicker
@@ -116,6 +117,7 @@ export function PresencePanel({ id, child, onChange, onHoursChange, onClose }: P
             times={hours.bellTimes.ends}
             usual={hours.usual.end}
             value={hours.end}
+            available={(end) => end > hours.start}
             onChange={(end) => changeHours({ end })}
           />
           <p

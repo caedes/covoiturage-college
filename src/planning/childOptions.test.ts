@@ -106,6 +106,19 @@ describe('withHours', () => {
     expect(next.end).toBe('12:30')
     expect(next).not.toHaveProperty('start')
   })
+
+  it("n'enregistre pas une entrée à 14:00 sur une journée 08:25 – 12:30", () => {
+    const wednesday = { start: '08:25', end: '12:30' }
+    const next = withHours(undefined, DATE, 'alice', { start: '14:00' }, wednesday)
+    expect(next).toEqual({ date: DATE, childId: 'alice', presence: 'present', skipped: [] })
+  })
+
+  it("n'enregistre pas une sortie qui précède l'entrée habituelle", () => {
+    const late = { start: '10:35', end: '16:00' }
+    const day = childDay({ date: DATE, childId: 'alice', presence: 'absent', permanence: '17:00' })
+    const next = withHours(day, DATE, 'alice', { end: '09:20' }, late)
+    expect(next).toEqual({ ...day, presence: 'present' })
+  })
 })
 
 describe('toggleSkipped', () => {

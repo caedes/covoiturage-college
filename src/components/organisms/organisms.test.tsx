@@ -292,6 +292,45 @@ describe('PresenceBar', () => {
     expect(onPresenceChange).not.toHaveBeenCalled()
   })
 
+  it('grise les heures impossibles sur une journée 08:25 – 12:30', async () => {
+    const user = userEvent.setup()
+    const morning = { start: '08:25', end: '12:30' }
+    render(
+      <PresenceBar
+        roster={withAliceHours({ usual: morning, ...morning })}
+        onPresenceChange={vi.fn()}
+        onHoursChange={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice' }))
+    await user.click(screen.getByRole('radio', { name: 'Présente · horaires modifiés' }))
+    const entry = screen.getByRole('radiogroup', { name: "Heure d'entrée d'Alice" })
+    for (const time of ['13:00', '14:00', '15:00', '16:05']) {
+      expect(within(entry).getByRole('radio', { name: time })).toBeDisabled()
+    }
+    for (const time of ['08:25', '09:25', '10:35', '11:35']) {
+      expect(within(entry).getByRole('radio', { name: time })).toBeEnabled()
+    }
+    const exit = screen.getByRole('radiogroup', { name: "Heure de sortie d'Alice" })
+    expect(within(exit).getByRole('radio', { name: '09:20' })).toBeEnabled()
+  })
+
+  it("grise les sorties qui ne suivent pas l'entrée modifiée", async () => {
+    const user = userEvent.setup()
+    render(
+      <PresenceBar
+        roster={withAliceHours({ start: '10:35', effect: { aller: '10:35', retour: null } })}
+        onPresenceChange={vi.fn()}
+        onHoursChange={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Alice · 10:35 – 16:00' }))
+    const exit = screen.getByRole('radiogroup', { name: "Heure de sortie d'Alice" })
+    expect(within(exit).getByRole('radio', { name: '09:20' })).toBeDisabled()
+    expect(within(exit).getByRole('radio', { name: '10:20' })).toBeDisabled()
+    expect(within(exit).getByRole('radio', { name: '11:30' })).toBeEnabled()
+  })
+
   it('garde ses trois choix pour un enfant sans horaires connus', async () => {
     const user = userEvent.setup()
     render(
