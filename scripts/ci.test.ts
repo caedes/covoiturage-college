@@ -28,6 +28,15 @@ describe('workflow CI', () => {
     expect(release).toContain('pull-requests: write')
   })
 
+  it('relance le CI sur la PR de release, que le jeton du CI ne déclenche pas', () => {
+    expect(workflow).toMatch(/^on:\n(?:.*\n)*? {2}workflow_dispatch:/m)
+    const release = job('release')
+    expect(release).toContain('actions: write')
+    expect(release).toContain("steps.release-please.outputs.prs_created == 'true'")
+    expect(release).toContain('gh workflow run ci.yml --ref')
+    expect(release).toContain('fromJSON(steps.release-please.outputs.pr).headBranchName')
+  })
+
   it('ne déploie que si une release vient d’être créée', () => {
     const deploy = job('deploy')
     expect(deploy).toContain('needs: release')

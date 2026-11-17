@@ -5,6 +5,10 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Lance par le job release sur la branche de la PR de release : une PR ouverte
+  # par GITHUB_TOKEN ne declenche aucun workflow, et la regle « main protegee »
+  # exige le check verify pour fusionner.
+  workflow_dispatch:
 
 # Sur une PR, un nouveau push rend le run precedent inutile. Sur main, jamais :
 # annuler le run de la fusion d'une PR de release couperait la release et le
@@ -125,6 +129,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
       pull-requests: write
     outputs:
@@ -136,6 +141,14 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+      # GITHUB_TOKEN a le droit de declencher un workflow_dispatch : verify tourne
+      # alors sur le commit exact de la PR de release, et le check requis est rendu.
+      - name: Lancer le CI sur la PR de release
+        if: steps.release-please.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ fromJSON(steps.release-please.outputs.pr).headBranchName }}
+        run: gh workflow run ci.yml --ref "$BRANCH" --repo "$GITHUB_REPOSITORY"
 
   # Livrer, c'est fusionner la PR de release : un push ordinaire ne deploie
   # plus rien. Le dist/ de verify vient du commit pousse ; on ne le deploie que

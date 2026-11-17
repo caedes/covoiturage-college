@@ -137,10 +137,14 @@ puisque l'affichage du numéro est un `feat`.
    release, il porte donc le bon numéro et c'est bien le bundle testé. Les autres pushes
    ne déploient plus rien.
 
-Notre choix : le CI ne tourne pas sur la PR de release. Une PR ouverte avec
-`GITHUB_TOKEN` ne déclenche pas les workflows, et cette PR ne touche que la version et le
-changelog. Le contrôle complet a lieu de toute façon au push sur `main`, avant le tag et
-le déploiement.
+**CI sur la PR de release (choix du propriétaire, après la relecture finale).** Une PR
+ouverte avec `GITHUB_TOKEN` ne déclenche pas les workflows. Or la règle « main protégée »
+du dépôt exige le check `verify` pour fusionner, ce qui bloquerait toute livraison. Le job
+`release` relance donc lui-même le workflow (`gh workflow run ci.yml`, déclencheur
+`workflow_dispatch`) sur la branche de la PR de release, chaque fois qu'il la crée ou la
+met à jour. `verify` tourne ainsi sur le commit exact de la release avant la fusion.
+Écartés : un jeton personnel (un secret à renouveler) et le contournement de la règle par
+l'administrateur (possible alors sur toutes les PR).
 
 **Correctif urgent :** on fusionne le `fix`, puis la PR de release, qui propose un patch.
 
