@@ -13,6 +13,20 @@ const time = z.string().regex(TIME, 'heure attendue au format HH:MM')
 function inOrder(earlier: string, later: string): boolean {
   return !TIME.test(earlier) || !TIME.test(later) || earlier < later
 }
+
+/** Strictly increasing times, so a list has no duplicate; skipped when a time is malformed. */
+function strictlyAscending(times: string[]): boolean {
+  return (
+    times.some((entry) => !TIME.test(entry)) || times.every((t, i) => i === 0 || times[i - 1] < t)
+  )
+}
+
+const bellList = z
+  .array(time)
+  .min(1)
+  .refine(strictlyAscending, { message: "heures attendues dans l'ordre, sans doublon" })
+
+const bellTimes = z.strictObject({ entrees: bellList, sorties: bellList })
 const email = z.string().transform(normalizeEmail).pipe(z.email())
 const firstName = z.string().trim().min(1)
 
@@ -59,6 +73,7 @@ const eveningBus = z
 export const importFileSchema = z
   .strictObject({
     valableDu: z.iso.date(),
+    sonneries: bellTimes.optional(),
     busDuSoir: z.array(eveningBus),
     enfants: z.record(childId, child),
     familles: z.array(family).min(1),

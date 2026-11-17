@@ -13,6 +13,20 @@ function parsed(raw: unknown = validImportFile()): ImportFile {
 }
 
 describe('toTimetableDoc', () => {
+  it('reprend les sonneries du fichier', () => {
+    const doc = toTimetableDoc(
+      parsed({
+        ...validImportFile(),
+        sonneries: { entrees: ['08:25', '09:25'], sorties: ['09:20', '10:20'] },
+      }),
+    )
+    expect(doc.bellTimes).toEqual({ starts: ['08:25', '09:25'], ends: ['09:20', '10:20'] })
+  })
+
+  it('omet bellTimes sans sonneries, Firestore refusant undefined', () => {
+    expect(toTimetableDoc(parsed())).not.toHaveProperty('bellTimes')
+  })
+
   it('traduit le fichier vers le document timetables de la spec', () => {
     const doc = toTimetableDoc(parsed())
     expect(doc.validFrom).toBe('2026-09-01')

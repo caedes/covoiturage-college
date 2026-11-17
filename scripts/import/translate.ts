@@ -21,6 +21,7 @@ export type ChildDoc = {
 
 export type TimetableDoc = {
   validFrom: string
+  bellTimes?: { starts: string[]; ends: string[] }
   eveningBuses: { classEnd: string; arrival: string }[]
   children: Record<string, ChildDoc>
 }
@@ -44,6 +45,9 @@ function toWeekDoc(week: SourceWeek): WeekDoc {
 export function toTimetableDoc(file: ImportFile): TimetableDoc {
   return {
     validFrom: file.valableDu,
+    ...(file.sonneries && {
+      bellTimes: { starts: file.sonneries.entrees, ends: file.sonneries.sorties },
+    }),
     eveningBuses: file.busDuSoir.map((bus) => ({
       classEnd: bus.sortie,
       arrival: bus.arriveeCentreBourg,
