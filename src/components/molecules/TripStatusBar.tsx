@@ -14,6 +14,8 @@ const STYLES: Record<TripStatus['kind'], string> = {
 
 type StatusAction = {
   kind: TripAction
+  /** Marks the button, so that the page can find it again after a dialog. */
+  tripKey: string
   accessibleLabel: string
   pending: boolean
   onClick: () => void
@@ -49,6 +51,7 @@ export function TripStatusBar({
             BUTTON[action.kind].className,
           )}
           aria-label={action.accessibleLabel}
+          data-trip-key={action.tripKey}
           aria-busy={action.pending}
           aria-disabled={action.pending}
           onClick={action.pending ? undefined : action.onClick}

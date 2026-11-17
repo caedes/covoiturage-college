@@ -191,9 +191,6 @@ export function PlanningPage() {
    */
   const [asked, setAsked] = useState<{ trip: PlannedTrip; text: ConfirmationText } | null>(null)
   const [asking, setAsking] = useState(false)
-  const confirmed = useRef<PlannedTrip | null>(null)
-  /** The button that opened the dialog: Radix only restores the focus to its own trigger. */
-  const opener = useRef<HTMLElement | null>(null)
 
   /** « Je prends » writes at once; « Annuler » and « Je le prends » ask first. */
   const request = useCallback(
@@ -203,8 +200,6 @@ export function PlanningPage() {
         act(trip)
         return
       }
-      confirmed.current = null
-      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       setAsked({ trip, text })
       setAsking(true)
     },
@@ -215,24 +210,27 @@ export function PlanningPage() {
     if (asked === null) {
       return
     }
-    confirmed.current = asked.trip
     setAsking(false)
     act(asked.trip)
   }
 
   /**
-   * The focus goes back to the trip's button, unless a confirmed cancel took the button away with
-   * an empty trip: then it goes to the trip's section.
+   * Radix only gives the focus back to its own trigger, and Safari does not focus a tapped button:
+   * the trip's button is found again by its key. Gone meanwhile, the focus goes to its section; a
+   * confirmed cancel that empties the trip moves it there itself, once written, in `act`.
    */
   const focusAfterDialog = (event: Event) => {
     event.preventDefault()
-    const trip = confirmed.current
-    if (trip?.action === 'cancel' && trip.status.kind === 'void') {
-      const heading = trip.direction === 'aller' ? allerHeading : retourHeading
-      heading.current?.focus()
+    if (asked === null) {
       return
     }
-    opener.current?.focus()
+    const button = document.querySelector<HTMLElement>(`[data-trip-key="${asked.trip.key}"]`)
+    if (button !== null) {
+      button.focus()
+      return
+    }
+    const heading = asked.trip.direction === 'aller' ? allerHeading : retourHeading
+    heading.current?.focus()
   }
 
   /**

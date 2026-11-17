@@ -82,6 +82,7 @@ export function TripCard({ trip, roster, onAction, onToggleRider, pendingKeys }:
             ? null
             : {
                 kind: trip.action,
+                tripKey: trip.key,
                 accessibleLabel: actionAccessibleLabel(trip.action, trip.time, trip.label),
                 pending: pendingKeys?.has(trip.key) ?? false,
                 onClick: () => onAction(trip),
