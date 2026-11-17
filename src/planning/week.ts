@@ -64,7 +64,8 @@ function emptyTrip(
 /**
  * A child's hours for the day with the car trips they call for, or `null` without bell times or
  * lessons. A later start moves the aller; an earlier exit moves the retour only when it differs
- * from where the usual exit already leads (bus, or Wednesday's 13:15).
+ * from where the usual exit already leads (bus, or Wednesday's 13:15). A direction the child is
+ * taken off calls for no trip.
  */
 function dayHours(
   timetable: Timetable,
@@ -80,15 +81,20 @@ function dayHours(
   const { usual, start, end } = slot
   const retour = retourPlacement(timetable, date, end)
   const usualRetour = retourPlacement(timetable, date, usual.end)
+  const skipped = childDay?.skipped ?? []
+  const allerCalled = start > usual.start && !skipped.includes('aller')
   const retourCalled =
-    end !== usual.end && retour.place === 'college' && retour.time !== usualRetour.time
+    end !== usual.end &&
+    retour.place === 'college' &&
+    retour.time !== usualRetour.time &&
+    !skipped.includes('retour')
   return {
     usual,
     start,
     end,
     bellTimes,
     effect: {
-      aller: start > usual.start ? start : null,
+      aller: allerCalled ? start : null,
       retour: retourCalled ? retour.time : null,
     },
   }

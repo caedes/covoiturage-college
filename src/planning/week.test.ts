@@ -307,6 +307,23 @@ describe('buildWeek', () => {
       expect(hours?.effect.retour).toBeNull()
     })
 
+    it('ne donne pas de trajet pour un sens retiré', () => {
+      const hours = hoursOf(MONDAY_A, 'alice', [
+        childDay({
+          date: MONDAY_A,
+          childId: 'alice',
+          start: '10:35',
+          end: '12:30',
+          skipped: ['aller', 'retour'],
+        }),
+      ])
+      expect(hours?.effect).toEqual({ aller: null, retour: null })
+      const retourOnly = hoursOf(MONDAY_A, 'alice', [
+        childDay({ date: MONDAY_A, childId: 'alice', start: '10:35', skipped: ['retour'] }),
+      ])
+      expect(retourOnly?.effect.aller).toBe('10:35')
+    })
+
     it('n’expose pas d’horaires sans sonneries', () => {
       const child = buildWeek(input()).days[0]?.children[0]
       expect(child).toBeDefined()
