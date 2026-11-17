@@ -14,6 +14,24 @@ permissions:
   contents: read
 
 jobs:
+  # Release Please calcule la prochaine version a partir des types de commit.
+  # La fusion se fait en rebase : chaque commit de la PR arrive sur main et
+  # compte, donc on les controle tous, pas seulement le titre de la PR.
+  commits:
+    name: commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
   verify:
     name: verify
     runs-on: ubuntu-latest

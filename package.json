@@ -38,6 +38,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@commitlint/lint": "^21.2.4",
+    "@commitlint/load": "^21.2.4",
     "@firebase/rules-unit-testing": "^5.0.2",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
