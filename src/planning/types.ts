@@ -54,9 +54,9 @@ export type ChildDay = {
   childId: ChildId
   presence: Presence
   permanence?: Time
-  /** Modified start of the day, when the child arrives later than usual. */
+  /** Modified start of the day. */
   start?: Time
-  /** Modified end of the day, when the child leaves earlier than usual. */
+  /** Modified end of the day. */
   end?: Time
   skipped: Direction[]
 }
@@ -115,7 +115,7 @@ export type HolidayCalendar = {
   publicHolidays: IsoDate[]
 }
 
-/** A change of the child's hours for the day: a later start or an earlier end. */
+/** A change of the child's hours for the day: a modified start or end. */
 export type HoursChange = { start: Time } | { end: Time }
 
 /** A child's hours for a day, usual and effective. */
