@@ -61,12 +61,28 @@ release GitHub : un parent peut dire quelle version il a, et voir ce qui a chang
   release GitHub, met `CHANGELOG.md` à jour, puis déploie ce build.
 - **Correctif urgent :** fusionner le `fix`, puis la PR de release, qui propose un patch.
 
-Le type de commit fait la version : voir `docs/rules/commits.md`. La PR de release est
-ouverte par le jeton du CI, qui ne déclenche aucun workflow. Le job `release` relance donc
-le CI sur sa branche (`workflow_dispatch`) : le check `verify`, exigé par la règle
-« main protégée », tourne sur le commit exact de la release avant la fusion.
-Le réglage du dépôt « Allow GitHub Actions to create and approve pull requests » doit
-rester activé.
+Le type de commit fait la version : voir `docs/rules/commits.md`.
+
+### Jeton de Release Please
+
+Release Please ouvre et met à jour la PR de release avec un jeton personnel du
+propriétaire, pas avec le jeton du CI. Une PR ouverte par le jeton du CI ne déclenche
+aucun workflow : les checks `verify` et `commits`, exigés par la règle « main protégée »,
+n'y tourneraient jamais et la livraison resterait bloquée. Sans ce secret, le job
+`release` échoue avec un message qui le nomme.
+
+| Nom | Onglet | Valeur |
+| --- | --- | --- |
+| `RELEASE_PLEASE_TOKEN` | Secrets | Fine-grained personal access token du propriétaire |
+
+Créer le jeton dans `Settings → Developer settings → Personal access tokens →
+Fine-grained tokens` :
+
+- **Repository access** : seulement `caedes/covoiturage-college` ;
+- **Permissions** : `Contents` en lecture et écriture, `Pull requests` en lecture et
+  écriture (`Metadata` en lecture est ajouté d'office) ;
+- **Expiration** : un an au plus. À l'expiration, le job `release` échoue : créer un
+  nouveau jeton et remplacer le secret.
 
 L'historique antérieur (`0.1.0` au socle, `1.0.0` à la mise en service, PR #11) a été
 reconstruit une fois par `npm run releases:backfill`. Le script refuse de tourner dès

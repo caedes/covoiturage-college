@@ -24,23 +24,21 @@ describe('workflow CI', () => {
     expect(release).toContain('needs: verify')
     expect(release).toContain("github.event_name == 'push' && github.ref == 'refs/heads/main'")
     expect(release).toContain('googleapis/release-please-action@')
-    expect(release).toContain('contents: write')
-    expect(release).toContain('pull-requests: write')
+    expect(release).toContain('contents: read')
   })
 
-  it('relance le CI sur la PR de release, que le jeton du CI ne déclenche pas', () => {
-    expect(workflow).toMatch(/^on:\n(?:.*\n)*? {2}workflow_dispatch:/m)
+  it('ouvre la PR de release avec le jeton du propriétaire, pour que le CI y tourne', () => {
     const release = job('release')
-    expect(release).toContain('actions: write')
-    expect(release).toContain("steps.release-please.outputs.prs_created == 'true'")
-    expect(release).toContain('gh workflow run ci.yml --ref')
-    expect(release).toContain('fromJSON(steps.release-please.outputs.pr).headBranchName')
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub Actions expression, not JS.
+    expect(release).toContain('token: ${{ secrets.RELEASE_PLEASE_TOKEN }}')
+    expect(release).toContain('RELEASE_PLEASE_TOKEN manquant')
   })
 
-  it('contrôle aussi les commits de la PR de release, check requis comme verify', () => {
-    const commits = job('commits')
-    expect(commits).toContain("github.event_name == 'workflow_dispatch'")
-    expect(commits).toContain('git merge-base origin/main HEAD')
+  it('ne relance plus le CI à la main : le jeton du propriétaire déclenche pull_request', () => {
+    expect(workflow).not.toContain('workflow_dispatch')
+    expect(workflow).not.toContain('gh workflow run')
+    expect(job('release')).not.toContain('actions: write')
+    expect(job('commits')).toContain("if: github.event_name == 'pull_request'\n")
   })
 
   it('ne déploie que si une release vient d’être créée', () => {
