@@ -25,12 +25,14 @@ trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs p
 | `npm run icons` | Régénère les icônes PNG et le favicon à partir de `public/icons/car.svg` |
 | `npm run rules:deploy` | Déploie `firestore.rules` sur le projet Firebase |
 | `npm run import -- <fichier>` | Simule l'import des familles et des emplois du temps (`--apply` pour écrire) |
+| `npm run releases:backfill` | Rattrapage des versions passées, une seule fois (`-- --publish` pour poser tags et releases) |
 
 ## Déploiement
 
-L'hébergement est sur Netlify. Tout merge sur `main` déclenche le job `deploy` du
-workflow CI : il publie en production le `dist/` produit par le job `verify`, donc
-celui qui a passé lint, build et tests. Une PR ne déploie rien.
+L'hébergement est sur Netlify. Seule la fusion d'une PR de release déploie (voir
+[Versions et livraison](#versions-et-livraison)) : le job `deploy` du workflow CI publie
+alors en production le `dist/` produit par le job `verify`, donc celui qui a passé lint,
+build et tests. Une PR ou un merge ordinaire ne déploie rien.
 
 Deux entrées sont requises dans `Settings → Secrets and variables → Actions` :
 
@@ -44,6 +46,30 @@ d'où la variable plutôt que le secret.
 
 Le fichier `public/_redirects` renvoie toutes les URL vers `index.html` : sans lui,
 un accès direct à une route côté client retournerait un 404 Netlify.
+
+## Versions et livraison
+
+L'application suit [SemVer](https://semver.org/lang/fr/). Sa version vit dans
+`package.json` et s'affiche à droite du titre (`v1.4.0`), en lien vers les notes de la
+release GitHub : un parent peut dire quelle version il a, et voir ce qui a changé.
+
+- **Fusionner une PR ne livre rien.** Les PR s'accumulent sur `main`.
+- **Release Please** (job `release`, après `verify`) tient à jour une PR de release. Elle
+  propose la prochaine version d'après les types de commit (`feat` → mineure, `fix` →
+  patch, `!` → majeure) et le changelog correspondant.
+- **Livrer, c'est fusionner la PR de release.** Le CI teste, crée le tag `vX.Y.Z` et la
+  release GitHub, met `CHANGELOG.md` à jour, puis déploie ce build.
+- **Correctif urgent :** fusionner le `fix`, puis la PR de release, qui propose un patch.
+
+Le type de commit fait la version : voir `docs/rules/commits.md`. La PR de release est
+ouverte par le jeton du CI, donc le CI ne tourne pas dessus. Elle ne touche que la
+version et le changelog, et tout est vérifié au push sur `main`, avant tag et déploiement.
+Le réglage du dépôt « Allow GitHub Actions to create and approve pull requests » doit
+rester activé.
+
+L'historique antérieur (`0.1.0` au socle, `1.0.0` à la mise en service, PR #11) a été
+reconstruit une fois par `npm run releases:backfill`. Le script refuse de tourner dès
+qu'un tag `v*` existe.
 
 ## Authentification
 

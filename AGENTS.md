@@ -99,10 +99,16 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   les émulateurs Auth et Firestore (`npm run test:e2e`).
 - **Qualité** — Biome pour le lint et le format, appliqué aux fichiers stagés par le
   hook `pre-commit` (Husky). La suite de tests n'est pas lancée au commit.
-- **Déploiement** — Netlify, via le job `deploy` du workflow CI sur merge vers `main`.
-  Les règles Firestore se déploient à part, avec `npm run rules:deploy`. Un lot qui ouvre
-  une lecture ou une écriture Firestore exige `npm run rules:deploy` **avant** la fusion :
-  Netlify déploie l'application dès le merge.
+- **Versions et livraison** — SemVer, géré par Release Please (job `release` après
+  `verify`) : une PR de release regroupe les PR fusionnées et propose la version. La
+  fusionner crée tag, release GitHub et `CHANGELOG.md`, puis déploie. Un merge ordinaire
+  ne déploie rien. La version (`__APP_VERSION__`, lue par `src/lib/version.ts`) s'affiche
+  à droite du titre par `molecules/AppTitle`, en lien vers la release GitHub. Le type de
+  commit fait la version : `feat`/`fix` seulement pour ce que les parents voient.
+- **Déploiement** — Netlify, via le job `deploy` du workflow CI, à la fusion d'une PR de
+  release seulement. Les règles Firestore se déploient à part, avec `npm run
+  rules:deploy`. Un lot qui ouvre une lecture ou une écriture Firestore exige `npm run
+  rules:deploy` **avant** la fusion de la PR de release qui le livre.
 - **Conception** — les specs vivent dans `docs/superpowers/specs/`, les plans
   d'implémentation dans `docs/superpowers/plans/`.
 
