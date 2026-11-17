@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { defaultUid, member } from '../../test/fakeAuth'
 import { planning } from '../../test/fakePlanning'
@@ -12,6 +12,12 @@ const TAKE_ALLER = /^Je prends — trajet de 07:40/
 
 function aller() {
   return screen.getByRole('region', { name: 'Aller' })
+}
+
+/** Answers the confirmation dialog with the button named `name`. */
+async function answer(user: UserEvent, name: string) {
+  const dialog = await screen.findByRole('alertdialog')
+  await user.click(within(dialog).getByRole('button', { name }))
 }
 
 describe('actions de conducteur', () => {
@@ -32,6 +38,7 @@ describe('actions de conducteur', () => {
       }),
     })
     await user.click(within(aller()).getByRole('button', { name: /^Annuler — trajet de 07:40/ }))
+    await answer(user, 'Ne plus conduire')
     expect(await within(aller()).findByText("Personne pour l'instant")).toBeInTheDocument()
   })
 
@@ -42,6 +49,7 @@ describe('actions de conducteur', () => {
     await user.click(
       within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ }),
     )
+    await answer(user, 'Prendre le trajet')
     expect(await within(aller()).findByText('Vous')).toBeInTheDocument()
     expect(store.writes()[0]).toMatchObject({ kind: 'takeOver', currentDriverUid: 'uid-paul' })
   })
@@ -54,6 +62,7 @@ describe('actions de conducteur', () => {
     await user.click(
       within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ }),
     )
+    await answer(user, 'Prendre le trajet')
     expect(await within(aller()).findByText('Vous')).toBeInTheDocument()
     expect(store.writes()).toEqual([
       {
@@ -165,6 +174,7 @@ describe('actions de conducteur', () => {
         name: /^Annuler — trajet de 16:00/,
       }),
     )
+    await answer(user, 'Ne plus conduire')
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 2, name: 'Retour' })).toHaveFocus(),
     )
@@ -182,5 +192,84 @@ describe('actions de conducteur', () => {
     await user.click(second)
     expect(first).toHaveAttribute('aria-disabled', 'true')
     expect(second).toHaveAttribute('aria-disabled', 'true')
+  })
+
+  it('prend un trajet libre sans demander de confirmation', async () => {
+    const user = userEvent.setup()
+    const store = planning()
+    await renderRoute('/', { planning: store })
+    await user.click(within(aller()).getByRole('button', { name: TAKE_ALLER }))
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+    expect(store.writes()).toEqual([{ kind: 'take', key: '2026-09-30_aller_centre-bourg_0740' }])
+  })
+
+  it("demande confirmation avant d'annuler, sans rien écrire avant", async () => {
+    const user = userEvent.setup()
+    const store = planning({
+      carpools: [carpool({ ...ALLER, driverUid: defaultUid, driverName: 'Sophie' })],
+    })
+    await renderRoute('/', { planning: store })
+    await user.click(within(aller()).getByRole('button', { name: /^Annuler — trajet de 07:40/ }))
+    expect(
+      await screen.findByRole('alertdialog', { name: 'Ne plus conduire ce trajet ?' }),
+    ).toBeInTheDocument()
+    expect(store.writes()).toEqual([])
+  })
+
+  it("n'annule rien quand on garde le trajet, et rend le focus au bouton", async () => {
+    const user = userEvent.setup()
+    const store = planning({
+      carpools: [carpool({ ...ALLER, driverUid: defaultUid, driverName: 'Sophie' })],
+    })
+    await renderRoute('/', { planning: store })
+    const button = within(aller()).getByRole('button', { name: /^Annuler — trajet de 07:40/ })
+    await user.click(button)
+    await answer(user, 'Garder le trajet')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    expect(store.writes()).toEqual([])
+    expect(within(aller()).getByText('Vous')).toBeInTheDocument()
+    await waitFor(() => expect(button).toHaveFocus())
+  })
+
+  it('ne reprend rien sur Échap', async () => {
+    const user = userEvent.setup()
+    const store = planning({ carpools: [carpool(ALLER)] })
+    await renderRoute('/', { planning: store })
+    const button = within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ })
+    await user.click(button)
+    await screen.findByRole('alertdialog')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    expect(store.writes()).toEqual([])
+    await waitFor(() => expect(button).toHaveFocus())
+  })
+
+  it('nomme le conducteur dans la confirmation de reprise', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { planning: planning({ carpools: [carpool(ALLER)] }) })
+    await user.click(
+      within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ }),
+    )
+    expect(
+      await screen.findByRole('alertdialog', { name: 'Prendre le trajet de Paul ?' }),
+    ).toBeInTheDocument()
+  })
+
+  it('annonce le conflit quand le trajet a été pris pendant la confirmation', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', {
+      planning: planning(
+        { carpools: [carpool(ALLER)] },
+        { writeOutcome: { status: 'alreadyTaken', driverName: 'Maud' } },
+      ),
+    })
+    await user.click(
+      within(aller()).getByRole('button', { name: /^Je le prends — trajet de 07:40/ }),
+    )
+    await answer(user, 'Prendre le trajet')
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Maud a pris ce trajet juste avant vous.',
+    )
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
   })
 })

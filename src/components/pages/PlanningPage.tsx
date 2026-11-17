@@ -3,7 +3,10 @@ import { useLocation } from 'react-router'
 import { APP_VERSION } from '@/lib/version'
 import { useAuth } from '../../auth/useAuth'
 import {
+  type ConfirmationText,
+  cancelConfirmation,
   childDayFailureMessage,
+  takeOverConfirmation,
   weekRangeLabel,
   writeFailureMessage,
   writeSuccessMessage,
@@ -23,6 +26,7 @@ import { buildWeek } from '../../planning/week'
 import { Button } from '../atoms/ui/button'
 import { ActionAlert } from '../molecules/ActionAlert'
 import { AppTitle } from '../molecules/AppTitle'
+import { ConfirmDialog } from '../molecules/ConfirmDialog'
 import { DaySelector } from '../organisms/DaySelector'
 import { PresenceBar } from '../organisms/PresenceBar'
 import { TripSection } from '../organisms/TripSection'
@@ -31,6 +35,17 @@ import { WeekTabs } from '../organisms/WeekTabs'
 import { PlanningTemplate, type WeekTab } from '../templates/PlanningTemplate'
 import { usePlanningContext } from './PlanningContext'
 import { usePlanning } from './usePlanning'
+
+/** The question asked before a trip action, or `null` when it is written at once. */
+function confirmationFor(trip: PlannedTrip): ConfirmationText | null {
+  if (trip.action === 'cancel') {
+    return cancelConfirmation(trip.time, trip.label)
+  }
+  if (trip.action === 'takeOver' && trip.status.kind === 'covered') {
+    return takeOverConfirmation(trip.time, trip.label, trip.status.driverName)
+  }
+  return null
+}
 
 function noticeFor(day: DayPlan, today: string): string | null {
   if (day.holiday) {
@@ -128,7 +143,10 @@ export function PlanningPage() {
     setAlert({ id: nextAlertId.current++, message })
   }, [])
 
-  /** A cancelled empty trip leaves with its button: the focus goes to its section. */
+  /**
+   * Writes a trip action at once: confirmation, when needed, happens before, in `request`. A
+   * cancelled empty trip leaves with its button: the focus goes to its section.
+   */
   const act = useCallback(
     async (trip: PlannedTrip) => {
       if (state.status !== 'member' || trip.action === null) {
@@ -166,6 +184,56 @@ export function PlanningPage() {
     },
     [repository, showAlert, state],
   )
+
+  /**
+   * The trip whose action awaits an answer, as seen when its button was pressed. It outlives the
+   * dialog's closing, so that the text does not vanish during the fade out.
+   */
+  const [asked, setAsked] = useState<{ trip: PlannedTrip; text: ConfirmationText } | null>(null)
+  const [asking, setAsking] = useState(false)
+  const confirmed = useRef<PlannedTrip | null>(null)
+  /** The button that opened the dialog: Radix only restores the focus to its own trigger. */
+  const opener = useRef<HTMLElement | null>(null)
+
+  /** « Je prends » writes at once; « Annuler » and « Je le prends » ask first. */
+  const request = useCallback(
+    (trip: PlannedTrip) => {
+      const text = confirmationFor(trip)
+      if (text === null) {
+        act(trip)
+        return
+      }
+      confirmed.current = null
+      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      setAsked({ trip, text })
+      setAsking(true)
+    },
+    [act],
+  )
+
+  const confirmAsked = () => {
+    if (asked === null) {
+      return
+    }
+    confirmed.current = asked.trip
+    setAsking(false)
+    act(asked.trip)
+  }
+
+  /**
+   * The focus goes back to the trip's button, unless a confirmed cancel took the button away with
+   * an empty trip: then it goes to the trip's section.
+   */
+  const focusAfterDialog = (event: Event) => {
+    event.preventDefault()
+    const trip = confirmed.current
+    if (trip?.action === 'cancel' && trip.status.kind === 'void') {
+      const heading = trip.direction === 'aller' ? allerHeading : retourHeading
+      heading.current?.focus()
+      return
+    }
+    opener.current?.focus()
+  }
 
   /**
    * Options are written without a pending state: the snapshot shows them at once, and a refusal
@@ -284,7 +352,7 @@ export function PlanningPage() {
               title="Aller"
               trips={day.aller}
               roster={day.children}
-              onAction={act}
+              onAction={request}
               onToggleRider={toggleRider}
               onTogglePermanence={togglePermanenceOf}
               pendingKeys={pendingKeys}
@@ -298,7 +366,7 @@ export function PlanningPage() {
               title="Retour"
               trips={day.retour}
               roster={day.children}
-              onAction={act}
+              onAction={request}
               onToggleRider={toggleRider}
               onTogglePermanence={togglePermanenceOf}
               pendingKeys={pendingKeys}
@@ -316,6 +384,16 @@ export function PlanningPage() {
       <p aria-live="polite" className="sr-only">
         {confirmation}
       </p>
+      {asked === null ? null : (
+        <ConfirmDialog
+          open={asking}
+          text={asked.text}
+          tone={asked.trip.action === 'cancel' ? 'destructive' : 'default'}
+          onConfirm={confirmAsked}
+          onCancel={() => setAsking(false)}
+          onCloseAutoFocus={focusAfterDialog}
+        />
+      )}
       {alert === null ? null : (
         <ActionAlert key={alert.id} message={alert.message} onDismiss={() => setAlert(null)} />
       )}
