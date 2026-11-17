@@ -52,7 +52,7 @@ rien des trajets. La page n'en monte qu'une et y place le trajet en attente de c
 
 Le prénom est celui du conducteur affiché à l'écran (`trip.status` `covered`).
 
-**Renoncer** (bouton, Échap) : la pop-in se ferme, rien n'est écrit, aucun message, et le focus
+**Renoncer** (bouton, Échap, clic sur le fond grisé — demandé par le propriétaire après l'essai) : la pop-in se ferme, rien n'est écrit, aucun message, et le focus
 revient sur le bouton d'origine.
 
 ## Choix de l'agent, à vérifier
@@ -61,8 +61,6 @@ revient sur le bouton d'origine.
   en variante par défaut. Une action qui retire un conducteur doit se voir.
 - **Le focus s'ouvre sur le bouton « renoncer »** (comportement par défaut de Radix
   `AlertDialog`) : un second tap trop rapide ne confirme pas.
-- **Pas de fermeture au clic sur le fond** : c'est le comportement de l'`AlertDialog`, qui
-  oblige à choisir.
 - **La pop-in se ferme dès la confirmation.** Le bouton du trajet passe alors en attente,
   comme aujourd'hui (`pendingKeys`). Un refus ou un conflit s'annonce par l'`ActionAlert`
   existante.

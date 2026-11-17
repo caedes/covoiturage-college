@@ -59,6 +59,18 @@ describe('ConfirmDialog', () => {
     expect(props.onConfirm).not.toHaveBeenCalled()
   })
 
+  it('renonce par un clic sur le fond grisé', async () => {
+    const user = userEvent.setup()
+    const props = renderDialog()
+    const overlay = document.querySelector('[data-slot="alert-dialog-overlay"]')
+    if (overlay === null) {
+      throw new Error('Fond grisé introuvable.')
+    }
+    await user.click(overlay)
+    expect(props.onCancel).toHaveBeenCalledTimes(1)
+    expect(props.onConfirm).not.toHaveBeenCalled()
+  })
+
   it('colore la confirmation selon le ton', () => {
     renderDialog({ tone: 'destructive' })
     expect(screen.getByRole('button', { name: 'Ne plus conduire' })).toHaveClass('bg-destructive')

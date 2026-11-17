@@ -33,16 +33,22 @@ function AlertDialogOverlay({
   )
 }
 
+/**
+ * `onOverlayClick` is the project's addition: Radix keeps an alert dialog open on a click outside
+ * it, so a page that wants the backdrop to mean "no" says so here.
+ */
 function AlertDialogContent({
   className,
   size = 'default',
+  onOverlayClick,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
   size?: 'default' | 'sm'
+  onOverlayClick?: () => void
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlay onClick={onOverlayClick} />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         data-size={size}

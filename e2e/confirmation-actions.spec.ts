@@ -45,7 +45,9 @@ async function newPhone(browser: Browser): Promise<Page> {
   return context.newPage()
 }
 
-test("demande confirmation avant d'annuler, garde le trajet puis le libère", async ({ page }) => {
+test("demande confirmation avant d'annuler, renonce par le bouton ou le fond, puis libère le trajet", async ({
+  page,
+}) => {
   await signInAs(page, 'paul@exemple.fr')
   test.skip(!(await openNextSchoolDay(page)), NO_DAY)
   const time = await firstOpenTime(page)
@@ -59,6 +61,12 @@ test("demande confirmation avant d'annuler, garde le trajet puis le libère", as
   await expect(dialog).toBeInViewport({ ratio: 1 })
   await dialog.getByRole('button', { name: 'Garder le trajet' }).click()
   await expect(dialog).toHaveCount(0)
+
+  await tripButton(page, 'Annuler', time).click()
+  await expect(dialog).toBeVisible()
+  await page.mouse.click(8, 8)
+  await expect(dialog).toHaveCount(0)
+  await expect(tripAt(page, time).getByText('Vous', { exact: true })).toBeVisible()
 
   await page.reload()
   await openNextSchoolDay(page)

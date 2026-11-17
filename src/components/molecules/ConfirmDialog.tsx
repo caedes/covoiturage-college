@@ -22,7 +22,7 @@ type ConfirmDialogProps = {
 
 /**
  * Asks before an action that takes a trip away from someone. Each answer carries its own verb;
- * the focus opens on the one that changes nothing, and only a button or Escape closes it.
+ * the focus opens on the one that changes nothing. Escape and a click on the backdrop mean "no".
  */
 export function ConfirmDialog({
   open,
@@ -37,6 +37,7 @@ export function ConfirmDialog({
       <AlertDialogContent
         className="bg-card"
         onEscapeKeyDown={onCancel}
+        onOverlayClick={onCancel}
         onCloseAutoFocus={onCloseAutoFocus}
       >
         <AlertDialogHeader>
