@@ -33,6 +33,12 @@ describe('workflow CI', () => {
     expect(deploy).toContain('needs: release')
     expect(deploy).toContain("needs.release.outputs.release_created == 'true'")
   })
+
+  it('ne déploie que le build du commit de release, jamais celui d’un push plus récent', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub Actions expression, not JS.
+    expect(job('release')).toContain('sha: ${{ steps.release-please.outputs.sha }}')
+    expect(job('deploy')).toContain('needs.release.outputs.sha == github.sha')
+  })
 })
 
 describe('configuration de Release Please', () => {
@@ -41,6 +47,10 @@ describe('configuration de Release Please', () => {
 
   it('versionne le paquet node à la racine', () => {
     expect(root['release-type']).toBe('node')
+  })
+
+  it('tague vX.Y.Z sans le nom du paquet, comme le rattrapage et le lien affiché', () => {
+    expect(root['include-component-in-tag']).toBe(false)
   })
 
   it('titre le changelog en français et masque les types sans effet pour les parents', () => {
