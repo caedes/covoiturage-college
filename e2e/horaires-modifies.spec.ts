@@ -28,6 +28,7 @@ test("avance la sortie d'un enfant et fait apparaître le retour au collège à 
   // Alice's usual exit is never 12:30 nor 10:20 in the fictitious data, nor 17:00 here.
   const time = dayIndex(nextSchoolDay()) === 2 ? '10:20' : '12:30'
 
+  // By role, the name « Alice … » would also match the trip buttons listing her as a rider.
   const chip = page.locator('button[aria-expanded]').filter({ hasText: /^Alice/ })
   await chip.click()
   await page

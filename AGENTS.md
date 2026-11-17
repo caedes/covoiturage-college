@@ -61,8 +61,9 @@ npm run test:e2e     # tests de non-régression Playwright (Java requis)
   14 jours au plus. `childDays` s'écrit par un parent de l'enfant (`childId` dans ses
   `childIds`), à son nom (`updatedByUid`), dans les mêmes bornes, et ne se supprime
   jamais ; il porte aussi les horaires modifiés du jour, choisis parmi les sonneries
-  (`bellTimes`) de l'emploi du temps. Aucune autre écriture cliente : `timetables` et `members` par
-  `scripts/import.ts` (SDK Admin) uniquement. Les autres collections naissent fermées.
+  (`bellTimes`) de l'emploi du temps. Aucune autre écriture cliente : `timetables` et
+  `members` par `scripts/import.ts` (SDK Admin) uniquement. Les autres collections
+  naissent fermées.
 - **Import** — `members` et `timetables` ne s'écrivent que par `scripts/import.ts` (SDK
   Admin, clé de compte de service hors du dépôt). La logique vit en fonctions pures dans
   `scripts/import/`, testées ; le point d'entrée lit, appelle `planImport` et applique.

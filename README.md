@@ -3,8 +3,9 @@
 Application d'entraide entre parents pour organiser les trajets domicile ↔ collège.
 Ce dépôt contient le socle technique (routage, layout accessible et harnais de test)
 et le planning de la semaine. Les parents peuvent prendre, reprendre et annuler un
-trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs propres enfants, ainsi que, pour un jour donné,
-ses horaires d'entrée et de sortie modifiés, choisis parmi les sonneries du collège.
+trajet. Ils règlent aussi la présence, les trajets et la permanence de leurs propres
+enfants, ainsi que les horaires d'entrée et de sortie modifiés d'un jour donné,
+choisis parmi les sonneries du collège.
 
 ## Commandes
 
