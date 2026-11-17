@@ -28,3 +28,6 @@ ui-debug.log
 
 # Rapports de revue de code (/qx:qx-code-review) : générés en local, jamais versionnés
 /.agents/qx/code-review/
+
+# Maquettes des séances de conception
+.superpowers/

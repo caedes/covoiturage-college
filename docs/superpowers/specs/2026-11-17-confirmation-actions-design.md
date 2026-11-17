@@ -1,7 +1,7 @@
 # Confirmation avant « Annuler » et « Je le prends » — covoiturage-college
 
 Date : 2026-11-17
-Statut : validé en conversation, en relecture
+Statut : validé (spec et rendu de la pop-in, sur maquette)
 
 ## Objet
 
