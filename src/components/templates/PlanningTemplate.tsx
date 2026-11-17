@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import { APP_VERSION } from '@/lib/version'
 import { Tabs, TabsContent } from '../atoms/ui/tabs'
+import { AppTitle } from '../molecules/AppTitle'
 
 export type WeekTab = 'current' | 'next'
 
@@ -32,7 +34,7 @@ export function PlanningTemplate({
 }: PlanningTemplateProps) {
   return (
     <>
-      <h1 className="font-heading text-3xl font-semibold leading-tight">Covoiturage</h1>
+      <AppTitle title="Covoiturage" version={APP_VERSION} />
       <Tabs
         value={tab}
         onValueChange={(value) => onTabChange(value === 'next' ? 'next' : 'current')}

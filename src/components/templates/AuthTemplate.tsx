@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import { APP_VERSION } from '@/lib/version'
 import { Card, CardContent } from '../atoms/ui/card'
+import { AppTitle } from '../molecules/AppTitle'
 
 type AuthTemplateProps = {
   title: string
@@ -19,7 +21,7 @@ export function AuthTemplate({ title, children }: AuthTemplateProps) {
     >
       <Card className="w-full max-w-md">
         <CardContent className="flex flex-col gap-4">
-          <h1 className="font-heading text-3xl font-semibold leading-tight">{title}</h1>
+          <AppTitle title={title} version={APP_VERSION} />
           {children}
         </CardContent>
       </Card>

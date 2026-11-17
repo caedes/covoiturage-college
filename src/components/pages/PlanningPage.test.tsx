@@ -11,6 +11,7 @@ import {
 import { carpool, childDay } from '../../test/planningFixtures'
 import { renderRoute } from '../../test/renderRoute'
 
+const VERSION_LINK = /^Notes de la version \d+\.\d+\.\d+ \(nouvel onglet\)$/
 const MONDAY = '2026-09-28'
 const WEDNESDAY = '2026-09-30'
 
@@ -26,15 +27,22 @@ describe('PlanningPage', () => {
     expect(screen.getByText('28 septembre – 2 octobre')).toBeInTheDocument()
   })
 
-  it('titre aussi « Covoiturage » le chargement et l’erreur', async () => {
+  it('titre aussi « Covoiturage » le chargement et l’erreur, avec le numéro de version', async () => {
     const loading = await renderRoute('/', { planning: pendingPlanning(), waitForSettled: false })
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Covoiturage' }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: VERSION_LINK })).toBeInTheDocument()
     loading.unmount()
     await renderRoute('/', { planning: failingPlanning() })
     expect(await screen.findByRole('button', { name: 'Réessayer' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'Covoiturage' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: VERSION_LINK })).toBeInTheDocument()
+  })
+
+  it('affiche le numéro de version à côté du titre du planning', async () => {
+    await renderRoute('/')
+    expect(screen.getByRole('link', { name: VERSION_LINK })).toBeInTheDocument()
   })
 
   it('sort le récapitulatif du panneau de la semaine, pour le fixer au-dessus de la barre du bas', async () => {
