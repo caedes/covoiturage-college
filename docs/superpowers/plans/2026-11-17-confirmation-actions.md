@@ -31,7 +31,7 @@
 ## Review Focus
 
 - **Trajet modifié par quelqu'un d'autre pendant que la pop-in est ouverte.** Attendu : la confirmation écrit avec le trajet affiché au moment de l'ouverture. Le conflit est annoncé par l'alerte existante, sans plantage ni pop-in bloquée. Test : tâche 3, étape 1, « annonce le conflit quand le trajet a été pris pendant la confirmation ».
-- **Double tap rapide sur « Annuler ».** Attendu : une seule pop-in. Le second tap tombe sur le fond, qui ne ferme rien. Couvert par le comportement modal de Radix. Vérifié à la main à la tâche 4.
+- **Double tap rapide sur « Annuler ».** Attendu : une seule pop-in. Le second tap tombe sur le fond, qui ne ferme rien. Couvert par le comportement modal de Radix. Vérifié à la main à la tâche 5.
 - **Échap.** Attendu : comme « renoncer », rien n'est écrit. Test : tâche 2 (molécule) et tâche 3 (page).
 - **Retour du focus après renoncement**, sur le bouton exact du trajet, même quand plusieurs trajets sont affichés. Test : tâche 3, étape 1.
 - **Focus après annulation d'un trajet vide.** Le retour automatique du focus par Radix ne doit pas reprendre le focus au titre de section. Test existant « rend le focus à la section après l'annulation d'un trajet vidé », adapté à la tâche 3.
@@ -45,6 +45,7 @@
 - Créer `src/components/molecules/ConfirmDialog.tsx` (+ test) : la pop-in de l'application.
 - Modifier `src/components/pages/PlanningPage.tsx` : demander la confirmation avant `act`.
 - Modifier `src/components/pages/PlanningPage.driving.test.tsx` : passer par la pop-in, tester les nouveaux cas.
+- Créer `e2e/confirmation-actions.spec.ts` : TNR des deux pop-in contre les émulateurs.
 
 ---
 
@@ -169,12 +170,37 @@ async function answer(user: UserEvent, name: string) {
 
 ---
 
-### Task 4 : Vérifications et essai avec le propriétaire
+### Task 4 : Tests de non-régression (e2e) de la confirmation
+
+**Files:**
+- Create: `e2e/confirmation-actions.spec.ts`
+- Modify (si besoin) : `e2e/support/session.ts`, pour un utilitaire partagé de choix du jour
+
+**Interfaces:**
+- Consumes : `resetEmulators`, `seedFixture` (`e2e/support/emulators.ts`), `signInAs` (`e2e/support/session.ts`), `isHoliday` et `ZONE_A_2026_2027` (`src/planning/holidays.ts`).
+- Produces : `openNextSchoolDay(page: Page): Promise<boolean>`. Il ouvre le premier jour d'école **après aujourd'hui** (vraie date, hors week-end et vacances) en cliquant sur « Semaine prochaine » si besoin, puis sur le bouton du jour (nom accessible commençant par « lundi 12 », « mardi 13 », etc., voir `dayButtonLabel`). Il renvoie `false` si ce jour n'est dans aucun des deux onglets, par exemple pendant de longues vacances.
+
+Règles de `docs/rules/tests-non-regression.md` : ces tests écrivent, donc **pas de `page.clock`**. Ils utilisent la vraie date et un jour choisi dynamiquement. `test.beforeAll` remet à zéro et réimporte le jeu fictif. Parents fictifs : `camille@exemple.fr` (Camille), `paul@exemple.fr` (Paul). Sélecteurs par rôle et nom accessible. Quand `openNextSchoolDay` renvoie `false`, appeler `test.skip(true, 'aucun jour d\'école dans les deux semaines affichées')`.
+
+- [ ] **Step 1 : écrire les deux tests**, sur le premier trajet libre de la section « Aller » du jour choisi. Lire son heure dans le nom accessible du bouton `^Je prends — trajet de HH:MM`, puis cibler les boutons suivants par `trajet de HH:MM`.
+  - « demande confirmation avant d'annuler, garde le trajet puis le libère » (Paul) :
+    1. Il clique sur « Je prends ». Pas de pop-in, le trajet affiche « Vous ».
+    2. Il clique sur « Annuler ». L'`alertdialog` « Ne plus conduire ce trajet ? » est visible et entièrement dans l'écran (`toBeInViewport({ ratio: 1 })`).
+    3. Il clique sur « Garder le trajet », puis recharge la page et rouvre le jour. Il conduit toujours (« Vous »).
+    4. Il clique sur « Annuler », puis sur « Ne plus conduire », et recharge la page. Le bouton « Je prends » de ce trajet est revenu.
+  - « reprend le trajet d'un autre parent après confirmation » : Camille prend le trajet. Le contexte est fermé, puis Paul se connecte dans un **nouveau contexte** (`browser.newContext()`, appareil `Pixel 7` repris de la config). Il clique sur « Je le prends ». L'`alertdialog` « Prendre le trajet de Camille ? » est visible et dans l'écran. Il clique sur « Prendre le trajet » : le trajet affiche « Vous ». Après rechargement, il conduit toujours.
+- [ ] **Step 2 :** `npm run test:e2e` → SUCCÈS pour tous les fichiers.
+- [ ] **Step 3 : prouver que les tests savent échouer.** Remplacer temporairement, dans `PlanningPage`, `onAction={request}` par `onAction={act}`. Relancer `npm run test:e2e -- confirmation-actions` → les deux tests ÉCHOUENT (pas d'`alertdialog`). Rétablir le code, puis vérifier que `git diff src/` est vide.
+- [ ] **Step 4 : commit** `test: tnr de la confirmation avant annuler et je le prends`
+
+---
+
+### Task 5 : Vérifications et essai avec le propriétaire
 
 **Files:** aucun, sauf correction.
 
 - [ ] **Step 1 :** `npm run lint`, `npm run test:coverage` (≥ 80 %), `npm run build` et `npm run check:bundle` → tous au vert. Noter dans le compte rendu le poids ajouté au bundle.
-- [ ] **Step 2 :** `npm run test:e2e` → SUCCÈS. Aucun parcours e2e ne clique aujourd'hui sur « Annuler » ou « Je le prends » : rien ne devrait changer.
+- [ ] **Step 2 :** `npm test` et `npm run test:e2e` → SUCCÈS (déjà vérifié à la tâche 4 pour l'e2e, à relancer si du code a changé depuis).
 - [ ] **Step 3 : essai avec le propriétaire.** Lancer `npm run dev` (émulateurs, jamais la prod), puis lui donner l'adresse. Il vérifie sur téléphone et sur ordinateur :
   - les deux pop-in, leurs textes et couleurs, conformes à la maquette validée ;
   - le double tap sur « Annuler » ;
