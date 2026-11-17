@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/caedes/covoiturage-college/compare/v1.4.0...v1.5.0) (2026-11-17)
+
+
+### Nouveautés
+
+* afficher la version à côté du titre, liée à ses notes de version ([a9f6038](https://github.com/caedes/covoiturage-college/commit/a9f6038b659abe0646e6332cda6001500ffa3448))
+
 ## [1.4.0](https://github.com/caedes/covoiturage-college/compare/v1.3.0...v1.4.0) (2026-11-16)
 
 
