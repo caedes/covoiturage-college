@@ -57,6 +57,8 @@ describe('AuthGate', () => {
     const user = userEvent.setup()
     await renderRoute('/', { auth: signedOut() })
     await user.tab()
+    expect(screen.getByRole('link', { name: /^Notes de la version/ })).toHaveFocus()
+    await user.tab()
     expect(screen.getByRole('button', { name: /se connecter avec google/i })).toHaveFocus()
   })
 })

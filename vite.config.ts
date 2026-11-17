@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -8,9 +9,13 @@ import { firebaseAuthProxy } from './scripts/vite/firebaseAuthProxy.ts'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
 
   return {
     plugins: [react(), tailwindcss()],
+    // Read by src/lib/version.ts. Release Please bumps package.json in the release commit, the one
+    // the deployed bundle is built from.
+    define: { __APP_VERSION__: JSON.stringify(version) },
     resolve: {
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },

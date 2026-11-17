@@ -36,6 +36,8 @@ describe('SignInScreen', () => {
     const user = userEvent.setup()
     renderWithAuth(<SignInScreen />)
     await user.tab()
+    expect(screen.getByRole('link', { name: /^Notes de la version/ })).toHaveFocus()
+    await user.tab()
     expect(screen.getByRole('button', { name: /se connecter avec google/i })).toHaveFocus()
   })
 

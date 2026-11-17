@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
+import { APP_VERSION } from '@/lib/version'
 import { useAuth } from '../../auth/useAuth'
 import {
   childDayFailureMessage,
@@ -21,6 +22,7 @@ import type {
 import { buildWeek } from '../../planning/week'
 import { Button } from '../atoms/ui/button'
 import { ActionAlert } from '../molecules/ActionAlert'
+import { AppTitle } from '../molecules/AppTitle'
 import { DaySelector } from '../organisms/DaySelector'
 import { PresenceBar } from '../organisms/PresenceBar'
 import { TripSection } from '../organisms/TripSection'
@@ -29,8 +31,6 @@ import { WeekTabs } from '../organisms/WeekTabs'
 import { PlanningTemplate, type WeekTab } from '../templates/PlanningTemplate'
 import { usePlanningContext } from './PlanningContext'
 import { usePlanning } from './usePlanning'
-
-const TITLE_CLASS = 'font-heading text-3xl font-semibold leading-tight'
 
 function noticeFor(day: DayPlan, today: string): string | null {
   if (day.holiday) {
@@ -191,7 +191,7 @@ export function PlanningPage() {
   if (load.status === 'loading') {
     return (
       <>
-        <h1 className={TITLE_CLASS}>Covoiturage</h1>
+        <AppTitle title="Covoiturage" version={APP_VERSION} />
         <p role="status" className="mt-3 text-muted-foreground">
           Chargement du planning…
         </p>
@@ -202,7 +202,7 @@ export function PlanningPage() {
   if (load.status === 'error') {
     return (
       <>
-        <h1 className={TITLE_CLASS}>Covoiturage</h1>
+        <AppTitle title="Covoiturage" version={APP_VERSION} />
         <p role="alert" className="mt-3 text-destructive">
           Impossible de charger le planning. Vérifiez votre connexion internet, puis réessayez.
         </p>
