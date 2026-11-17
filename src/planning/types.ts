@@ -24,9 +24,13 @@ export type TimetableChild = {
 
 export type EveningBus = { classEnd: Time; arrival: Time }
 
+/** The school's bell times: the lesson start times and the lesson end times of the day. */
+export type BellTimes = { starts: Time[]; ends: Time[] }
+
 /** One version of the `timetables` collection. */
 export type Timetable = {
   validFrom: IsoDate
+  bellTimes?: BellTimes
   eveningBuses: EveningBus[]
   children: Record<ChildId, TimetableChild>
 }
@@ -50,6 +54,10 @@ export type ChildDay = {
   childId: ChildId
   presence: Presence
   permanence?: Time
+  /** Modified start of the day, when the child arrives later than usual. */
+  start?: Time
+  /** Modified end of the day, when the child leaves earlier than usual. */
+  end?: Time
   skipped: Direction[]
 }
 
@@ -107,6 +115,22 @@ export type HolidayCalendar = {
   publicHolidays: IsoDate[]
 }
 
+/** A change of the child's hours for the day: a later start or an earlier end. */
+export type HoursChange = { start: Time } | { end: Time }
+
+/** A child's hours for a day, usual and effective. */
+export type DayHours = {
+  /** The child's usual slot for this day. */
+  usual: DaySlot
+  /** Effective start of the day. */
+  start: Time
+  /** Effective end of the day. */
+  end: Time
+  bellTimes: BellTimes
+  /** Times of the car trips the change creates, `null` when it creates none. */
+  effect: { aller: Time | null; retour: Time | null }
+}
+
 /** A child as the day shows them: who they are, and whether they ride today. */
 export type DayChild = {
   childId: ChildId
@@ -114,6 +138,8 @@ export type DayChild = {
   gender: Gender
   colorSlot: ColorSlot
   presence: Presence
+  /** Absent without `bellTimes` or when the child has no lesson that day. */
+  hours?: DayHours
   /** The viewer is one of this child's parents, and the day is not locked. */
   editable: boolean
 }
