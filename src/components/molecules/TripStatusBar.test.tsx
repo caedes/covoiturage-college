@@ -38,6 +38,7 @@ describe('TripStatusBar avec action', () => {
         status={{ kind: 'open' }}
         action={{
           kind: 'take',
+          tripKey: 'trajet-1',
           accessibleLabel: 'Je prends — trajet de 07:40, Maison → Centre-bourg',
           pending: false,
           onClick,
@@ -61,6 +62,7 @@ describe('TripStatusBar avec action', () => {
         status={{ kind: 'mine' }}
         action={{
           kind: 'cancel',
+          tripKey: 'trajet-1',
           accessibleLabel: 'Annuler — trajet',
           pending: true,
           onClick,
@@ -82,6 +84,7 @@ describe('TripStatusBar avec action', () => {
   it("montre un indicateur animé pendant l'écriture, sans changer le nom du bouton", () => {
     const action = {
       kind: 'take',
+      tripKey: 'trajet-1',
       accessibleLabel: 'Je prends — trajet',
       onClick: () => {},
     } as const

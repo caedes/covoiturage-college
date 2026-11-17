@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { defaultUid, member } from '../../test/fakeAuth'
@@ -271,5 +271,18 @@ describe('actions de conducteur', () => {
       'Maud a pris ce trajet juste avant vous.',
     )
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  })
+
+  it('rend le focus au bouton même quand le tap ne l’a pas pris, comme sur Safari', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', {
+      planning: planning({
+        carpools: [carpool({ ...ALLER, driverUid: defaultUid, driverName: 'Sophie' })],
+      }),
+    })
+    const button = within(aller()).getByRole('button', { name: /^Annuler — trajet de 07:40/ })
+    fireEvent.click(button)
+    await answer(user, 'Garder le trajet')
+    await waitFor(() => expect(button).toHaveFocus())
   })
 })
