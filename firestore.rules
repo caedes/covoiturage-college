@@ -59,8 +59,8 @@ service cloud.firestore {
     }
 
     function isChildDayShape(childDayId, data) {
-      return data.keys().hasOnly(['date', 'childId', 'presence', 'permanence', 'skipped',
-                                  'updatedByUid', 'updatedAt'])
+      return data.keys().hasOnly(['date', 'childId', 'presence', 'permanence', 'start',
+                                  'end', 'skipped', 'updatedByUid', 'updatedAt'])
         && data.keys().hasAll(['date', 'childId', 'presence', 'skipped', 'updatedByUid',
                                'updatedAt'])
         && data.date is string
@@ -71,6 +71,12 @@ service cloud.firestore {
         && (!('permanence' in data)
             || (data.permanence is string
                 && data.permanence.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')))
+        && (!('start' in data)
+            || (data.start is string
+                && data.start.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')))
+        && (!('end' in data)
+            || (data.end is string
+                && data.end.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')))
         && data.skipped is list
         && data.skipped.hasOnly(['aller', 'retour'])
         && data.skipped.toSet().size() == data.skipped.size()

@@ -471,6 +471,21 @@ describe('écritures sur la collection childDays', () => {
     )
   })
 
+  it("autorise des horaires modifiés d'entrée et de sortie", async () => {
+    await assertSucceeds(
+      save(
+        MEMBER,
+        TOMORROW,
+        'alice',
+        childDayOf(TOMORROW, 'alice', MEMBER, {
+          presence: 'present',
+          start: '10:35',
+          end: '12:30',
+        }),
+      ),
+    )
+  })
+
   it("autorise un parent à modifier la journée réglée par l'autre parent", async () => {
     await seed(TOMORROW, 'alice', OTHER_MEMBER)
     await assertSucceeds(
@@ -513,6 +528,21 @@ describe('écritures sur la collection childDays', () => {
       await assertFails(
         save(MEMBER, TOMORROW, 'alice', childDayOf(TOMORROW, 'alice', MEMBER, { permanence })),
       )
+    }
+  })
+
+  it('refuse des horaires modifiés hors format ou qui ne sont pas une chaîne', async () => {
+    for (const field of ['start', 'end']) {
+      for (const value of ['10h35', '25:00', 1035]) {
+        await assertFails(
+          save(
+            MEMBER,
+            TOMORROW,
+            'alice',
+            childDayOf(TOMORROW, 'alice', MEMBER, { [field]: value }),
+          ),
+        )
+      }
     }
   })
 
