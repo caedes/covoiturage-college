@@ -69,14 +69,14 @@ describe('WeekTabs', () => {
   it('propose les deux semaines en onglets, avec la période', () => {
     render(
       <Tabs value="current">
-        <WeekTabs range="28 septembre – 2 octobre" />
+        <WeekTabs range="28 septembre – 2 octobre" currentWeekType="A" nextWeekType="B" />
       </Tabs>,
     )
-    expect(screen.getByRole('tab', { name: 'Cette semaine' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Cette semaine (A)' })).toHaveAttribute(
       'aria-selected',
       'true',
     )
-    expect(screen.getByRole('tab', { name: 'Semaine prochaine' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine (B)' })).toHaveAttribute(
       'aria-selected',
       'false',
     )
@@ -86,12 +86,22 @@ describe('WeekTabs', () => {
   it('donne à l’onglet inactif une couleur de texte assez contrastée', () => {
     render(
       <Tabs value="current">
-        <WeekTabs range="28 septembre – 2 octobre" />
+        <WeekTabs range="28 septembre – 2 octobre" currentWeekType="A" nextWeekType="B" />
       </Tabs>,
     )
-    expect(screen.getByRole('tab', { name: 'Semaine prochaine' })).toHaveClass(
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine (B)' })).toHaveClass(
       'data-[state=inactive]:text-secondary-foreground',
     )
+  })
+
+  it('affiche le type de chaque semaine dans son onglet', () => {
+    render(
+      <Tabs value="current">
+        <WeekTabs range="30 novembre – 4 décembre" currentWeekType="B" nextWeekType="A" />
+      </Tabs>,
+    )
+    expect(screen.getByRole('tab', { name: 'Cette semaine (B)' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine (A)' })).toBeInTheDocument()
   })
 })
 
