@@ -42,7 +42,7 @@ describe('Layout', () => {
     const user = userEvent.setup()
     await renderRoute('/adresse-inexistante')
     await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
-    expect(await screen.findByRole('tab', { name: 'Cette semaine' })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'Cette semaine (A)' })).toBeInTheDocument()
   })
 
   it('déconnecte le membre par le menu du compte', async () => {
