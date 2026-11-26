@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/caedes/covoiturage-college/compare/v1.6.0...v1.7.0) (2026-11-26)
+
+
+### Nouveautés
+
+* afficher le type de semaine A/B dans les onglets ([#26](https://github.com/caedes/covoiturage-college/issues/26)) ([6a94784](https://github.com/caedes/covoiturage-college/commit/6a9478452a45a9a577a34ca804d54d9ba474cf7b))
+
 ## [1.6.0](https://github.com/caedes/covoiturage-college/compare/v1.5.0...v1.6.0) (2026-11-17)
 
 
