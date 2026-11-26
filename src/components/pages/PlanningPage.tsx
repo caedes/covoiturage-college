@@ -17,7 +17,7 @@ import {
   withHours,
   withPresence,
 } from '../../planning/childOptions'
-import { addDays, displayedMonday, initialDay, parisToday } from '../../planning/dates'
+import { addDays, displayedMonday, initialDay, parisToday, weekType } from '../../planning/dates'
 import { ZONE_A_2026_2027 } from '../../planning/holidays'
 import type {
   ChildDay,
@@ -349,7 +349,13 @@ export function PlanningPage() {
       <PlanningTemplate
         tab={tab}
         onTabChange={changeTab}
-        weekTabs={<WeekTabs range={weekRangeLabel(monday)} />}
+        weekTabs={
+          <WeekTabs
+            range={weekRangeLabel(monday)}
+            currentWeekType={weekType(thisMonday)}
+            nextWeekType={weekType(nextMonday)}
+          />
+        }
         days={<DaySelector days={week.days} selected={day.date} onSelect={setSelected} />}
         notice={notice === null ? null : <p className="text-sm text-muted-foreground">{notice}</p>}
         presence={

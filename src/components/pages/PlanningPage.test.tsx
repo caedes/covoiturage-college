@@ -20,7 +20,7 @@ describe('PlanningPage', () => {
     await renderRoute('/')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Covoiturage' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Cette semaine' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Cette semaine (A)' })).toHaveAttribute(
       'aria-selected',
       'true',
     )
@@ -78,10 +78,10 @@ describe('PlanningPage', () => {
   it('passe à la semaine prochaine sur son lundi, puis revient sur aujourd’hui', async () => {
     const user = userEvent.setup()
     await renderRoute('/')
-    await user.click(screen.getByRole('tab', { name: 'Semaine prochaine' }))
+    await user.click(screen.getByRole('tab', { name: 'Semaine prochaine (B)' }))
     expect(screen.getByText('5 – 9 octobre')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^lundi 5/ })).toHaveAttribute('aria-pressed', 'true')
-    await user.click(screen.getByRole('tab', { name: 'Cette semaine' }))
+    await user.click(screen.getByRole('tab', { name: 'Cette semaine (A)' }))
     expect(screen.getByRole('button', { name: /^mercredi 30/ })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -234,10 +234,10 @@ describe("« Aujourd'hui »", () => {
   it('ramène sur « Cette semaine » et le jour courant, en haut de la page, à chaque clic', async () => {
     const user = userEvent.setup()
     await renderRoute('/')
-    await user.click(screen.getByRole('tab', { name: 'Semaine prochaine' }))
+    await user.click(screen.getByRole('tab', { name: 'Semaine prochaine (B)' }))
     await user.click(screen.getByRole('button', { name: /^jeudi 8/ }))
     await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
-    expect(screen.getByRole('tab', { name: 'Cette semaine' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Cette semaine (A)' })).toHaveAttribute(
       'aria-selected',
       'true',
     )
@@ -276,5 +276,36 @@ describe("« Aujourd'hui »", () => {
     current = new Date('2026-10-01T08:00:00Z')
     await user.click(screen.getByRole('link', { name: "Aujourd'hui" }))
     expect(screen.getByRole('button', { name: /^jeudi 1/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
+describe('type de semaine', () => {
+  it('affiche A puis B un jeudi de semaine A', async () => {
+    await renderRoute('/', { now: new Date('2026-11-26T09:00:00Z') })
+    expect(screen.getByRole('tab', { name: 'Cette semaine (A)' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine (B)' })).toBeInTheDocument()
+  })
+
+  it('suit la semaine qui arrive le week-end', async () => {
+    await renderRoute('/', { now: new Date('2026-11-28T09:00:00Z') })
+    expect(screen.getByRole('tab', { name: 'Cette semaine (B)' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine (A)' })).toBeInTheDocument()
+  })
+
+  it('garde chaque lettre sur son onglet quand on passe à la semaine prochaine', async () => {
+    const user = userEvent.setup()
+    await renderRoute('/', { now: new Date('2026-11-26T09:00:00Z') })
+    await user.click(screen.getByRole('tab', { name: 'Semaine prochaine (B)' }))
+    expect(screen.getByRole('tab', { name: 'Semaine prochaine (B)' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByRole('tab', { name: 'Cette semaine (A)' })).toBeInTheDocument()
   })
 })
